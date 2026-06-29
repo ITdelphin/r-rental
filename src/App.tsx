@@ -23,6 +23,7 @@ import { AdminUsers } from '@/pages/dashboard/admin/AdminUsers'
 import { AdminReports } from '@/pages/dashboard/admin/AdminReports'
 import { SuperAdminCms } from '@/pages/dashboard/super-admin/SuperAdminCms'
 import { SuperAdminSettings } from '@/pages/dashboard/super-admin/SuperAdminSettings'
+import { AccountSettingsPage } from '@/pages/dashboard/AccountSettingsPage'
 import { MessagesPage } from '@/pages/dashboard/MessagesPage'
 import { NotificationsPage } from '@/pages/dashboard/NotificationsPage'
 import { ReviewsPage } from '@/pages/dashboard/ReviewsPage'
@@ -57,6 +58,7 @@ export default function App() {
             <Route path="/dashboard/reports" element={<AdminReports />} />
             <Route path="/dashboard/cms" element={<SuperAdminCms />} />
             <Route path="/dashboard/settings" element={<SuperAdminSettings />} />
+            <Route path="/dashboard/account" element={<AccountSettingsPage />} />
             <Route path="/dashboard/messages" element={<MessagesPage />} />
             <Route path="/dashboard/notifications" element={<NotificationsPage />} />
             <Route path="/dashboard/reviews" element={<ReviewsPage />} />

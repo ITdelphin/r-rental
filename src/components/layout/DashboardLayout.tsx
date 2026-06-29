@@ -20,6 +20,7 @@ const tenantNav: NavItem[] = [
   { to: '/dashboard/favorites', label: 'Favorites', icon: Heart },
   { to: '/dashboard/messages', label: 'Messages', icon: MessageSquare },
   { to: '/dashboard/reviews', label: 'Reviews', icon: FileText },
+  { to: '/dashboard/account', label: 'Account Settings', icon: Settings },
 ]
 
 const ownerNav: NavItem[] = [
@@ -29,6 +30,7 @@ const ownerNav: NavItem[] = [
   { to: '/dashboard/earnings', label: 'Earnings', icon: BarChart3 },
   { to: '/dashboard/messages', label: 'Messages', icon: MessageSquare },
   { to: '/dashboard/reviews', label: 'Reviews', icon: FileText },
+  { to: '/dashboard/account', label: 'Account Settings', icon: Settings },
 ]
 
 const adminNav: NavItem[] = [
@@ -38,6 +40,7 @@ const adminNav: NavItem[] = [
   { to: '/dashboard/bookings', label: 'Bookings', icon: Calendar },
   { to: '/dashboard/reports', label: 'Reports', icon: BarChart3 },
   { to: '/dashboard/complaints', label: 'Complaints', icon: Shield },
+  { to: '/dashboard/account', label: 'Account Settings', icon: Settings },
 ]
 
 const superAdminNav: NavItem[] = [
@@ -49,6 +52,7 @@ const superAdminNav: NavItem[] = [
   { to: '/dashboard/cms', label: 'CMS', icon: FileText },
   { to: '/dashboard/settings', label: 'Settings', icon: Settings },
   { to: '/dashboard/activity-logs', label: 'Activity Logs', icon: Shield },
+  { to: '/dashboard/account', label: 'Account Settings', icon: Settings },
 ]
 
 export function DashboardLayout() {

@@ -1,11 +1,11 @@
 -- Rwanda EasyRent Database Schema
 
 -- Enable UUID generation
-create extension if not exists "uuid-ossp";
+-- gen_random_uuid() is built-in; no extension needed
 
 -- Profiles table (extends auth.users)
 create table if not exists profiles (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id) on delete cascade not null unique,
   full_name text not null,
   email text not null,
@@ -28,7 +28,7 @@ create table if not exists profiles (
 
 -- Properties table
 create table if not exists properties (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   owner_id uuid references profiles(id) on delete cascade not null,
   title text not null,
   description text,
@@ -64,7 +64,7 @@ create table if not exists properties (
 
 -- Property Images
 create table if not exists property_images (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   property_id uuid references properties(id) on delete cascade not null,
   url text not null,
   is_floor_plan boolean default false,
@@ -74,7 +74,7 @@ create table if not exists property_images (
 
 -- Property Videos
 create table if not exists property_videos (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   property_id uuid references properties(id) on delete cascade not null,
   url text not null,
   created_at timestamptz default now()
@@ -82,7 +82,7 @@ create table if not exists property_videos (
 
 -- Amenities
 create table if not exists amenities (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   property_id uuid references properties(id) on delete cascade not null,
   name text not null,
   created_at timestamptz default now()
@@ -90,7 +90,7 @@ create table if not exists amenities (
 
 -- Bookings
 create table if not exists bookings (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   property_id uuid references properties(id) on delete cascade not null,
   tenant_id uuid references profiles(id) on delete cascade not null,
   owner_id uuid references profiles(id) on delete cascade not null,
@@ -103,7 +103,7 @@ create table if not exists bookings (
 
 -- Payments
 create table if not exists payments (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   booking_id uuid references bookings(id) on delete cascade,
   payer_id uuid references profiles(id) on delete cascade not null,
   payee_id uuid references profiles(id) on delete cascade not null,
@@ -118,7 +118,7 @@ create table if not exists payments (
 
 -- Reviews
 create table if not exists reviews (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   property_id uuid references properties(id) on delete cascade not null,
   user_id uuid references profiles(id) on delete cascade not null,
   rating integer not null check (rating >= 1 and rating <= 5),
@@ -130,7 +130,7 @@ create table if not exists reviews (
 
 -- Favorites
 create table if not exists favorites (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   user_id uuid references profiles(id) on delete cascade not null,
   property_id uuid references properties(id) on delete cascade not null,
   created_at timestamptz default now(),
@@ -139,7 +139,7 @@ create table if not exists favorites (
 
 -- Messages
 create table if not exists messages (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   sender_id uuid references profiles(id) on delete cascade not null,
   receiver_id uuid references profiles(id) on delete cascade not null,
   property_id uuid references properties(id) on delete set null,
@@ -150,7 +150,7 @@ create table if not exists messages (
 
 -- Notifications
 create table if not exists notifications (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   user_id uuid references profiles(id) on delete cascade not null,
   title text not null,
   body text,
@@ -162,7 +162,7 @@ create table if not exists notifications (
 
 -- Maintenance Requests
 create table if not exists maintenance_requests (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   property_id uuid references properties(id) on delete cascade not null,
   tenant_id uuid references profiles(id) on delete cascade not null,
   title text not null,
@@ -175,7 +175,7 @@ create table if not exists maintenance_requests (
 
 -- Complaints
 create table if not exists complaints (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   user_id uuid references profiles(id) on delete cascade not null,
   subject text not null,
   description text,
@@ -186,7 +186,7 @@ create table if not exists complaints (
 
 -- Contracts
 create table if not exists contracts (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   booking_id uuid references bookings(id) on delete cascade,
   tenant_id uuid references profiles(id) on delete cascade not null,
   owner_id uuid references profiles(id) on delete cascade not null,
@@ -202,7 +202,7 @@ create table if not exists contracts (
 
 -- CMS Pages
 create table if not exists cms_pages (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   slug text unique not null,
   title text not null,
   content text,
@@ -215,7 +215,7 @@ create table if not exists cms_pages (
 
 -- Settings
 create table if not exists settings (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   key text unique not null,
   value text not null,
   created_at timestamptz default now(),
@@ -224,7 +224,7 @@ create table if not exists settings (
 
 -- Newsletters
 create table if not exists newsletters (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   email text unique not null,
   is_active boolean default true,
   created_at timestamptz default now()
@@ -232,7 +232,7 @@ create table if not exists newsletters (
 
 -- Audit Logs
 create table if not exists audit_logs (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   user_id uuid references profiles(id) on delete set null,
   action text not null,
   entity_type text not null,
