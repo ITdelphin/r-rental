@@ -1,0 +1,3 @@
+https://github.com/ITdelphin/r-rental.git
+https://gptlrwjefqyovtucvibs.supabase.co
+https://vercel.com/new?teamSlug=delphinproject
