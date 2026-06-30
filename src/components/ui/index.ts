@@ -4,3 +4,4 @@ export { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription }
 export { Badge } from './badge'
 export { Avatar, AvatarImage, AvatarFallback } from './avatar'
 export { Select } from './select'
+export { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from './dialog'
