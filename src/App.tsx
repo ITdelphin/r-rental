@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
 import { PublicLayout } from '@/components/layout/PublicLayout'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
+import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { HomePage } from '@/pages/public/HomePage'
 import { AboutPage } from '@/pages/public/AboutPage'
 import { ContactPage } from '@/pages/public/ContactPage'
@@ -19,6 +20,7 @@ import { TenantBookings } from '@/pages/dashboard/tenant/TenantBookings'
 import { TenantFavorites } from '@/pages/dashboard/tenant/TenantFavorites'
 import { OwnerProperties } from '@/pages/dashboard/owner/OwnerProperties'
 import { OwnerEarnings } from '@/pages/dashboard/owner/OwnerEarnings'
+import { AddPropertyPage } from '@/pages/dashboard/owner/AddPropertyPage'
 import { AdminUsers } from '@/pages/dashboard/admin/AdminUsers'
 import { AdminReports } from '@/pages/dashboard/admin/AdminReports'
 import { SuperAdminCms } from '@/pages/dashboard/super-admin/SuperAdminCms'
@@ -27,6 +29,8 @@ import { AccountSettingsPage } from '@/pages/dashboard/AccountSettingsPage'
 import { MessagesPage } from '@/pages/dashboard/MessagesPage'
 import { NotificationsPage } from '@/pages/dashboard/NotificationsPage'
 import { ReviewsPage } from '@/pages/dashboard/ReviewsPage'
+import { ComplaintsPage } from '@/pages/dashboard/ComplaintsPage'
+import { ActivityLogsPage } from '@/pages/dashboard/ActivityLogsPage'
 
 const queryClient = new QueryClient()
 
@@ -35,6 +39,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
+          {/* Public routes */}
           <Route element={<PublicLayout />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/properties" element={<PropertiesPage />} />
@@ -45,23 +50,41 @@ export default function App() {
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/terms" element={<TermsPage />} />
           </Route>
+
+          {/* Auth routes */}
           <Route path="/auth/login" element={<LoginPage />} />
           <Route path="/auth/register" element={<RegisterPage />} />
           <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
-          <Route element={<DashboardLayout />}>
-            <Route path="/dashboard" element={<DashboardHome />} />
-            <Route path="/dashboard/bookings" element={<TenantBookings />} />
-            <Route path="/dashboard/favorites" element={<TenantFavorites />} />
-            <Route path="/dashboard/properties" element={<OwnerProperties />} />
-            <Route path="/dashboard/earnings" element={<OwnerEarnings />} />
-            <Route path="/dashboard/users" element={<AdminUsers />} />
-            <Route path="/dashboard/reports" element={<AdminReports />} />
-            <Route path="/dashboard/cms" element={<SuperAdminCms />} />
-            <Route path="/dashboard/settings" element={<SuperAdminSettings />} />
-            <Route path="/dashboard/account" element={<AccountSettingsPage />} />
-            <Route path="/dashboard/messages" element={<MessagesPage />} />
-            <Route path="/dashboard/notifications" element={<NotificationsPage />} />
-            <Route path="/dashboard/reviews" element={<ReviewsPage />} />
+
+          {/* Protected dashboard routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route element={<DashboardLayout />}>
+              {/* Common */}
+              <Route path="/dashboard" element={<DashboardHome />} />
+              <Route path="/dashboard/account" element={<AccountSettingsPage />} />
+              <Route path="/dashboard/messages" element={<MessagesPage />} />
+              <Route path="/dashboard/notifications" element={<NotificationsPage />} />
+              <Route path="/dashboard/reviews" element={<ReviewsPage />} />
+
+              {/* Tenant */}
+              <Route path="/dashboard/bookings" element={<TenantBookings />} />
+              <Route path="/dashboard/favorites" element={<TenantFavorites />} />
+
+              {/* Owner / Agent */}
+              <Route path="/dashboard/properties" element={<OwnerProperties />} />
+              <Route path="/dashboard/properties/add" element={<AddPropertyPage />} />
+              <Route path="/dashboard/earnings" element={<OwnerEarnings />} />
+
+              {/* Admin / Super-Admin */}
+              <Route path="/dashboard/users" element={<AdminUsers />} />
+              <Route path="/dashboard/reports" element={<AdminReports />} />
+              <Route path="/dashboard/complaints" element={<ComplaintsPage />} />
+
+              {/* Super-Admin only */}
+              <Route path="/dashboard/cms" element={<SuperAdminCms />} />
+              <Route path="/dashboard/settings" element={<SuperAdminSettings />} />
+              <Route path="/dashboard/activity-logs" element={<ActivityLogsPage />} />
+            </Route>
           </Route>
         </Routes>
       </BrowserRouter>

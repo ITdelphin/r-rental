@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { LayoutDashboard, Building2, Calendar, Heart, MessageSquare, Bell, Settings, LogOut, Menu, X, ChevronRight, Home, Users, BarChart3, FileText, Shield } from 'lucide-react'
+import { LayoutDashboard, Building2, Calendar, Heart, MessageSquare, Bell, Settings, LogOut, Menu, X, ChevronRight, Home, Users, BarChart3, FileText, Shield, Star, Plus, Activity } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
@@ -26,10 +26,11 @@ const tenantNav: NavItem[] = [
 const ownerNav: NavItem[] = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/dashboard/properties', label: 'My Properties', icon: Building2 },
+  { to: '/dashboard/properties/add', label: 'Add Property', icon: Plus },
   { to: '/dashboard/bookings', label: 'Bookings', icon: Calendar },
   { to: '/dashboard/earnings', label: 'Earnings', icon: BarChart3 },
   { to: '/dashboard/messages', label: 'Messages', icon: MessageSquare },
-  { to: '/dashboard/reviews', label: 'Reviews', icon: FileText },
+  { to: '/dashboard/reviews', label: 'Reviews', icon: Star },
   { to: '/dashboard/account', label: 'Account Settings', icon: Settings },
 ]
 
@@ -40,6 +41,7 @@ const adminNav: NavItem[] = [
   { to: '/dashboard/bookings', label: 'Bookings', icon: Calendar },
   { to: '/dashboard/reports', label: 'Reports', icon: BarChart3 },
   { to: '/dashboard/complaints', label: 'Complaints', icon: Shield },
+  { to: '/dashboard/messages', label: 'Messages', icon: MessageSquare },
   { to: '/dashboard/account', label: 'Account Settings', icon: Settings },
 ]
 
@@ -48,10 +50,12 @@ const superAdminNav: NavItem[] = [
   { to: '/dashboard/users', label: 'Users', icon: Users },
   { to: '/dashboard/properties', label: 'Properties', icon: Building2 },
   { to: '/dashboard/bookings', label: 'Bookings', icon: Calendar },
-  { to: '/dashboard/reports', label: 'Reports', icon: FileText },
+  { to: '/dashboard/reports', label: 'Reports', icon: BarChart3 },
+  { to: '/dashboard/complaints', label: 'Complaints', icon: Shield },
   { to: '/dashboard/cms', label: 'CMS', icon: FileText },
   { to: '/dashboard/settings', label: 'Settings', icon: Settings },
-  { to: '/dashboard/activity-logs', label: 'Activity Logs', icon: Shield },
+  { to: '/dashboard/activity-logs', label: 'Activity Logs', icon: Activity },
+  { to: '/dashboard/messages', label: 'Messages', icon: MessageSquare },
   { to: '/dashboard/account', label: 'Account Settings', icon: Settings },
 ]
 

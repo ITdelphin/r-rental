@@ -3,48 +3,73 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { TableSkeleton } from '@/components/ui/loading'
-import { Search, Shield, UserX, Filter, MoreHorizontal } from 'lucide-react'
+import { Search, Shield, UserX, RefreshCw, UserCheck } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabase'
+import toast from 'react-hot-toast'
+import type { Profile } from '@/types'
 
-interface User {
-  id: string
-  name: string
-  email: string
-  role: string
-  status: 'active' | 'suspended' | 'pending'
-  joined: string
-}
-
-const mockUsers: User[] = [
-  { id: '1', name: 'Alice Mutesi', email: 'alice@email.com', role: 'tenant', status: 'active', joined: 'Dec 1, 2024' },
-  { id: '2', name: 'Jean-Pierre Kagame', email: 'jp@email.com', role: 'owner', status: 'active', joined: 'Nov 15, 2024' },
-  { id: '3', name: 'Diane Uwimana', email: 'diane@email.com', role: 'agent', status: 'suspended', joined: 'Oct 20, 2024' },
-  { id: '4', name: 'Patrick Habimana', email: 'patrick@email.com', role: 'tenant', status: 'pending', joined: 'Dec 5, 2024' },
-  { id: '5', name: 'Grace Mugabo', email: 'grace@email.com', role: 'admin', status: 'active', joined: 'Sep 10, 2024' },
-]
-
-const statusVariant: Record<string, 'success' | 'danger' | 'warning'> = {
+const statusVariant: Record<string, 'success' | 'danger' | 'warning' | 'secondary'> = {
   active: 'success',
   suspended: 'danger',
-  pending: 'warning',
 }
 
 export function AdminUsers() {
   const { t } = useTranslation()
   const [loading, setLoading] = useState(true)
-  const [users, setUsers] = useState<User[]>([])
+  const [users, setUsers] = useState<Profile[]>([])
   const [search, setSearch] = useState('')
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setUsers(mockUsers)
-      setLoading(false)
-    }, 700)
-    return () => clearTimeout(timer)
+    fetchUsers()
   }, [])
 
-  const filtered = users.filter(
-    (u) => u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase())
+  const fetchUsers = async () => {
+    setLoading(true)
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false })
+      if (error) throw error
+      setUsers((data || []) as unknown as Profile[])
+    } catch {
+      setUsers([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const toggleSuspend = async (user: Profile) => {
+    const newSuspended = !user.is_suspended
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_suspended: newSuspended } as never)
+        .eq('user_id', user.user_id)
+      if (error) throw error
+      toast.success(newSuspended ? 'User suspended' : 'User reinstated')
+      setUsers(prev => prev.map(u => u.user_id === user.user_id ? { ...u, is_suspended: newSuspended } : u))
+    } catch {
+      toast.error('Failed to update user status')
+    }
+  }
+
+  const changeRole = async (user: Profile, role: string) => {
+    try {
+      const { error } = await supabase.from('profiles').update({ role } as never).eq('user_id', user.user_id)
+      if (error) throw error
+      toast.success(`Role changed to ${role}`)
+      setUsers(prev => prev.map(u => u.user_id === user.user_id ? { ...u, role: role as Profile['role'] } : u))
+    } catch {
+      toast.error('Failed to change role')
+    }
+  }
+
+  const filtered = users.filter(u =>
+    !search ||
+    u.full_name?.toLowerCase().includes(search.toLowerCase()) ||
+    u.email?.toLowerCase().includes(search.toLowerCase())
   )
 
   return (
@@ -54,20 +79,18 @@ export function AdminUsers() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('users')}</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">{users.length} {t('total_users')}</p>
         </div>
-        <Button variant="outline" size="sm"><Filter className="h-4 w-4" /> {t('filters')}</Button>
+        <Button variant="outline" size="sm" onClick={fetchUsers}><RefreshCw className="h-4 w-4" /> Refresh</Button>
       </div>
 
-      <div className="flex gap-2">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder={t('search_users')}
-            className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
-          />
-        </div>
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+        <input
+          type="text"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder={t('search_users')}
+          className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+        />
       </div>
 
       {loading ? (
@@ -95,34 +118,62 @@ export function AdminUsers() {
                   </tr>
                 </thead>
                 <tbody className="divide-y dark:divide-gray-700">
-                  {filtered.map((user) => (
-                    <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                  {filtered.map(user => (
+                    <tr key={user.user_id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-sm font-bold text-primary-600 dark:bg-primary-900/50">
-                            {user.name.charAt(0)}
+                            {user.full_name?.charAt(0) || '?'}
                           </div>
-                          <span className="font-medium text-gray-900 dark:text-gray-100">{user.name}</span>
+                          <div>
+                            <span className="font-medium text-gray-900 dark:text-gray-100">{user.full_name || 'Unknown'}</span>
+                            {user.is_verified && <span className="ml-2 text-xs text-green-600">✓ Verified</span>}
+                          </div>
                         </div>
                       </td>
                       <td className="px-4 py-3 text-gray-500">{user.email}</td>
                       <td className="px-4 py-3">
-                        <Badge variant="secondary" className="capitalize">{user.role.replace('_', ' ')}</Badge>
+                        <select
+                          value={user.role}
+                          onChange={e => changeRole(user, e.target.value)}
+                          className="rounded border border-gray-300 bg-white px-2 py-1 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                        >
+                          <option value="tenant">Tenant</option>
+                          <option value="owner">Owner</option>
+                          <option value="agent">Agent</option>
+                          <option value="admin">Admin</option>
+                          <option value="super_admin">Super Admin</option>
+                        </select>
                       </td>
                       <td className="px-4 py-3">
-                        <Badge variant={statusVariant[user.status]} className="capitalize">{user.status}</Badge>
+                        <Badge variant={user.is_suspended ? 'danger' : 'success'} className="capitalize">
+                          {user.is_suspended ? 'Suspended' : 'Active'}
+                        </Badge>
                       </td>
-                      <td className="px-4 py-3 text-gray-500">{user.joined}</td>
+                      <td className="px-4 py-3 text-gray-500 text-xs">
+                        {new Date(user.created_at).toLocaleDateString()}
+                      </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <Button variant="ghost" size="icon" className="text-blue-500">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className={user.is_suspended ? 'text-green-500' : 'text-red-500'}
+                            onClick={() => toggleSuspend(user)}
+                            title={user.is_suspended ? 'Reinstate User' : 'Suspend User'}
+                          >
+                            {user.is_suspended ? <UserCheck className="h-4 w-4" /> : <UserX className="h-4 w-4" />}
+                          </Button>
+                          <Button variant="ghost" size="icon" className="text-blue-500" title="Verify User"
+                            onClick={async () => {
+                              try {
+                                await supabase.from('profiles').update({ is_verified: !user.is_verified } as never).eq('user_id', user.user_id)
+                                setUsers(prev => prev.map(u => u.user_id === user.user_id ? { ...u, is_verified: !user.is_verified } : u))
+                                toast.success('Verification updated')
+                              } catch { toast.error('Failed') }
+                            }}
+                          >
                             <Shield className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="text-red-500">
-                            <UserX className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </div>
                       </td>

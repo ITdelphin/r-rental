@@ -6,36 +6,49 @@ import { ListSkeleton } from '@/components/ui/loading'
 import { Button } from '@/components/ui/button'
 import { Heart, Home, MapPin, Trash2 } from 'lucide-react'
 import { useState, useEffect } from 'react'
-
-interface Favorite {
-  id: string
-  title: string
-  price: string
-  location: string
-  beds: number
-  baths: number
-}
-
-const mockFavorites: Favorite[] = [
-  { id: '1', title: 'Modern Apartment in Kicukiro', price: 'RWF 250,000', location: 'Kicukiro, Kigali', beds: 2, baths: 1 },
-  { id: '2', title: 'Villa with Pool in Musanze', price: 'RWF 500,000', location: 'Musanze, Northern', beds: 4, baths: 3 },
-]
+import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/hooks/useAuth'
+import { formatPrice } from '@/lib/utils'
+import type { Favorite } from '@/types'
+import toast from 'react-hot-toast'
 
 export function TenantFavorites() {
   const { t } = useTranslation()
+  const { user } = useAuth()
   const [loading, setLoading] = useState(true)
   const [favorites, setFavorites] = useState<Favorite[]>([])
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setFavorites(mockFavorites)
-      setLoading(false)
-    }, 600)
-    return () => clearTimeout(timer)
-  }, [])
+    if (user) fetchFavorites()
+  }, [user])
 
-  const handleRemove = (id: string) => {
-    setFavorites((prev) => prev.filter((f) => f.id !== id))
+  const fetchFavorites = async () => {
+    if (!user) return
+    setLoading(true)
+    try {
+      const { data, error } = await supabase
+        .from('favorites')
+        .select('*, property:properties(id, title, price, district, province, bedrooms, bathrooms, images:property_images(url))')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+      if (error) throw error
+      setFavorites((data || []) as unknown as Favorite[])
+    } catch {
+      setFavorites([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleRemove = async (id: string) => {
+    try {
+      const { error } = await supabase.from('favorites').delete().eq('id', id)
+      if (error) throw error
+      toast.success('Removed from favorites')
+      setFavorites(prev => prev.filter(f => f.id !== id))
+    } catch {
+      toast.error('Failed to remove favorite')
+    }
   }
 
   return (
@@ -59,33 +72,45 @@ export function TenantFavorites() {
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
-          {favorites.map((fav) => (
-            <Card key={fav.id} className="group hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-gray-900 dark:text-gray-100 truncate">{fav.title}</h3>
-                    <p className="mt-1 flex items-center gap-1 text-sm text-gray-500">
-                      <MapPin className="h-3 w-3 shrink-0" /> {fav.location}
-                    </p>
-                    <div className="mt-2 flex items-center gap-3 text-sm text-gray-500">
-                      <span>{fav.beds} {t('beds')}</span>
-                      <span>{fav.baths} {t('baths')}</span>
-                    </div>
-                    <p className="mt-2 text-lg font-bold text-primary-600">{fav.price}/{t('mo')}</p>
-                  </div>
-                  <div className="flex flex-col gap-1 ml-2">
-                    <Button variant="ghost" size="icon" className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
-                      <Heart className="h-5 w-5 fill-current" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="text-gray-400 hover:text-red-500" onClick={() => handleRemove(fav.id)}>
+          {favorites.map((fav) => {
+            const prop = fav.property as unknown as { id: string; title: string; price: number; district: string; province: string; bedrooms: number; bathrooms: number; images?: { url: string }[] }
+            if (!prop) return null
+            return (
+              <Card key={fav.id} className="group hover:shadow-md transition-shadow">
+                <CardContent className="p-0">
+                  <div className="relative aspect-[16/9] overflow-hidden rounded-t-lg bg-gray-200 dark:bg-gray-700">
+                    {prop.images?.[0]?.url ? (
+                      <img src={prop.images[0].url} alt={prop.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-gray-400"><Home className="h-10 w-10" /></div>
+                    )}
+                    <button
+                      onClick={() => handleRemove(fav.id)}
+                      className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-red-500 shadow hover:bg-white dark:bg-gray-800/90 cursor-pointer"
+                    >
                       <Trash2 className="h-4 w-4" />
-                    </Button>
+                    </button>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  <div className="p-4">
+                    <h3 className="font-medium text-gray-900 dark:text-gray-100 truncate">{prop.title}</h3>
+                    <p className="mt-1 flex items-center gap-1 text-sm text-gray-500">
+                      <MapPin className="h-3 w-3 shrink-0" /> {prop.district}, {prop.province}
+                    </p>
+                    <div className="mt-2 flex items-center justify-between">
+                      <div className="flex items-center gap-3 text-sm text-gray-500">
+                        <span>{prop.bedrooms} {t('beds')}</span>
+                        <span>{prop.bathrooms} {t('baths')}</span>
+                      </div>
+                      <p className="text-lg font-bold text-primary-600">{formatPrice(prop.price)}/{t('mo')}</p>
+                    </div>
+                    <Link to={`/properties/${prop.id}`} className="mt-3 block">
+                      <Button variant="outline" size="sm" className="w-full">View Property</Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })}
         </div>
       )}
     </div>
