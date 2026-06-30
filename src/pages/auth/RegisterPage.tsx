@@ -34,14 +34,10 @@ export function RegisterPage() {
       return
     }
     if (data.user) {
-      const { error: profileError } = await supabase.from('profiles').insert({
-        user_id: data.user.id,
-        full_name: form.full_name,
-        email: form.email,
+      const { error: profileError } = await supabase.from('profiles').update({
         phone: form.phone,
-        role: form.role,
-      } as never)
-      if (profileError) toast.error('Profile creation failed')
+      } as never).eq('user_id', data.user.id)
+      if (profileError) toast.error('Profile update failed')
     }
     toast.success('Account created! Check your email to verify.')
     navigate('/auth/login')

@@ -29,7 +29,10 @@ export function useUpdateProperty() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Property> }) => propertyApi.update(id, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['properties'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['properties'] })
+      qc.invalidateQueries({ queryKey: ['property'] })
+    },
   })
 }
 
