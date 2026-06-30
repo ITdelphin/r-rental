@@ -11,7 +11,7 @@ import { useAuth } from '@/hooks/useAuth'
 import toast from 'react-hot-toast'
 
 const provinces = ['Kigali', 'Eastern', 'Western', 'Northern', 'Southern']
-const propertyTypes = ['apartment', 'house', 'villa', 'studio', 'bungalow', 'cottage', 'commercial']
+const propertyTypes = ['House', 'Apartment', 'Villa', 'Studio', 'Commercial', 'Cottage']
 const categories = ['Rent', 'Sale', 'Short-term']
 
 const amenityFields = [
@@ -38,7 +38,7 @@ export function AddPropertyPage() {
         title: '',
         description: '',
         category: 'Rent',
-        property_type: 'apartment',
+        property_type: 'Apartment',
         bedrooms: 1,
         bathrooms: 1,
         kitchen: 1,
@@ -96,7 +96,7 @@ export function AddPropertyPage() {
         setSubmitting(true)
         try {
             const propertyData = {
-                owner_id: user.id,
+                owner_id: profile.id || user.id,
                 title: form.title,
                 description: form.description,
                 category: form.category,
@@ -200,7 +200,7 @@ export function AddPropertyPage() {
                                 <Select
                                     value={form.property_type}
                                     onChange={e => setForm({ ...form, property_type: e.target.value })}
-                                    options={propertyTypes.map(pt => ({ value: pt, label: pt.charAt(0).toUpperCase() + pt.slice(1) }))}
+                                    options={propertyTypes.map(pt => ({ value: pt, label: pt }))}
                                 />
                             </div>
                         </div>
