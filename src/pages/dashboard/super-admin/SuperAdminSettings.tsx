@@ -133,7 +133,7 @@ export function SuperAdminSettings() {
   // Media upload
   const uploadMedia = async (file: File, folder: string): Promise<string | null> => {
     const ext = file.name.split('.').pop()
-    const path = `cms/${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+    const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
     const { error } = await supabase.storage.from('cms').upload(path, file)
     if (error) { toast.error(`Upload failed: ${error.message}`); return null }
     const { data: { publicUrl } } = supabase.storage.from('cms').getPublicUrl(path)
