@@ -39,11 +39,9 @@ export function HomePage() {
 
   return (
     <div>
-      <section className="relative min-h-[90vh] flex items-center overflow-hidden">
-        <div className="absolute inset-0">
-          <img src="/images/1.jfif" alt="" className="h-full w-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-dark-900/95 via-dark-900/80 to-dark-900/60" />
-        </div>
+      <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-gradient-to-br from-primary-700 via-primary-800 to-primary-950">
+        <div className="absolute inset-0 bg-[url('/images/1.jfif')] bg-cover bg-center opacity-20" />
+        <div className="absolute inset-0 bg-gradient-to-r from-gray-950/90 via-gray-950/70 to-gray-950/50" />
         <div className="relative mx-auto w-full max-w-7xl px-4 sm:px-6 text-center">
           <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">{t('hero_title')}</h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-primary-100">{t('hero_subtitle')}</p>
@@ -204,14 +202,14 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="relative overflow-hidden bg-gradient-to-br from-dark-900 to-dark-800 py-20">
+      <section className="relative overflow-hidden bg-gradient-to-br from-gray-900 to-gray-950 py-20">
         <div className="absolute inset-0 bg-[url('/images/4.jfif')] bg-cover bg-center opacity-5" />
         <div className="relative mx-auto max-w-3xl px-4 sm:px-6 text-center">
           <Badge variant="secondary" className="mb-4 bg-white/10 text-white hover:bg-white/20">Get Started</Badge>
           <h2 className="text-3xl font-bold text-white sm:text-4xl">Ready to Find Your Dream Home?</h2>
           <p className="mt-4 text-lg text-gray-300">Join thousands of happy tenants and property owners across Rwanda. Start your journey today.</p>
           <div className="mt-10 flex justify-center gap-4">
-            <Button size="lg" className="bg-white text-dark-900 hover:bg-gray-100 shadow-xl" onClick={() => navigate('/auth/register')}>
+            <Button size="lg" className="bg-white text-gray-900 hover:bg-gray-100 shadow-xl" onClick={() => navigate('/auth/register')}>
               {t('sign_up')}
             </Button>
             <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10" onClick={() => navigate('/properties')}>
