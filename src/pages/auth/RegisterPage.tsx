@@ -34,6 +34,12 @@ export function RegisterPage() {
       return
     }
     if (data.user) {
+      // Wait for the DB trigger to create the profile row
+      for (let i = 0; i < 10; i++) {
+        const { data: profile } = await supabase.from('profiles').select('id').eq('user_id', data.user.id).single()
+        if (profile) break
+        await new Promise(r => setTimeout(r, 500))
+      }
       const { error: profileError } = await supabase.from('profiles').update({
         phone: form.phone,
       } as never).eq('user_id', data.user.id)

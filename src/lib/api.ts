@@ -133,6 +133,19 @@ export const messageApi = {
     if (error) throw error
     return data as unknown as Message
   },
+  update: async (id: string, updates: Partial<Message>) => {
+    const { data, error } = await supabase.from('messages').update(updates as never).eq('id', id).select().single()
+    if (error) throw error
+    return data as unknown as Message
+  },
+  remove: async (id: string) => {
+    const { error } = await supabase.from('messages').delete().eq('id', id)
+    if (error) throw error
+  },
+  markAsRead: async (id: string) => {
+    const { error } = await supabase.from('messages').update({ is_read: true } as never).eq('id', id)
+    if (error) throw error
+  },
 }
 
 export const notificationApi = {

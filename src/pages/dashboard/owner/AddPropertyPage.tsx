@@ -8,6 +8,7 @@ import { Select } from '@/components/ui/select'
 import { ChevronLeft, Building2, Save, Upload, Check } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
+import { useCreateProperty } from '@/hooks/useProperties'
 import toast from 'react-hot-toast'
 
 const provinces = ['Kigali', 'Eastern', 'Western', 'Northern', 'Southern']
@@ -30,6 +31,7 @@ export function AddPropertyPage() {
     const { t } = useTranslation()
     const navigate = useNavigate()
     const { user, profile } = useAuth()
+    const createProperty = useCreateProperty()
     const [submitting, setSubmitting] = useState(false)
     const [uploadingImages, setUploadingImages] = useState(false)
     const [uploadedImages, setUploadedImages] = useState<string[]>([])
@@ -87,7 +89,7 @@ export function AddPropertyPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!user || !profile) return
+        if (!user) return
         if (!form.title || !form.price || !form.district) {
             toast.error('Please fill in all required fields')
             return
@@ -96,7 +98,7 @@ export function AddPropertyPage() {
         setSubmitting(true)
         try {
             const propertyData = {
-                owner_id: profile.id || user.id,
+                owner_id: user.id,
                 title: form.title,
                 description: form.description,
                 category: form.category,
@@ -127,14 +129,11 @@ export function AddPropertyPage() {
                 views_count: 0,
             }
 
-            const { data, error } = await supabase.from('properties').insert(propertyData as never).select().single()
-            if (error) throw error
+            const created = await createProperty.mutateAsync(propertyData as Partial<import('@/types').Property>)
 
-            // Save images
-            if (uploadedImages.length > 0 && data) {
-                const insertedProperty = data as { id: string }
+            if (uploadedImages.length > 0 && created?.id) {
                 const imageRows = uploadedImages.map((url, i) => ({
-                    property_id: insertedProperty.id,
+                    property_id: created.id,
                     url,
                     is_floor_plan: false,
                     sort_order: i,
