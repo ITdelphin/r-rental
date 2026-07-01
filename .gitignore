@@ -13,3 +13,4 @@ run-migration.cjs
 create-bucket.cjs
 2/
 .env*
+scripts/locations-data.json

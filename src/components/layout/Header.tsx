@@ -1,10 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Home, Menu, X, User, LogOut, Globe } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/lib/supabase'
+import { getSettings } from '@/lib/settings'
 
 const languages = [
   { code: 'en', label: 'English' },
@@ -18,6 +19,7 @@ export function Header() {
   const navigate = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [langOpen, setLangOpen] = useState(false)
+  const [logoUrl, setLogoUrl] = useState('')
 
   const navLinks = [
     { to: '/', label: t('home') },
@@ -25,6 +27,10 @@ export function Header() {
     { to: '/about', label: t('about') },
     { to: '/contact', label: t('contact') },
   ]
+
+  useEffect(() => {
+    getSettings().then(s => { if (s.logo_url) setLogoUrl(s.logo_url) })
+  }, [])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -34,9 +40,15 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md dark:bg-gray-900/80">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
-        <Link to="/" className="flex items-center gap-2 text-xl font-bold text-primary-600">
-          <Home className="h-6 w-6" />
-          {t('app_name')}
+        <Link to="/" className="flex items-center gap-2">
+          {logoUrl ? (
+            <img src={logoUrl} alt={t('app_name')} className="h-8 w-auto" />
+          ) : (
+            <>
+              <Home className="h-6 w-6 text-primary-600" />
+              <span className="text-xl font-bold text-primary-600">{t('app_name')}</span>
+            </>
+          )}
         </Link>
 
         <nav className="hidden md:flex items-center gap-6">

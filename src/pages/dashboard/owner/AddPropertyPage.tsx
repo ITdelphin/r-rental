@@ -5,13 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
+import { LocationSelect } from '@/components/ui/LocationSelect'
 import { ChevronLeft, Building2, Save, Upload, Check } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { useCreateProperty } from '@/hooks/useProperties'
 import toast from 'react-hot-toast'
 
-const provinces = ['Kigali', 'Eastern', 'Western', 'Northern', 'Southern']
 const propertyTypes = ['House', 'Apartment', 'Villa', 'Studio', 'Commercial', 'Cottage']
 const categories = ['Rent', 'Sale', 'Short-term']
 
@@ -243,32 +243,14 @@ export function AddPropertyPage() {
                         <CardTitle>Location</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="grid gap-4 sm:grid-cols-2">
-                            <div>
-                                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Province *</label>
-                                <Select
-                                    value={form.province}
-                                    onChange={e => setForm({ ...form, province: e.target.value })}
-                                    options={provinces.map(p => ({ value: p, label: p }))}
-                                />
-                            </div>
-                            <div>
-                                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">District *</label>
-                                <Input value={form.district} onChange={e => setForm({ ...form, district: e.target.value })} placeholder="e.g. Kicukiro" required />
-                            </div>
-                            <div>
-                                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Sector</label>
-                                <Input value={form.sector} onChange={e => setForm({ ...form, sector: e.target.value })} placeholder="e.g. Gatenga" />
-                            </div>
-                            <div>
-                                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Cell</label>
-                                <Input value={form.cell} onChange={e => setForm({ ...form, cell: e.target.value })} placeholder="e.g. Gatenga" />
-                            </div>
-                            <div>
-                                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Village</label>
-                                <Input value={form.village} onChange={e => setForm({ ...form, village: e.target.value })} placeholder="e.g. Gatenga Center" />
-                            </div>
-                        </div>
+                        <LocationSelect
+                            selectedProvince={form.province}
+                            selectedDistrict={form.district}
+                            selectedSector={form.sector}
+                            selectedCell={form.cell}
+                            selectedVillage={form.village}
+                            onChange={(field, value) => setForm(prev => ({ ...prev, [field]: value }))}
+                        />
                         <div className="grid gap-4 sm:grid-cols-2">
                             <div>
                                 <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Latitude (optional)</label>

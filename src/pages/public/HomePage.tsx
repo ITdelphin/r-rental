@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Search, Home, MessageCircle, Key, Star, Shield, MapPin, ChevronRight, Building, Users, Award, MapPinned } from 'lucide-react'
@@ -6,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useProperties } from '@/hooks/useProperties'
 import { formatPrice } from '@/lib/utils'
+import { getSettings } from '@/lib/settings'
 
 const steps = [
   { icon: Search, titleKey: 'step_1_title', descKey: 'step_1_desc' },
@@ -36,11 +38,18 @@ export function HomePage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { data: properties } = useProperties({ status: 'published', is_featured: true })
+  const [heroBg, setHeroBg] = useState('/images/1.jpg')
+
+  useEffect(() => {
+    getSettings().then(s => {
+      if (s.hero_background) setHeroBg(s.hero_background)
+    })
+  }, [])
 
   return (
     <div>
       <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-gradient-to-br from-primary-700 via-primary-800 to-primary-950">
-        <div className="absolute inset-0 bg-[url('/images/1.jpg')] bg-cover bg-center opacity-20" />
+        <div className="absolute inset-0 bg-cover bg-center opacity-20" style={{ backgroundImage: `url('${heroBg}')` }} />
         <div className="absolute inset-0 bg-gradient-to-r from-gray-950/90 via-gray-950/70 to-gray-950/50" />
         <div className="relative mx-auto w-full max-w-7xl px-4 sm:px-6 text-center">
           <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">{t('hero_title')}</h1>
