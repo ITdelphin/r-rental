@@ -12,3 +12,4 @@ coverage/
 run-migration.cjs
 create-bucket.cjs
 2/
+.env*

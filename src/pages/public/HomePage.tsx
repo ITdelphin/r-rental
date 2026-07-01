@@ -40,7 +40,7 @@ export function HomePage() {
   return (
     <div>
       <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-gradient-to-br from-primary-700 via-primary-800 to-primary-950">
-        <div className="absolute inset-0 bg-[url('/images/1.jfif')] bg-cover bg-center opacity-20" />
+        <div className="absolute inset-0 bg-[url('/images/1.jpg')] bg-cover bg-center opacity-20" />
         <div className="absolute inset-0 bg-gradient-to-r from-gray-950/90 via-gray-950/70 to-gray-950/50" />
         <div className="relative mx-auto w-full max-w-7xl px-4 sm:px-6 text-center">
           <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">{t('hero_title')}</h1>
