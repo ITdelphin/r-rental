@@ -67,7 +67,7 @@ export function ActivityLogsPage() {
         setLoading(true)
         try {
             const { data, error } = await supabase
-                .from('activity_logs')
+                .from('audit_logs')
                 .select('*, user:profiles!user_id(full_name, email)')
                 .order('created_at', { ascending: false })
                 .limit(50)
