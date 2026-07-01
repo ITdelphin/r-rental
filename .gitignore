@@ -8,6 +8,7 @@ dist/
 coverage/
 
 .vercel
+.env.local
 run-migration.cjs
 create-bucket.cjs
 2/

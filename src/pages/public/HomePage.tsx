@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Search, Home, MessageCircle, Key, Star, Shield, MapPin, ChevronRight } from 'lucide-react'
+import { Search, Home, MessageCircle, Key, Star, Shield, MapPin, ChevronRight, Building, Users, Award, MapPinned } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -20,10 +20,10 @@ const features = [
 ]
 
 const stats = [
-  { value: '5,000+', key: 'stat_properties' },
-  { value: '10,000+', key: 'stat_tenants' },
-  { value: '2,000+', key: 'stat_owners' },
-  { value: '30+', key: 'stat_cities' },
+  { icon: Building, value: '5,000+', key: 'stat_properties' },
+  { icon: Users, value: '10,000+', key: 'stat_tenants' },
+  { icon: Award, value: '2,000+', key: 'stat_owners' },
+  { icon: MapPinned, value: '30+', key: 'stat_cities' },
 ]
 
 const testimonials = [
@@ -39,9 +39,12 @@ export function HomePage() {
 
   return (
     <div>
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 py-20 sm:py-32">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDE4YzEuNjU3IDAgMy0xLjM0MyAzLTNzLTEuMzQzLTMtMy0zLTMgMS4zNDMtMyAzIDEuMzQzIDMgMyAzem0wIDM2YzEuNjU3IDAgMy0xLjM0MyAzLTNzLTEuMzQzLTMtMy0zLTMgMS4zNDMtMyAzIDEuMzQzIDMgMyAzeiIvPjwvZz48L2c+PC9zdmc+')] opacity-30" />
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 text-center">
+      <section className="relative min-h-[90vh] flex items-center overflow-hidden">
+        <div className="absolute inset-0">
+          <img src="/images/1.jfif" alt="" className="h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-r from-dark-900/95 via-dark-900/80 to-dark-900/60" />
+        </div>
+        <div className="relative mx-auto w-full max-w-7xl px-4 sm:px-6 text-center">
           <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">{t('hero_title')}</h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-primary-100">{t('hero_subtitle')}</p>
           <div className="mx-auto mt-10 flex max-w-xl items-center gap-2 rounded-full bg-white p-1 shadow-lg">
@@ -57,20 +60,24 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="py-16 sm:py-24">
+      <section className="py-20 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('how_it_works')}</h2>
-            <p className="mt-4 text-gray-600 dark:text-gray-400">Three simple steps to find your perfect rental</p>
+            <Badge variant="secondary" className="mb-4">How It Works</Badge>
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 sm:text-4xl">{t('how_it_works')}</h2>
+            <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">Three simple steps to find your perfect rental in Rwanda</p>
           </div>
-          <div className="mt-12 grid gap-8 sm:grid-cols-3">
+          <div className="mt-16 grid gap-8 sm:grid-cols-3">
             {steps.map((step, i) => (
-              <div key={i} className="text-center">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-100 text-primary-600 dark:bg-primary-900/50">
-                  <step.icon className="h-8 w-8" />
+              <div key={i} className="group relative text-center">
+                <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-primary-50 text-primary-600 transition-colors group-hover:bg-primary-100 dark:bg-primary-900/30 dark:group-hover:bg-primary-900/50">
+                  <step.icon className="h-9 w-9" />
                 </div>
-                <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-gray-100">{t(step.titleKey)}</h3>
-                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{t(step.descKey)}</p>
+                <div className="absolute left-1/2 top-10 -translate-x-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full bg-primary-600 text-xs font-bold text-white shadow-lg">
+                  {i + 1}
+                </div>
+                <h3 className="mt-6 text-lg font-semibold text-gray-900 dark:text-gray-100">{t(step.titleKey)}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">{t(step.descKey)}</p>
               </div>
             ))}
           </div>
@@ -78,37 +85,45 @@ export function HomePage() {
       </section>
 
       {properties && properties.length > 0 && (
-        <section className="bg-gray-50 py-16 dark:bg-gray-900/50 sm:py-24">
+        <section className="bg-gray-50 py-20 dark:bg-gray-900/50 sm:py-28">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
               <div>
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('featured_properties')}</h2>
-                <p className="mt-2 text-gray-600 dark:text-gray-400">Hand-picked properties for you</p>
+                <Badge variant="secondary" className="mb-4">Featured Listings</Badge>
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 sm:text-4xl">{t('featured_properties')}</h2>
+                <p className="mt-2 text-gray-600 dark:text-gray-400">Hand-picked premium properties for you</p>
               </div>
-              <Link to="/properties" className="hidden sm:flex items-center gap-1 text-sm font-medium text-primary-600 hover:text-primary-700">
+              <Link to="/properties" className="flex items-center gap-1 text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors">
                 {t('view_all')} <ChevronRight className="h-4 w-4" />
               </Link>
             </div>
-            <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
               {properties.slice(0, 6).map((property) => (
-                <Link key={property.id} to={`/properties/${property.id}`}>
-                  <Card className="overflow-hidden transition-shadow hover:shadow-md">
-                    <div className="aspect-[16/10] bg-gray-200 dark:bg-gray-700 relative">
+                <Link key={property.id} to={`/properties/${property.id}`} className="group">
+                  <Card className="overflow-hidden border-0 shadow-sm transition-all duration-300 group-hover:shadow-xl group-hover:-translate-y-1">
+                    <div className="aspect-[16/10] bg-gray-200 dark:bg-gray-700 relative overflow-hidden">
                       {property.images?.[0] ? (
-                        <img src={property.images[0].url} alt={property.title} className="h-full w-full object-cover" />
+                        <img src={property.images[0].url} alt={property.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
                       ) : (
                         <div className="flex h-full items-center justify-center text-gray-400"><Home className="h-12 w-12" /></div>
                       )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                       <Badge className="absolute left-3 top-3">{property.category}</Badge>
+                      {property.is_featured && (
+                        <Badge variant="secondary" className="absolute right-3 top-3 bg-amber-500 text-white hover:bg-amber-600">Featured</Badge>
+                      )}
                     </div>
-                    <CardContent className="p-4">
-                      <h3 className="font-semibold text-gray-900 dark:text-gray-100">{property.title}</h3>
-                      <p className="mt-1 flex items-center gap-1 text-sm text-gray-500"><MapPin className="h-3 w-3" /> {property.district}, {property.province}</p>
-                      <div className="mt-3 flex items-center justify-between">
-                        <span className="text-lg font-bold text-primary-600">{formatPrice(property.price)}/mo</span>
+                    <CardContent className="p-5">
+                      <h3 className="font-semibold text-gray-900 dark:text-gray-100 group-hover:text-primary-600 transition-colors">{property.title}</h3>
+                      <p className="mt-1.5 flex items-center gap-1.5 text-sm text-gray-500">
+                        <MapPin className="h-3.5 w-3.5 shrink-0" /> {property.district}, {property.province}
+                      </p>
+                      <div className="mt-4 flex items-center justify-between border-t pt-4 dark:border-gray-700">
+                        <span className="text-lg font-bold text-primary-600">{formatPrice(property.price)}<span className="text-sm font-normal text-gray-400">/mo</span></span>
                         <div className="flex items-center gap-3 text-sm text-gray-500">
-                          <span>{property.bedrooms} bed</span>
-                          <span>{property.bathrooms} bath</span>
+                          <span>{property.bedrooms} beds</span>
+                          <span className="text-gray-300 dark:text-gray-600">|</span>
+                          <span>{property.bathrooms} baths</span>
                         </div>
                       </div>
                     </CardContent>
@@ -120,48 +135,65 @@ export function HomePage() {
         </section>
       )}
 
-      <section className="py-16 sm:py-24">
+      <section className="py-20 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="grid gap-8 sm:grid-cols-3">
+          <div className="text-center">
+            <Badge variant="secondary" className="mb-4">Why Choose Us</Badge>
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 sm:text-4xl">Why Rwanda EasyRent?</h2>
+            <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">We make property rental simple, secure, and stress-free</p>
+          </div>
+          <div className="mt-16 grid gap-8 sm:grid-cols-3">
             {features.map((feature) => (
-              <div key={feature.title} className="rounded-xl border p-6 dark:border-gray-700">
-                <feature.icon className="h-8 w-8 text-primary-600" />
-                <h3 className="mt-4 font-semibold text-gray-900 dark:text-gray-100">{feature.title}</h3>
-                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{feature.desc}</p>
+              <div key={feature.title} className="group rounded-2xl border border-gray-200 p-8 transition-all duration-300 hover:border-primary-200 hover:shadow-lg hover:shadow-primary-100/50 dark:border-gray-700 dark:hover:border-primary-800 dark:hover:shadow-primary-900/30">
+                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary-50 text-primary-600 transition-colors group-hover:bg-primary-100 dark:bg-primary-900/30 dark:group-hover:bg-primary-900/50">
+                  <feature.icon className="h-7 w-7" />
+                </div>
+                <h3 className="mt-6 text-lg font-semibold text-gray-900 dark:text-gray-100">{feature.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-gray-600 dark:text-gray-400">{feature.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="bg-primary-600 py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="grid grid-cols-2 gap-8 text-center text-white lg:grid-cols-4">
+      <section className="relative overflow-hidden bg-gradient-to-r from-primary-700 to-primary-600 py-20">
+        <div className="absolute inset-0 bg-[url('/images/3.jfif')] bg-cover bg-center opacity-10" />
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
+          <div className="grid grid-cols-2 gap-12 text-center text-white lg:grid-cols-4">
             {stats.map((stat) => (
-              <div key={stat.key}>
-                <div className="text-3xl font-bold">{stat.value}</div>
-                <div className="mt-1 text-sm text-primary-200">{t(stat.key)}</div>
+              <div key={stat.key} className="group">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm transition-transform group-hover:scale-110">
+                  <stat.icon className="h-7 w-7" />
+                </div>
+                <div className="mt-4 text-4xl font-bold tracking-tight">{stat.value}</div>
+                <div className="mt-2 text-sm font-medium text-primary-200">{t(stat.key)}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="py-16 sm:py-24">
+      <section className="py-20 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <h2 className="text-center text-3xl font-bold text-gray-900 dark:text-gray-100">{t('testimonials_title')}</h2>
-          <div className="mt-12 grid gap-8 sm:grid-cols-3">
+          <div className="text-center">
+            <Badge variant="secondary" className="mb-4">Testimonials</Badge>
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 sm:text-4xl">{t('testimonials_title')}</h2>
+            <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">Hear from our happy customers</p>
+          </div>
+          <div className="mt-16 grid gap-8 sm:grid-cols-3">
             {testimonials.map((tItem, i) => (
-              <Card key={i}>
-                <CardContent className="p-6">
-                  <div className="flex gap-1 text-yellow-400">
+              <Card key={i} className="border-0 shadow-sm transition-all duration-300 hover:shadow-lg">
+                <CardContent className="p-8">
+                  <div className="flex gap-1 text-amber-400">
                     {[...Array(5)].map((_, j) => <Star key={j} className="h-4 w-4 fill-current" />)}
                   </div>
-                  <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">&ldquo;{t(tItem.textKey)}&rdquo;</p>
-                  <div className="mt-4 flex items-center gap-3 border-t pt-4 dark:border-gray-700">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-100 text-sm font-bold text-primary-600">{t(tItem.nameKey).charAt(0)}</div>
+                  <p className="mt-6 text-sm leading-relaxed text-gray-600 dark:text-gray-400 italic">&ldquo;{t(tItem.textKey)}&rdquo;</p>
+                  <div className="mt-6 flex items-center gap-3 border-t pt-6 dark:border-gray-700">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-primary-700 text-sm font-bold text-white shadow-md">
+                      {t(tItem.nameKey).charAt(0)}
+                    </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{t(tItem.nameKey)}</p>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t(tItem.nameKey)}</p>
                       <p className="text-xs text-gray-500">{t(tItem.roleKey)}</p>
                     </div>
                   </div>
@@ -172,13 +204,19 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="bg-gray-50 py-16 dark:bg-gray-900/50">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 text-center">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Ready to Find Your Home?</h2>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Join thousands of happy tenants and property owners in Rwanda.</p>
-          <div className="mt-8 flex justify-center gap-4">
-            <Button size="lg" onClick={() => navigate('/auth/register')}>{t('sign_up')}</Button>
-            <Button variant="outline" size="lg" onClick={() => navigate('/properties')}>{t('browse') || 'Browse Properties'}</Button>
+      <section className="relative overflow-hidden bg-gradient-to-br from-dark-900 to-dark-800 py-20">
+        <div className="absolute inset-0 bg-[url('/images/4.jfif')] bg-cover bg-center opacity-5" />
+        <div className="relative mx-auto max-w-3xl px-4 sm:px-6 text-center">
+          <Badge variant="secondary" className="mb-4 bg-white/10 text-white hover:bg-white/20">Get Started</Badge>
+          <h2 className="text-3xl font-bold text-white sm:text-4xl">Ready to Find Your Dream Home?</h2>
+          <p className="mt-4 text-lg text-gray-300">Join thousands of happy tenants and property owners across Rwanda. Start your journey today.</p>
+          <div className="mt-10 flex justify-center gap-4">
+            <Button size="lg" className="bg-white text-dark-900 hover:bg-gray-100 shadow-xl" onClick={() => navigate('/auth/register')}>
+              {t('sign_up')}
+            </Button>
+            <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10" onClick={() => navigate('/properties')}>
+              {t('browse') || 'Browse Properties'}
+            </Button>
           </div>
         </div>
       </section>
