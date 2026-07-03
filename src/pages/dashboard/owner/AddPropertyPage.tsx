@@ -20,7 +20,7 @@ import { useCreateProperty } from '@/hooks/useProperties'
 import toast from 'react-hot-toast'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024
-const ACCEPTED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/jpg']
+const ACCEPTED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/jpg', 'image/jfif', 'image/vnd.microsoft.icon']
 
 const propertyTypes = ['House', 'Apartment', 'Villa', 'Studio', 'Commercial', 'Cottage'] as const
 const categories = ['Rent', 'Sale', 'Short-term'] as const
@@ -494,14 +494,14 @@ export function AddPropertyPage() {
                     <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
                       Click to upload images
                     </p>
-                    <p className="text-xs text-gray-400 mt-1">PNG, JPG, WEBP up to 10MB each</p>
+                    <p className="text-xs text-gray-400 mt-1">PNG, JPG, WEBP, JFIF up to 10MB each</p>
                   </div>
                 </>
               )}
               <input
                 type="file"
                 multiple
-                accept="image/png,image/jpeg,image/webp,image/jpg"
+                accept="image/png,image/jpeg,image/webp,image/jpg,image/jfif"
                 className="hidden"
                 onChange={handleImageUpload}
                 disabled={uploadingImages}

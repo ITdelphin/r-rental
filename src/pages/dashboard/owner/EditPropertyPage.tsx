@@ -21,7 +21,7 @@ import toast from 'react-hot-toast'
 import type { Property } from '@/types'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024
-const ACCEPTED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/jpg']
+const ACCEPTED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/jpg', 'image/jfif']
 
 const propertyTypes = ['House', 'Apartment', 'Villa', 'Studio', 'Commercial', 'Cottage'] as const
 const categories = ['Rent', 'Sale', 'Short-term'] as const
@@ -524,11 +524,11 @@ export function EditPropertyPage() {
                   <Upload className="h-8 w-8 text-gray-400" />
                   <div className="text-center">
                     <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Click to add more images</p>
-                    <p className="text-xs text-gray-400 mt-1">PNG, JPG, WEBP up to 10MB each</p>
+                    <p className="text-xs text-gray-400 mt-1">PNG, JPG, WEBP, JFIF up to 10MB each</p>
                   </div>
                 </>
               )}
-              <input type="file" multiple accept="image/png,image/jpeg,image/webp,image/jpg" className="hidden" onChange={handleImageUpload} disabled={uploadingImages} />
+              <input type="file" multiple               accept="image/png,image/jpeg,image/webp,image/jpg,image/jfif" className="hidden" onChange={handleImageUpload} disabled={uploadingImages} />
             </label>
 
             {uploadedImages.length > 0 && (
