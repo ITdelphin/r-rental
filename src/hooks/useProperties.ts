@@ -6,6 +6,7 @@ export function useProperties(filters?: Record<string, string | number | boolean
   return useQuery({
     queryKey: ['properties', filters],
     queryFn: () => propertyApi.list(filters),
+    refetchOnMount: true,
   })
 }
 
@@ -21,7 +22,10 @@ export function useCreateProperty() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (data: Partial<Property>) => propertyApi.create(data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['properties'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['properties'] })
+      qc.invalidateQueries({ queryKey: ['property'] })
+    },
   })
 }
 
