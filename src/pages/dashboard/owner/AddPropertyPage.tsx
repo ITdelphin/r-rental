@@ -244,7 +244,7 @@ export function AddPropertyPage() {
         water: formData.water,
         electricity: formData.electricity,
         furnished: formData.furnished,
-        status: 'pending_approval',
+        status: 'published',
         is_featured: false,
         views_count: 0,
       }
@@ -265,7 +265,7 @@ export function AddPropertyPage() {
         }
       }
 
-      toast.success('Property submitted for approval!')
+      toast.success('Property published successfully!')
       navigate('/dashboard/properties')
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to submit property'
