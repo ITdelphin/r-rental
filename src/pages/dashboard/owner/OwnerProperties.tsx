@@ -7,7 +7,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
-import { Building2, Plus, Edit, Trash2, MapPin, Eye } from 'lucide-react'
+import { Building2, Plus, Edit, Trash2, MapPin, Eye, ExternalLink, Pencil } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
@@ -160,8 +160,18 @@ export function OwnerProperties() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2 self-end sm:self-center">
-                      <Button variant="ghost" size="icon" onClick={() => handleEdit(prop)}><Edit className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon" className="text-red-500" onClick={() => handleDelete(prop)}><Trash2 className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => navigate(`/dashboard/properties/${prop.id}/edit`)} title="Edit full details">
+                        <Pencil className="h-4 w-4 text-blue-500" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => navigate(`/properties/${prop.id}`)} title="View on site">
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleEdit(prop)} title="Quick edit">
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="text-red-500" onClick={() => handleDelete(prop)} title="Delete">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 </CardContent>

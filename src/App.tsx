@@ -23,6 +23,7 @@ import { TenantFavorites } from '@/pages/dashboard/tenant/TenantFavorites'
 import { OwnerProperties } from '@/pages/dashboard/owner/OwnerProperties'
 import { OwnerEarnings } from '@/pages/dashboard/owner/OwnerEarnings'
 import { AddPropertyPage } from '@/pages/dashboard/owner/AddPropertyPage'
+import { EditPropertyPage } from '@/pages/dashboard/owner/EditPropertyPage'
 import { AdminUsers } from '@/pages/dashboard/admin/AdminUsers'
 import { AdminReports } from '@/pages/dashboard/admin/AdminReports'
 import { SuperAdminCms } from '@/pages/dashboard/super-admin/SuperAdminCms'
@@ -94,6 +95,7 @@ function AppRoutes() {
             {/* Owner / Agent */}
             <Route path="/dashboard/properties" element={<OwnerProperties />} />
             <Route path="/dashboard/properties/add" element={<AddPropertyPage />} />
+            <Route path="/dashboard/properties/:id/edit" element={<EditPropertyPage />} />
             <Route path="/dashboard/earnings" element={<OwnerEarnings />} />
 
             {/* Admin / Super-Admin */}
