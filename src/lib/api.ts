@@ -53,9 +53,14 @@ export const propertyApi = {
     return (data || []) as unknown as Property[]
   },
   get: async (id: string) => {
-    const { data, error } = await supabase.from('properties').select('*, images:property_images(*), owner:profiles(*), reviews(*, user:profiles(*))').eq('id', id).single()
+    const { data, error } = await supabase.from('properties').select('*, images:property_images(*), reviews(*, user:profiles(*))').eq('id', id).single()
     if (error) throw error
-    return data as unknown as Property
+    const property = data as unknown as Property
+    if (property.owner_id) {
+      const { data: owner } = await supabase.from('profiles').select('*').eq('user_id', property.owner_id).single()
+      property.owner = owner as unknown as Profile | undefined
+    }
+    return property
   },
   create: async (property: Partial<Property>) => {
     const { data, error } = await supabase.from('properties').insert(property as never).select().single()
@@ -70,6 +75,14 @@ export const propertyApi = {
   delete: async (id: string) => {
     const { error } = await supabase.from('properties').delete().eq('id', id)
     if (error) throw error
+  },
+  incrementViews: async (id: string) => {
+    try {
+      const { error } = await (supabase.rpc as any)('increment_property_views', { property_id: id })
+      if (error) throw error
+    } catch {
+      // silently fail - views are non-critical
+    }
   },
 }
 

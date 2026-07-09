@@ -4,14 +4,15 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { TableSkeleton } from '@/components/ui/loading'
 import { EmptyState } from '@/components/ui/empty-state'
-import { Activity, UserPlus, Building2, LogIn, Settings, Trash2, Shield } from 'lucide-react'
+import { Activity, UserPlus, Building2, LogIn, Settings, Trash2, Shield, RefreshCw } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 
 interface ActivityLog {
     id: string
     user_id: string
     action: string
-    resource: string
+    entity_type: string
     details: string | null
     created_at: string
     user?: { full_name: string; email: string }
@@ -35,23 +36,14 @@ const actionColors: Record<string, string> = {
     user_suspended: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30',
 }
 
-// Fallback mock data if table doesn't exist yet
-const mockLogs: ActivityLog[] = [
-    { id: '1', user_id: 'u1', action: 'login', resource: 'auth', details: 'User logged in from Kigali', created_at: new Date(Date.now() - 2 * 60 * 1000).toISOString(), user: { full_name: 'Alice Mutesi', email: 'alice@email.com' } },
-    { id: '2', user_id: 'u2', action: 'property_created', resource: 'properties', details: 'Listed: Modern Apartment in Kicukiro', created_at: new Date(Date.now() - 60 * 60 * 1000).toISOString(), user: { full_name: 'Jean-Pierre K.', email: 'jp@email.com' } },
-    { id: '3', user_id: 'u3', action: 'register', resource: 'auth', details: 'New tenant registered', created_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(), user: { full_name: 'Patrick Habimana', email: 'patrick@email.com' } },
-    { id: '4', user_id: 'u4', action: 'property_deleted', resource: 'properties', details: 'Removed listing: Studio in Kimihurura', created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), user: { full_name: 'Grace Mugabo', email: 'grace@email.com' } },
-    { id: '5', user_id: 'u5', action: 'settings_changed', resource: 'settings', details: 'Updated platform notification settings', created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), user: { full_name: 'Admin User', email: 'admin@email.com' } },
-]
-
-function timeAgo(dateStr: string) {
+function timeAgo(dateStr: string, t: (key: string) => string) {
     const diff = Date.now() - new Date(dateStr).getTime()
     const m = Math.floor(diff / 60000)
     const h = Math.floor(m / 60)
     const d = Math.floor(h / 24)
-    if (d > 0) return `${d}d ago`
-    if (h > 0) return `${h}h ago`
-    return `${m}m ago`
+    if (d > 0) return `${d}d ${t('ago')}`
+    if (h > 0) return `${h}h ${t('ago')}`
+    return `${m}m ${t('ago')}`
 }
 
 export function ActivityLogsPage() {
@@ -74,7 +66,7 @@ export function ActivityLogsPage() {
             if (error) throw error
             setLogs((data || []) as unknown as ActivityLog[])
         } catch {
-            setLogs(mockLogs)
+            setLogs([])
         } finally {
             setLoading(false)
         }
@@ -82,9 +74,12 @@ export function ActivityLogsPage() {
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('activity_logs')}</h1>
-                <p className="text-sm text-gray-500 dark:text-gray-400">{t('view_system_activity')}</p>
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('activity_logs')}</h1>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{t('view_system_activity')}</p>
+                </div>
+                <Button variant="outline" size="sm" onClick={fetchLogs}><RefreshCw className="h-4 w-4" /> {t('refresh')}</Button>
             </div>
 
             <Card>
@@ -92,7 +87,7 @@ export function ActivityLogsPage() {
                     {loading ? (
                         <div className="p-6"><TableSkeleton rows={5} /></div>
                     ) : logs.length === 0 ? (
-                        <EmptyState icon={Activity} title="No activity logs" description="System activity will appear here." />
+                        <EmptyState icon={Activity} title={t('no_activity_logs')} description={t('no_activity_logs_description')} />
                     ) : (
                         <div className="divide-y dark:divide-gray-700">
                             {logs.map(log => {
@@ -106,14 +101,14 @@ export function ActivityLogsPage() {
                                         <div className="flex-1 min-w-0">
                                             <div className="flex flex-wrap items-center gap-2">
                                                 <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                    {log.user?.full_name || 'Unknown'}
+                                                    {log.user?.full_name || t('unknown')}
                                                 </span>
                                                 <Badge variant="secondary" className="text-xs capitalize">
                                                     {log.action.replace(/_/g, ' ')}
                                                 </Badge>
                                             </div>
                                             {log.details && <p className="mt-0.5 text-sm text-gray-500">{log.details}</p>}
-                                            <p className="mt-0.5 text-xs text-gray-400">{log.user?.email} • {timeAgo(log.created_at)}</p>
+                                            <p className="mt-0.5 text-xs text-gray-400">{log.user?.email} • {timeAgo(log.created_at, t)}</p>
                                         </div>
                                     </div>
                                 )

@@ -4,56 +4,73 @@ import { Button } from '@/components/ui/button'
 import { ListSkeleton } from '@/components/ui/loading'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Bell, CheckCheck, Trash2, Info, CheckCircle, AlertTriangle, XCircle } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/hooks/useAuth'
+import type { Notification } from '@/types'
+import toast from 'react-hot-toast'
 
-interface Notification {
-  id: string
-  title: string
-  body: string
-  time: string
-  read: boolean
-  type: 'info' | 'success' | 'warning' | 'error'
-}
-
-const mockNotifications: Notification[] = [
-  { id: '1', title: 'Property Approved', body: 'Your property "Modern Apartment in Kicukiro" has been approved.', time: '2 hours ago', read: false, type: 'success' },
-  { id: '2', title: 'Booking Received', body: 'New booking request for "Villa in Musanze".', time: '5 hours ago', read: false, type: 'info' },
-  { id: '3', title: 'New Message', body: 'Alice sent you a message about "Studio in Kimihurura".', time: '1 day ago', read: true, type: 'info' },
-  { id: '4', title: 'Payment Completed', body: 'Payment of RWF 250,000 received for "Apartment in Kicukiro".', time: '2 days ago', read: true, type: 'success' },
-  { id: '5', title: 'Maintenance Request', body: 'Maintenance request #1234 has been marked as urgent.', time: '3 days ago', read: true, type: 'warning' },
-]
-
-const typeIcons = {
-  info: Info,
-  success: CheckCircle,
-  warning: AlertTriangle,
-  error: XCircle,
-}
-
-const typeColors = {
-  info: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30',
-  success: 'bg-green-100 text-green-600 dark:bg-green-900/30',
-  warning: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30',
-  error: 'bg-red-100 text-red-600 dark:bg-red-900/30',
+const typeConfig: Record<string, { icon: typeof Info; color: string }> = {
+  info: { icon: Info, color: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30' },
+  success: { icon: CheckCircle, color: 'bg-green-100 text-green-600 dark:bg-green-900/30' },
+  warning: { icon: AlertTriangle, color: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30' },
+  error: { icon: XCircle, color: 'bg-red-100 text-red-600 dark:bg-red-900/30' },
 }
 
 export function NotificationsPage() {
   const { t } = useTranslation()
+  const { user } = useAuth()
   const [loading, setLoading] = useState(true)
   const [notifications, setNotifications] = useState<Notification[]>([])
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setNotifications(mockNotifications)
+  const fetchNotifications = useCallback(async () => {
+    if (!user) return
+    setLoading(true)
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+      if (error) throw error
+      setNotifications((data || []) as unknown as Notification[])
+    } catch {
+      setNotifications([])
+    } finally {
       setLoading(false)
-    }, 600)
-    return () => clearTimeout(timer)
-  }, [])
+    }
+  }, [user])
 
-  const unreadCount = notifications.filter((n) => !n.read).length
+  useEffect(() => {
+    fetchNotifications()
+  }, [fetchNotifications])
 
-  const markAllRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
+  const unreadCount = notifications.filter((n) => !n.is_read).length
+
+  const markAllRead = async () => {
+    if (!user) return
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ is_read: true } as never)
+        .eq('user_id', user.id)
+        .is('is_read', false)
+      if (error) throw error
+      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })))
+      toast.success('All marked as read')
+    } catch {
+      toast.error('Failed to mark as read')
+    }
+  }
+
+  const deleteNotification = async (id: string) => {
+    try {
+      const { error } = await supabase.from('notifications').delete().eq('id', id)
+      if (error) throw error
+      setNotifications((prev) => prev.filter((n) => n.id !== id))
+    } catch {
+      toast.error('Failed to delete notification')
+    }
   }
 
   return (
@@ -83,32 +100,32 @@ export function NotificationsPage() {
       ) : (
         <div className="space-y-3">
           {notifications.map((notif) => {
-            const TypeIcon = typeIcons[notif.type]
-            const typeColor = typeColors[notif.type]
+            const cfg = typeConfig[notif.type] || typeConfig.info
+            const TypeIcon = cfg.icon
             return (
               <Card
                 key={notif.id}
                 className={`transition-colors ${
-                  notif.read
+                  notif.is_read
                     ? ''
                     : 'border-primary-300 bg-primary-50/50 dark:border-primary-700 dark:bg-primary-900/10'
                 }`}
               >
                 <CardContent className="flex items-start justify-between p-4">
                   <div className="flex items-start gap-3 flex-1 min-w-0">
-                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${typeColor}`}>
+                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${cfg.color}`}>
                       <TypeIcon className="h-5 w-5" />
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">{notif.title}</h3>
-                        {!notif.read && <div className="h-2 w-2 shrink-0 rounded-full bg-primary-600" />}
+                        {!notif.is_read && <div className="h-2 w-2 shrink-0 rounded-full bg-primary-600" />}
                       </div>
                       <p className="mt-0.5 text-sm text-gray-500">{notif.body}</p>
-                      <p className="mt-1 text-xs text-gray-400">{notif.time}</p>
+                      <p className="mt-1 text-xs text-gray-400">{new Date(notif.created_at).toLocaleDateString()}</p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon" className="shrink-0 text-gray-400 hover:text-red-500">
+                  <Button variant="ghost" size="icon" className="shrink-0 text-gray-400 hover:text-red-500" onClick={() => deleteNotification(notif.id)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </CardContent>

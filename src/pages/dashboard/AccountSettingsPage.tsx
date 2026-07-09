@@ -16,6 +16,7 @@ export function AccountSettingsPage() {
 
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [localAvatar, setLocalAvatar] = useState<string | undefined>(undefined)
 
   const [form, setForm] = useState({
     full_name: profile?.full_name || '',
@@ -51,8 +52,8 @@ export function AccountSettingsPage() {
       const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filePath)
 
       await profileApi.update(user.id, { avatar_url: publicUrl } as never)
+      setLocalAvatar(publicUrl ?? undefined)
       toast.success(t('profile_updated'))
-      window.location.reload()
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : t('upload_failed'))
     } finally {
@@ -211,7 +212,7 @@ export function AccountSettingsPage() {
             <CardContent className="flex flex-col items-center gap-4">
               <div className="relative">
                 <Avatar className="h-24 w-24">
-                  {profile.avatar_url ? <AvatarImage src={profile.avatar_url} /> : null}
+                  {(localAvatar ?? profile.avatar_url) ? <AvatarImage src={localAvatar ?? profile.avatar_url ?? undefined} /> : null}
                   <AvatarFallback className="text-2xl">{profile.full_name?.charAt(0) || 'U'}</AvatarFallback>
                 </Avatar>
                 <button

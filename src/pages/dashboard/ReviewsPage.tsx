@@ -4,36 +4,38 @@ import { Button } from '@/components/ui/button'
 import { ListSkeleton } from '@/components/ui/loading'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Star, MessageSquare, ThumbsUp, Flag } from 'lucide-react'
-import { useState, useEffect } from 'react'
-
-interface Review {
-  id: string
-  property: string
-  rating: number
-  comment: string
-  user: string
-  date: string
-}
-
-const mockReviews: Review[] = [
-  { id: '1', property: 'Modern Apartment in Kicukiro', rating: 5, comment: 'Great apartment, highly recommended! The location is perfect and the amenities are top-notch.', user: 'Alice M.', date: 'Dec 10, 2024' },
-  { id: '2', property: 'Villa in Musanze', rating: 4, comment: 'Beautiful location and spacious rooms. The garden is well maintained.', user: 'Bob K.', date: 'Dec 5, 2024' },
-  { id: '3', property: 'Studio in Kimihurura', rating: 3, comment: 'Good value for money, but needs some repairs in the bathroom.', user: 'Carol U.', date: 'Nov 28, 2024' },
-  { id: '4', property: '2BR Apartment in Kacyiru', rating: 5, comment: 'Excellent property management, very responsive.', user: 'David N.', date: 'Nov 20, 2024' },
-]
+import { useState, useEffect, useCallback } from 'react'
+import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/hooks/useAuth'
+import type { Review } from '@/types'
 
 export function ReviewsPage() {
   const { t } = useTranslation()
+  const { user } = useAuth()
   const [loading, setLoading] = useState(true)
-  const [reviews, setReviews] = useState<Review[]>([])
+  const [reviews, setReviews] = useState<(Review & { property?: { title: string } })[]>([])
+
+  const fetchReviews = useCallback(async () => {
+    if (!user) return
+    setLoading(true)
+    try {
+      const { data, error } = await supabase
+        .from('reviews')
+        .select('*, property:properties(title)')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+      if (error) throw error
+      setReviews((data || []) as unknown as (Review & { property?: { title: string } })[])
+    } catch {
+      setReviews([])
+    } finally {
+      setLoading(false)
+    }
+  }, [user])
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setReviews(mockReviews)
-      setLoading(false)
-    }, 600)
-    return () => clearTimeout(timer)
-  }, [])
+    fetchReviews()
+  }, [fetchReviews])
 
   const averageRating = reviews.length > 0
     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
@@ -75,16 +77,17 @@ export function ReviewsPage() {
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-medium text-gray-900 dark:text-gray-100">{review.property}</h3>
-                      <span className="text-xs text-gray-400">• {review.date}</span>
+                      <h3 className="font-medium text-gray-900 dark:text-gray-100">{review.property?.title || 'Unknown Property'}</h3>
+                      <span className="text-xs text-gray-400">• {new Date(review.created_at).toLocaleDateString()}</span>
                     </div>
                     <div className="mt-1 flex items-center gap-1">
                       {[...Array(5)].map((_, i) => (
                         <Star key={i} className={`h-4 w-4 ${i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300 dark:text-gray-600'}`} />
                       ))}
-                      <span className="ml-2 text-sm text-gray-500">{review.user}</span>
                     </div>
-                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{review.comment}</p>
+                    {review.comment && (
+                      <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{review.comment}</p>
+                    )}
                   </div>
                 </div>
                 <div className="mt-3 flex items-center gap-3 border-t pt-3 dark:border-gray-700">

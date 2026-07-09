@@ -4,15 +4,10 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { TableSkeleton } from '@/components/ui/loading'
 import { Search, Shield, UserX, RefreshCw, UserCheck } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import toast from 'react-hot-toast'
 import type { Profile } from '@/types'
-
-const statusVariant: Record<string, 'success' | 'danger' | 'warning' | 'secondary'> = {
-  active: 'success',
-  suspended: 'danger',
-}
 
 export function AdminUsers() {
   const { t } = useTranslation()
@@ -48,21 +43,29 @@ export function AdminUsers() {
         .update({ is_suspended: newSuspended } as never)
         .eq('user_id', user.user_id)
       if (error) throw error
-      toast.success(newSuspended ? 'User suspended' : 'User reinstated')
+      toast.success(newSuspended ? t('user_suspended') : t('user_reinstated'))
       setUsers(prev => prev.map(u => u.user_id === user.user_id ? { ...u, is_suspended: newSuspended } : u))
     } catch {
-      toast.error('Failed to update user status')
+      toast.error(t('failed_to_update_user'))
     }
   }
+
+  const toggleVerify = useCallback(async (user: Profile) => {
+    try {
+      await supabase.from('profiles').update({ is_verified: !user.is_verified } as never).eq('user_id', user.user_id)
+      setUsers(prev => prev.map(u => u.user_id === user.user_id ? { ...u, is_verified: !user.is_verified } : u))
+      toast.success(t('verification_updated'))
+    } catch { toast.error(t('failed')) }
+  }, [t])
 
   const changeRole = async (user: Profile, role: string) => {
     try {
       const { error } = await supabase.from('profiles').update({ role } as never).eq('user_id', user.user_id)
       if (error) throw error
-      toast.success(`Role changed to ${role}`)
+      toast.success(`${t('role_changed')} ${t(role)}`)
       setUsers(prev => prev.map(u => u.user_id === user.user_id ? { ...u, role: role as Profile['role'] } : u))
     } catch {
-      toast.error('Failed to change role')
+      toast.error(t('failed_to_change_role'))
     }
   }
 
@@ -79,7 +82,7 @@ export function AdminUsers() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('users')}</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">{users.length} {t('total_users')}</p>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchUsers}><RefreshCw className="h-4 w-4" /> Refresh</Button>
+        <Button variant="outline" size="sm" onClick={fetchUsers}><RefreshCw className="h-4 w-4" /> {t('refresh')}</Button>
       </div>
 
       <div className="relative max-w-md">
@@ -109,7 +112,7 @@ export function AdminUsers() {
               <table className="w-full text-sm">
                 <thead className="border-b bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
                   <tr>
-                    <th className="px-4 py-3 text-left font-medium text-gray-500">{t('name')}</th>
+                    <th className="px-4 py-3 text-left font-medium text-gray-500">{t('user')}</th>
                     <th className="px-4 py-3 text-left font-medium text-gray-500">{t('email')}</th>
                     <th className="px-4 py-3 text-left font-medium text-gray-500">{t('role')}</th>
                     <th className="px-4 py-3 text-left font-medium text-gray-500">{t('status')}</th>
@@ -126,8 +129,8 @@ export function AdminUsers() {
                             {user.full_name?.charAt(0) || '?'}
                           </div>
                           <div>
-                            <span className="font-medium text-gray-900 dark:text-gray-100">{user.full_name || 'Unknown'}</span>
-                            {user.is_verified && <span className="ml-2 text-xs text-green-600">✓ Verified</span>}
+                            <span className="font-medium text-gray-900 dark:text-gray-100">{user.full_name || t('unknown')}</span>
+                            {user.is_verified && <span className="ml-2 text-xs text-green-600">✓ {t('verified')}</span>}
                           </div>
                         </div>
                       </td>
@@ -138,16 +141,16 @@ export function AdminUsers() {
                           onChange={e => changeRole(user, e.target.value)}
                           className="rounded border border-gray-300 bg-white px-2 py-1 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                         >
-                          <option value="tenant">Tenant</option>
-                          <option value="owner">Owner</option>
-                          <option value="agent">Agent</option>
-                          <option value="admin">Admin</option>
-                          <option value="super_admin">Super Admin</option>
+                          <option value="tenant">{t('tenant')}</option>
+                          <option value="owner">{t('owner')}</option>
+                          <option value="agent">{t('agent')}</option>
+                          <option value="admin">{t('admin')}</option>
+                          <option value="super_admin">{t('super_admin')}</option>
                         </select>
                       </td>
                       <td className="px-4 py-3">
-                        <Badge variant={user.is_suspended ? 'danger' : 'success'} className="capitalize">
-                          {user.is_suspended ? 'Suspended' : 'Active'}
+                        <Badge variant={user.is_suspended ? 'danger' : 'success'}>
+                          {user.is_suspended ? t('suspended') : t('active')}
                         </Badge>
                       </td>
                       <td className="px-4 py-3 text-gray-500 text-xs">
@@ -160,18 +163,12 @@ export function AdminUsers() {
                             size="icon"
                             className={user.is_suspended ? 'text-green-500' : 'text-red-500'}
                             onClick={() => toggleSuspend(user)}
-                            title={user.is_suspended ? 'Reinstate User' : 'Suspend User'}
+                            title={user.is_suspended ? t('reinstate_user') : t('suspend_user')}
                           >
                             {user.is_suspended ? <UserCheck className="h-4 w-4" /> : <UserX className="h-4 w-4" />}
                           </Button>
-                          <Button variant="ghost" size="icon" className="text-blue-500" title="Verify User"
-                            onClick={async () => {
-                              try {
-                                await supabase.from('profiles').update({ is_verified: !user.is_verified } as never).eq('user_id', user.user_id)
-                                setUsers(prev => prev.map(u => u.user_id === user.user_id ? { ...u, is_verified: !user.is_verified } : u))
-                                toast.success('Verification updated')
-                              } catch { toast.error('Failed') }
-                            }}
+                          <Button variant="ghost" size="icon" className="text-blue-500" title={t('verify_user')}
+                            onClick={() => toggleVerify(user)}
                           >
                             <Shield className="h-4 w-4" />
                           </Button>

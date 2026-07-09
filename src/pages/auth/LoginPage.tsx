@@ -5,7 +5,7 @@ import { Home, Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { supabase } from '@/lib/supabase'
+import { authApi } from '@/lib/api'
 import toast from 'react-hot-toast'
 
 export function LoginPage() {
@@ -19,13 +19,14 @@ export function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    setLoading(false)
-    if (error) {
-      toast.error(error.message)
-      return
+    try {
+      await authApi.login(email, password)
+      navigate('/dashboard')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Login failed')
+    } finally {
+      setLoading(false)
     }
-    navigate('/dashboard')
   }
 
   return (

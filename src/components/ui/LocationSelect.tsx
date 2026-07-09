@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Select } from '@/components/ui/select'
 import { getProvinces, getDistricts, getSectors, getCells, getVillages } from '@/lib/locations'
 import type { LocationItem } from '@/lib/locations'
@@ -16,6 +17,7 @@ export function LocationSelect({
   selectedProvince, selectedDistrict, selectedSector, selectedCell, selectedVillage,
   onChange,
 }: LocationSelectProps) {
+  const { t } = useTranslation()
   const [provinces, setProvinces] = useState<LocationItem[]>([])
   const [districts, setDistricts] = useState<LocationItem[]>([])
   const [sectors, setSectors] = useState<LocationItem[]>([])
@@ -71,7 +73,7 @@ export function LocationSelect({
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Province *</label>
+        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">{t('province')} *</label>
         <Select
           value={selectedProvince}
           onChange={e => {
@@ -82,11 +84,11 @@ export function LocationSelect({
             onChange('village', '')
           }}
           options={toOptions(provinces)}
-          placeholder="Select province"
+          placeholder={t('select_province')}
         />
       </div>
       <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">District *</label>
+        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">{t('district')} *</label>
         <Select
           value={selectedDistrict}
           onChange={e => {
@@ -96,12 +98,12 @@ export function LocationSelect({
             onChange('village', '')
           }}
           options={toOptions(districts)}
-          placeholder={loading.districts ? 'Loading...' : 'Select district'}
+          placeholder={loading.districts ? t('loading') : t('select_district')}
           disabled={!selectedProvince}
         />
       </div>
       <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Sector</label>
+        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">{t('sector')}</label>
         <Select
           value={selectedSector}
           onChange={e => {
@@ -110,12 +112,12 @@ export function LocationSelect({
             onChange('village', '')
           }}
           options={toOptions(sectors)}
-          placeholder={loading.sectors ? 'Loading...' : 'Select sector'}
+          placeholder={loading.sectors ? t('loading') : t('select_sector')}
           disabled={!selectedDistrict}
         />
       </div>
       <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Cell</label>
+        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">{t('cell')}</label>
         <Select
           value={selectedCell}
           onChange={e => {
@@ -123,17 +125,17 @@ export function LocationSelect({
             onChange('village', '')
           }}
           options={toOptions(cells)}
-          placeholder={loading.cells ? 'Loading...' : 'Select cell'}
+          placeholder={loading.cells ? t('loading') : t('select_cell')}
           disabled={!selectedSector}
         />
       </div>
       <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Village</label>
+        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">{t('village')}</label>
         <Select
           value={selectedVillage}
           onChange={e => onChange('village', e.target.value)}
           options={toOptions(villages)}
-          placeholder={loading.villages ? 'Loading...' : 'Select village'}
+          placeholder={loading.villages ? t('loading') : t('select_village')}
           disabled={!selectedCell}
         />
       </div>

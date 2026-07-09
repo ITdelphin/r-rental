@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Home, Menu, X, User, LogOut, Globe } from 'lucide-react'
+import { Home, Menu, X, User, LogOut, Globe, Sun, Moon } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
@@ -20,6 +20,7 @@ export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [langOpen, setLangOpen] = useState(false)
   const [logoUrl, setLogoUrl] = useState('')
+  const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'))
 
   const navLinks = [
     { to: '/', label: t('home') },
@@ -60,6 +61,9 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <button onClick={() => { const next = !dark; setDark(next); document.documentElement.classList.toggle('dark', next); localStorage.setItem('theme', next ? 'dark' : 'light') }} className="p-2 text-gray-700 hover:text-primary-600 dark:text-gray-300 cursor-pointer" title={t('theme')}>
+            {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
           <div className="relative hidden sm:block">
             <button onClick={() => setLangOpen(!langOpen)} className="flex items-center gap-1 p-2 text-sm text-gray-700 hover:text-primary-600 dark:text-gray-300 cursor-pointer">
               <Globe className="h-4 w-4" />

@@ -1,18 +1,19 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { MapPin, Bed, Bath, Square, Wifi, Shield, Car, TreePine, Waves, Zap, Droplets, Heart, MessageCircle, Calendar, Star, ChevronLeft, ChevronRight, Share2 } from 'lucide-react'
-import { useState } from 'react'
+import { MapPin, Bed, Bath, Square, Wifi, Shield, Car, TreePine, Waves, Zap, Droplets, Heart, MessageCircle, Calendar, Star, ChevronLeft, ChevronRight, Share2, CookingPot, Sun, Eye } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useProperty } from '@/hooks/useProperties'
 import { useAuth } from '@/hooks/useAuth'
+import { propertyApi } from '@/lib/api'
 import { formatPrice } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import toast from 'react-hot-toast'
 
 const amenityIcons: Record<string, typeof Wifi> = {
-  wifi: Wifi, security: Shield, parking: Car, garden: TreePine, swimming_pool: Waves, electricity: Zap, water: Droplets,
+  wifi: Wifi, security: Shield, parking: Car, garden: TreePine, swimming_pool: Waves, electricity: Zap, water: Droplets, balcony: Sun,
 }
 
 export function PropertyDetailPage() {
@@ -27,6 +28,12 @@ export function PropertyDetailPage() {
   const [bookingLoading, setBookingLoading] = useState(false)
   const [favoriteLoading, setFavoriteLoading] = useState(false)
   const [isFavorited, setIsFavorited] = useState(false)
+
+  useEffect(() => {
+    if (property) {
+      propertyApi.incrementViews(property.id)
+    }
+  }, [property])
 
   if (isLoading) {
     return (
@@ -59,6 +66,7 @@ export function PropertyDetailPage() {
     { key: 'swimming_pool', label: 'Swimming Pool', value: property.swimming_pool },
     { key: 'electricity', label: 'Electricity', value: property.electricity },
     { key: 'water', label: 'Water', value: property.water },
+    { key: 'balcony', label: 'Balcony', value: property.balcony },
   ].filter((a) => a.value)
 
   const handleBooking = async () => {
@@ -189,7 +197,7 @@ export function PropertyDetailPage() {
                   {property.is_featured && <Badge variant="success">{t('featured')}</Badge>}
                 </div>
                 <p className="mt-1 flex items-center gap-1 text-sm text-gray-500">
-                  <MapPin className="h-4 w-4" /> {property.village}, {property.sector}, {property.district}, {property.province}
+                  <MapPin className="h-4 w-4" /> {property.village}, {property.cell ? `${property.cell}, ` : ''}{property.sector}, {property.district}, {property.province}
                 </p>
                 {avgRating && (
                   <div className="mt-2 flex items-center gap-1">
@@ -203,12 +211,14 @@ export function PropertyDetailPage() {
               <div className="text-right">
                 <p className="text-2xl font-bold text-primary-600">{formatPrice(property.price)}<span className="text-sm font-normal text-gray-500">/mo</span></p>
                 {property.deposit && <p className="text-sm text-gray-500">{t('deposit')}: {formatPrice(property.deposit)}</p>}
+                <p className="mt-1 flex items-center justify-end gap-1 text-xs text-gray-400"><Eye className="h-3 w-3" /> {property.views_count} views</p>
               </div>
             </div>
 
             <div className="mt-4 flex flex-wrap gap-4 border-y py-4 dark:border-gray-700">
               <div className="flex items-center gap-2 text-sm"><Bed className="h-4 w-4 text-gray-400" /> {property.bedrooms} {t('bedrooms')}</div>
               <div className="flex items-center gap-2 text-sm"><Bath className="h-4 w-4 text-gray-400" /> {property.bathrooms} {t('bathrooms')}</div>
+              {property.kitchen > 0 && <div className="flex items-center gap-2 text-sm"><CookingPot className="h-4 w-4 text-gray-400" /> {property.kitchen} Kitchen</div>}
               <Badge>{property.category}</Badge>
               <Badge variant="secondary">{property.property_type}</Badge>
               {property.furnished && <Badge variant="secondary">Furnished</Badge>}
