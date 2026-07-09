@@ -1,9 +1,16 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Home, Mail, Phone, MapPin } from 'lucide-react'
+import { useSettings } from '@/hooks/useSettings'
 
 export function Footer() {
   const { t } = useTranslation()
+  const { settings } = useSettings()
+
+  const platformName = settings.platform_name || t('app_name')
+  const address = settings.address || 'Kigali, Rwanda'
+  const phone = settings.phone_number || '+250 788 000 000'
+  const email = settings.support_email || 'info@rwanda-easyrent.com'
 
   return (
     <footer className="border-t bg-gray-50 dark:bg-gray-900">
@@ -12,7 +19,7 @@ export function Footer() {
           <div>
             <Link to="/" className="flex items-center gap-2 text-lg font-bold text-primary-600">
               <Home className="h-5 w-5" />
-              {t('app_name')}
+              {platformName}
             </Link>
             <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">{t('footer_description')}</p>
           </div>
@@ -31,9 +38,9 @@ export function Footer() {
           <div>
             <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t('contact')}</h3>
             <ul className="mt-3 space-y-2 text-sm text-gray-600 dark:text-gray-400">
-              <li className="flex items-center gap-2"><MapPin className="h-4 w-4" /> Kigali, Rwanda</li>
-              <li className="flex items-center gap-2"><Phone className="h-4 w-4" /> +250 788 000 000</li>
-              <li className="flex items-center gap-2"><Mail className="h-4 w-4" /> info@rwanda-easyrent.com</li>
+              <li className="flex items-center gap-2"><MapPin className="h-4 w-4" /> {address}</li>
+              <li className="flex items-center gap-2"><Phone className="h-4 w-4" /> {phone}</li>
+              <li className="flex items-center gap-2"><Mail className="h-4 w-4" /> {email}</li>
             </ul>
           </div>
 
@@ -48,7 +55,7 @@ export function Footer() {
         </div>
 
         <div className="mt-8 border-t pt-6 text-center text-sm text-gray-500 dark:text-gray-400">
-          &copy; {new Date().getFullYear()} {t('app_name')}. {t('all_rights_reserved')}
+          &copy; {new Date().getFullYear()} {platformName}. {t('all_rights_reserved')}
         </div>
       </div>
     </footer>

@@ -1,11 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Home, Menu, X, User, LogOut, Globe, Sun, Moon } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
+import { useSettings } from '@/hooks/useSettings'
 import { supabase } from '@/lib/supabase'
-import { getSettings } from '@/lib/settings'
 
 const languages = [
   { code: 'en', label: 'English' },
@@ -16,10 +16,10 @@ const languages = [
 export function Header() {
   const { t, i18n } = useTranslation()
   const { user, profile } = useAuth()
+  const { settings } = useSettings()
   const navigate = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [langOpen, setLangOpen] = useState(false)
-  const [logoUrl, setLogoUrl] = useState('')
   const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'))
 
   const navLinks = [
@@ -29,9 +29,8 @@ export function Header() {
     { to: '/contact', label: t('contact') },
   ]
 
-  useEffect(() => {
-    getSettings().then(s => { if (s.logo_url) setLogoUrl(s.logo_url) })
-  }, [])
+  const platformName = settings.platform_name || t('app_name')
+  const logoUrl = settings.logo_url || ''
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -43,11 +42,11 @@ export function Header() {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
         <Link to="/" className="flex items-center gap-2">
           {logoUrl ? (
-            <img src={logoUrl} alt={t('app_name')} className="h-8 w-auto" />
+            <img src={logoUrl} alt={platformName} className="h-8 w-auto" />
           ) : (
             <>
               <Home className="h-6 w-6 text-primary-600" />
-              <span className="text-xl font-bold text-primary-600">{t('app_name')}</span>
+              <span className="text-xl font-bold text-primary-600">{platformName}</span>
             </>
           )}
         </Link>
