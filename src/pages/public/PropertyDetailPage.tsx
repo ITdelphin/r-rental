@@ -80,15 +80,18 @@ export function PropertyDetailPage() {
     }
     setBookingLoading(true)
     try {
-      const { data: existing } = await supabase
+      const { data: existing } = await (supabase
         .from('bookings')
         .select('id, status')
         .eq('tenant_id', user.id)
         .eq('property_id', property.id)
-        .in('status', ['pending', 'approved'])
-        .maybeSingle()
+        .maybeSingle() as unknown as { data: { id: string; status: string } | null })
       if (existing) {
-        toast.error('You already have a pending booking request for this property')
+        if (existing.status === 'pending' || existing.status === 'approved') {
+          toast.error('You already have a pending booking request for this property')
+        } else {
+          toast.error('You have already sent a booking request for this property')
+        }
         setBookingLoading(false)
         return
       }
@@ -106,7 +109,11 @@ export function PropertyDetailPage() {
       setVisitDate('')
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to send booking request'
-      toast.error(msg)
+      if (msg.toLowerCase().includes('duplicate') || msg.toLowerCase().includes('unique') || msg.includes('409')) {
+        toast.error('You have already sent a booking request for this property')
+      } else {
+        toast.error(msg)
+      }
     } finally {
       setBookingLoading(false)
     }
