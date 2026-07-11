@@ -369,7 +369,7 @@ export function PropertyDetailPage() {
                   <Button
                     variant="outline"
                     className="mt-2 w-full border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
-                    onClick={() => window.open(`https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi, I'm interested in your property "${property.title}". Is it still available?`)}`, '_blank')}
+                    onClick={() => { const n = whatsappNumber.replace(/[^0-9]/g, ''); window.open(`https://wa.me/${n.startsWith('0') ? '250' + n.slice(1) : n}?text=${encodeURIComponent(`Hi, I'm interested in your property "${property.title}". Is it still available?`)}`, '_blank') }}
                   >
                     <MessageCircle className="h-4 w-4" /> WhatsApp
                   </Button>
