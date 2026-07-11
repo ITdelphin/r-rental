@@ -155,6 +155,15 @@ export const messageApi = {
     const { error } = await supabase.from('messages').delete().eq('id', id)
     if (error) throw error
   },
+  getAdminUsers: async () => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .in('role', ['admin', 'super_admin'])
+      .limit(5)
+    if (error) throw error
+    return (data || []) as unknown as Profile[]
+  },
   markAsRead: async (id: string) => {
     const { error } = await supabase.from('messages').update({ is_read: true } as never).eq('id', id)
     if (error) throw error

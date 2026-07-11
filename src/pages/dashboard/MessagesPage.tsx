@@ -47,6 +47,7 @@ export function MessagesPage() {
   const [newConvMessage, setNewConvMessage] = useState('')
   const [selectedNewUser, setSelectedNewUser] = useState<Profile | null>(null)
   const [sendingNewConv, setSendingNewConv] = useState(false)
+  const [contactingSupport, setContactingSupport] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const userSearchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -285,6 +286,30 @@ export function MessagesPage() {
     }
   }
 
+  const handleContactSupport = async () => {
+    if (!user) return
+    setContactingSupport(true)
+    try {
+      const admins = await messageApi.getAdminUsers()
+      const admin = admins.find(a => a.user_id !== user.id)
+      if (!admin) {
+        toast.error('No support staff available')
+        return
+      }
+      if (conversations.find(c => c.userId === admin.user_id)) {
+        handleSelectChat(admin.user_id)
+      } else {
+        setSelectedNewUser(admin as unknown as Profile)
+        setShowNewMessageDialog(true)
+        setNewConvMessage('Hello, I need help with something.')
+      }
+    } catch {
+      toast.error('Failed to contact support')
+    } finally {
+      setContactingSupport(false)
+    }
+  }
+
   const totalUnread = conversations.reduce((sum, c) => sum + c.unreadCount, 0)
 
   if (loading) {
@@ -301,25 +326,37 @@ export function MessagesPage() {
       <Card className={`w-full sm:w-80 flex-shrink-0 ${showMobileChat ? 'hidden sm:block' : 'block'}`}>
         <CardContent className="p-0 flex flex-col h-full">
           <div className="border-b p-3 dark:border-gray-700">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('messages')}</h2>
-                {totalUnread > 0 && (
-                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary-600 px-1.5 text-xs text-white font-medium">
-                    {totalUnread}
-                  </span>
-                )}
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('messages')}</h2>
+                  {totalUnread > 0 && (
+                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary-600 px-1.5 text-xs text-white font-medium">
+                      {totalUnread}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-1">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 px-2 text-xs"
+                    onClick={handleContactSupport}
+                    disabled={contactingSupport}
+                    title="Contact Support"
+                  >
+                    <MessageSquare className="h-3.5 w-3.5 mr-1" /> Support
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 w-8 p-0"
+                    onClick={() => setShowNewMessageDialog(true)}
+                    title={t('new_message') || 'New Message'}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-8 w-8 p-0"
-                onClick={() => setShowNewMessageDialog(true)}
-                title={t('new_message') || 'New Message'}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <input
@@ -333,13 +370,27 @@ export function MessagesPage() {
           </div>
 
           {filteredConversations.length === 0 ? (
-            <EmptyState
-              icon={MessageSquare}
-              title={searchQuery ? (t('no_search_results') || 'No results found') : t('no_conversations')}
-              description={searchQuery ? '' : t('no_conversations_description')}
-              actionLabel={!searchQuery ? (t('new_message') || 'Start a conversation') : undefined}
-              onAction={!searchQuery ? () => setShowNewMessageDialog(true) : undefined}
-            />
+            <div className="flex flex-col items-center justify-center flex-1 p-4 text-center">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary-50 dark:bg-primary-900/20">
+                <MessageSquare className="h-7 w-7 text-primary-400" />
+              </div>
+              <p className="mt-4 text-sm font-medium text-gray-900 dark:text-gray-100">
+                {searchQuery ? (t('no_search_results') || 'No results found') : t('no_conversations')}
+              </p>
+              {!searchQuery && (
+                <>
+                  <p className="mt-1 text-xs text-gray-500 max-w-[200px]">{t('no_conversations_description')}</p>
+                  <div className="mt-4 flex flex-col gap-2 w-full max-w-[200px]">
+                    <Button size="sm" className="w-full" onClick={() => setShowNewMessageDialog(true)}>
+                      <Plus className="h-4 w-4" /> {t('new_message') || 'New Message'}
+                    </Button>
+                    <Button size="sm" variant="outline" className="w-full" onClick={handleContactSupport} disabled={contactingSupport}>
+                      <MessageSquare className="h-4 w-4" /> Contact Support
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
           ) : (
             <div className="flex-1 overflow-y-auto divide-y dark:divide-gray-700">
               {filteredConversations.map((conv) => (
