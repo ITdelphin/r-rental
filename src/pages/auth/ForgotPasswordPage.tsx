@@ -15,13 +15,16 @@ export function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false)
   const [recovery, setRecovery] = useState(false)
   const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
 
   useEffect(() => {
-    const hash = window.location.hash
-    if (hash && hash.includes('type=recovery')) {
-      setRecovery(true)
-    }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setRecovery(true)
+      }
+    })
+    return () => subscription.unsubscribe()
   }, [])
 
   const handleReset = async (e: React.FormEvent) => {
@@ -41,6 +44,10 @@ export function ForgotPasswordPage() {
 
   const handleSetNewPassword = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (newPassword !== confirmPassword) {
+      toast.error(t('passwords_do_not_match'))
+      return
+    }
     if (newPassword.length < 6) {
       toast.error(t('password_too_short'))
       return
@@ -54,7 +61,6 @@ export function ForgotPasswordPage() {
     }
     toast.success(t('password_updated'))
     await supabase.auth.signOut()
-    window.location.hash = ''
     window.location.href = '/auth/login'
   }
 
@@ -88,6 +94,14 @@ export function ForgotPasswordPage() {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+              <Input
+                label={t('confirm_password')}
+                type={showPassword ? 'text' : 'password'}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                minLength={6}
+              />
               <Button type="submit" className="w-full" loading={loading}>{t('update_password')}</Button>
             </form>
           </CardContent>
