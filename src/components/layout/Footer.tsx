@@ -1,16 +1,39 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Home, Mail, Phone, MapPin } from 'lucide-react'
+import { Home, Mail, Phone, MapPin, Loader2 } from 'lucide-react'
 import { useSettings } from '@/hooks/useSettings'
+import { sendNewsletterSubscribe } from '@/lib/email'
+import toast from 'react-hot-toast'
 
 export function Footer() {
   const { t } = useTranslation()
   const { settings } = useSettings()
+  const [newsletterEmail, setNewsletterEmail] = useState('')
+  const [subscribing, setSubscribing] = useState(false)
 
   const platformName = settings.platform_name || t('app_name')
   const address = settings.address || 'Kigali, Rwanda'
   const phone = settings.phone_number || '+250 788 000 000'
   const email = settings.support_email || 'info@rwanda-easyrent.com'
+
+  const handleSubscribe = async () => {
+    if (!newsletterEmail.trim()) return
+    setSubscribing(true)
+    try {
+      const { success } = await sendNewsletterSubscribe(newsletterEmail.trim())
+      if (success) {
+        toast.success('Subscribed successfully! Check your email.')
+        setNewsletterEmail('')
+      } else {
+        toast.error('Failed to subscribe. Please try again.')
+      }
+    } catch {
+      toast.error('Failed to subscribe. Please try again.')
+    } finally {
+      setSubscribing(false)
+    }
+  }
 
   return (
     <footer className="border-t bg-gray-50 dark:bg-gray-900">
@@ -48,8 +71,20 @@ export function Footer() {
             <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t('newsletter')}</h3>
             <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">Stay updated with new properties.</p>
             <div className="mt-3 flex gap-2">
-              <input type="email" placeholder={t('email_address')} className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800" />
-              <button className="rounded-lg bg-primary-600 px-4 py-2 text-sm text-white hover:bg-primary-700 cursor-pointer">{t('subscribe')}</button>
+              <input
+                type="email"
+                value={newsletterEmail}
+                onChange={e => setNewsletterEmail(e.target.value)}
+                placeholder={t('email_address')}
+                className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800"
+              />
+              <button
+                onClick={handleSubscribe}
+                disabled={subscribing}
+                className="rounded-lg bg-primary-600 px-4 py-2 text-sm text-white hover:bg-primary-700 disabled:opacity-50 cursor-pointer"
+              >
+                {subscribing ? <Loader2 className="h-4 w-4 animate-spin" /> : t('subscribe')}
+              </button>
             </div>
           </div>
         </div>

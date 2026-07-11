@@ -48,12 +48,12 @@ The EasyRent Team`
       text: body,
     })
 
-    await supabase.from('email_logs').insert({
+    try { await supabase.from('email_logs').insert({
       recipient: email,
       email_type: 'newsletter_subscription',
       subject,
       status: 'sent',
-    })
+    }) } catch { /* non-critical */ }
 
     // Notify admin
     await transporter.sendMail({

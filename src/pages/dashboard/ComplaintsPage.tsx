@@ -7,6 +7,7 @@ import { TableSkeleton } from '@/components/ui/loading'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Shield, Search, MessageSquare, CheckCircle, Clock, XCircle, AlertTriangle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { sendComplaintNotification } from '@/lib/email'
 import toast from 'react-hot-toast'
 
 interface Complaint {
@@ -58,6 +59,7 @@ export function ComplaintsPage() {
             const { error } = await supabase.from('complaints').update({ status } as never).eq('id', id)
             if (error) throw error
             toast.success('Status updated')
+            sendComplaintNotification(id, status)
             setComplaints(prev => prev.map(c => c.id === id ? { ...c, status: status as Complaint['status'] } : c))
         } catch {
             toast.error('Failed to update status')

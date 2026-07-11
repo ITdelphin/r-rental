@@ -40,12 +40,12 @@ Sent from EasyRent Contact Page`
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
-    await supabase.from('email_logs').insert({
+    try { await supabase.from('email_logs').insert({
       recipient: adminEmail,
       email_type: 'contact_form',
       subject,
       status: 'sent',
-    })
+    }) } catch { /* non-critical */ }
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,

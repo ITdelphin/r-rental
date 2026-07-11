@@ -8,6 +8,7 @@ import { Calendar, Home, CheckCircle, XCircle, Clock, Eye } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import { sendBookingNotification } from '@/lib/email'
 import { useAuth } from '@/hooks/useAuth'
 import { formatPrice } from '@/lib/utils'
 import type { Booking } from '@/types'
@@ -57,6 +58,7 @@ export function TenantBookings() {
       const { error } = await supabase.from('bookings').update({ status: 'cancelled' } as never).eq('id', id)
       if (error) throw error
       toast.success('Booking cancelled')
+      sendBookingNotification(id, 'cancelled')
       setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'cancelled' } : b))
     } catch {
       toast.error('Failed to cancel booking')
@@ -68,6 +70,7 @@ export function TenantBookings() {
       const { error } = await supabase.from('bookings').update({ status: 'approved' } as never).eq('id', id)
       if (error) throw error
       toast.success('Booking approved')
+      sendBookingNotification(id, 'approved')
       setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'approved' } : b))
     } catch {
       toast.error('Failed to approve booking')

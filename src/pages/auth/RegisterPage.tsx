@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { supabase } from '@/lib/supabase'
+import { sendWelcomeEmail } from '@/lib/email'
 import toast from 'react-hot-toast'
 
 const roleOptions = [
@@ -44,6 +45,10 @@ export function RegisterPage() {
         phone: form.phone,
       } as never).eq('user_id', data.user.id)
       if (profileError) toast.error('Profile update failed')
+    }
+    // Send welcome email
+    if (data.user) {
+      sendWelcomeEmail(data.user.id)
     }
     toast.success('Account created! Check your email to verify.')
     navigate('/auth/login')

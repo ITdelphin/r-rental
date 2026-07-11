@@ -51,13 +51,13 @@ The EasyRent Team`
       text: body,
     })
 
-    await supabase.from('email_logs').insert({
+    try { await supabase.from('email_logs').insert({
       user_id: message.receiver_id,
       recipient: message.receiver?.email,
       email_type: 'new_message',
       subject,
       status: 'sent',
-    })
+    }) } catch { /* non-critical */ }
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,

@@ -51,13 +51,13 @@ The EasyRent Team`
         text: body,
       })
 
-      await supabase.from('email_logs').insert({
+      try { await supabase.from('email_logs').insert({
         user_id: booking.owner_id,
         recipient: booking.owner?.email,
         email_type: 'booking_created',
         subject,
         status: 'sent',
-      })
+      }) } catch { /* non-critical */ }
     } else if (event === 'approved') {
       const subject = `Booking Approved - ${propertyTitle}`
       const body = `Hi ${booking.tenant?.full_name},
@@ -80,13 +80,13 @@ The EasyRent Team`
         text: body,
       })
 
-      await supabase.from('email_logs').insert({
+      try { await supabase.from('email_logs').insert({
         user_id: booking.tenant_id,
         recipient: booking.tenant?.email,
         email_type: 'booking_approved',
         subject,
         status: 'sent',
-      })
+      }) } catch { /* non-critical */ }
     } else if (event === 'cancelled') {
       const subject = `Booking Cancelled - ${propertyTitle}`
       const body = `Hi ${booking.owner?.full_name},
@@ -105,13 +105,13 @@ The EasyRent Team`
         text: body,
       })
 
-      await supabase.from('email_logs').insert({
+      try { await supabase.from('email_logs').insert({
         user_id: booking.owner_id,
         recipient: booking.owner?.email,
         email_type: 'booking_cancelled',
         subject,
         status: 'sent',
-      })
+      }) } catch { /* non-critical */ }
     }
 
     return new Response(JSON.stringify({ success: true }), {

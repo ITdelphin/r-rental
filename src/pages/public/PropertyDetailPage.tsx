@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { propertyApi } from '@/lib/api'
 import { formatPrice } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
+import { sendBookingNotification } from '@/lib/email'
 import toast from 'react-hot-toast'
 
 const amenityIcons: Record<string, typeof Wifi> = {
@@ -95,18 +96,19 @@ export function PropertyDetailPage() {
         setBookingLoading(false)
         return
       }
-      const { error } = await supabase.from('bookings').insert({
+      const { data: newBooking, error } = await supabase.from('bookings').insert({
         property_id: property.id,
         tenant_id: user.id,
         owner_id: property.owner_id,
         status: 'pending',
         visit_date: visitDate || null,
         message: bookingMessage,
-      } as never)
+      } as never).select().single()
       if (error) throw error
       toast.success('Booking request sent! The owner will be in touch.')
       setBookingMessage('')
       setVisitDate('')
+      if (newBooking) sendBookingNotification((newBooking as { id: string }).id, 'created')
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to send booking request'
       if (msg.toLowerCase().includes('duplicate') || msg.toLowerCase().includes('unique') || msg.includes('409')) {
@@ -351,7 +353,15 @@ export function PropertyDetailPage() {
                     )}
                   </div>
                 </div>
-                <Button variant="outline" className="mt-4 w-full" onClick={() => user ? navigate('/dashboard/messages') : navigate('/auth/login')}>
+                <Button variant="outline" className="mt-4 w-full" onClick={() => {
+                  if (!user) { navigate('/auth/login'); return }
+                  const params = new URLSearchParams({
+                    to: property.owner_id,
+                    name: property.owner?.full_name || 'Owner',
+                    property: property.title,
+                  })
+                  navigate(`/dashboard/messages?${params.toString()}`)
+                }}>
                   <MessageCircle className="h-4 w-4" /> {t('send_message')}
                 </Button>
               </CardContent>

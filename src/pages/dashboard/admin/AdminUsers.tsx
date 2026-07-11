@@ -6,6 +6,7 @@ import { TableSkeleton } from '@/components/ui/loading'
 import { Search, Shield, UserX, RefreshCw, UserCheck } from 'lucide-react'
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
+import { sendAccountNotification } from '@/lib/email'
 import toast from 'react-hot-toast'
 import type { Profile } from '@/types'
 
@@ -44,6 +45,7 @@ export function AdminUsers() {
         .eq('user_id', user.user_id)
       if (error) throw error
       toast.success(newSuspended ? t('user_suspended') : t('user_reinstated'))
+      sendAccountNotification(user.user_id, newSuspended ? 'suspended' : 'reinstated')
       setUsers(prev => prev.map(u => u.user_id === user.user_id ? { ...u, is_suspended: newSuspended } : u))
     } catch {
       toast.error(t('failed_to_update_user'))
@@ -55,6 +57,7 @@ export function AdminUsers() {
       await supabase.from('profiles').update({ is_verified: !user.is_verified } as never).eq('user_id', user.user_id)
       setUsers(prev => prev.map(u => u.user_id === user.user_id ? { ...u, is_verified: !user.is_verified } : u))
       toast.success(t('verification_updated'))
+      sendAccountNotification(user.user_id, !user.is_verified ? 'verified' : 'unverified')
     } catch { toast.error(t('failed')) }
   }, [t])
 
@@ -63,6 +66,7 @@ export function AdminUsers() {
       const { error } = await supabase.from('profiles').update({ role } as never).eq('user_id', user.user_id)
       if (error) throw error
       toast.success(`${t('role_changed')} ${t(role)}`)
+      sendAccountNotification(user.user_id, 'role_changed', { new_role: role })
       setUsers(prev => prev.map(u => u.user_id === user.user_id ? { ...u, role: role as Profile['role'] } : u))
     } catch {
       toast.error(t('failed_to_change_role'))

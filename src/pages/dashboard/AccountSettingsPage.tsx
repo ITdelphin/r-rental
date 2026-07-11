@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/useAuth'
 import { profileApi } from '@/lib/api'
+import { sendAccountNotification } from '@/lib/email'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -87,6 +88,7 @@ export function AccountSettingsPage() {
       const { error } = await supabase.auth.updateUser({ password: passwordForm.new_password })
       if (error) throw error
       toast.success(t('password_updated'))
+      if (user) sendAccountNotification(user.id, 'password_changed')
       setPasswordForm({ current_password: '', new_password: '', confirm_password: '' })
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : t('password_update_failed'))
@@ -97,6 +99,7 @@ export function AccountSettingsPage() {
     if (!window.confirm(t('delete_account_confirm'))) return
     try {
       if (user) {
+        sendAccountNotification(user.id, 'account_deleted')
         await supabase.from('profiles').delete().eq('user_id', user.id)
         await supabase.auth.signOut()
         window.location.href = '/'

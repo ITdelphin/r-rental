@@ -1,19 +1,33 @@
 import { useTranslation } from 'react-i18next'
-import { Mail, Phone, MapPin, Clock } from 'lucide-react'
+import { Mail, Phone, MapPin, Clock, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { useState } from 'react'
+import { sendContactForm } from '@/lib/email'
 import toast from 'react-hot-toast'
 
 export function ContactPage() {
   const { t } = useTranslation()
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' })
+  const [sending, setSending] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    toast.success('Message sent! We will get back to you soon.')
-    setForm({ name: '', email: '', subject: '', message: '' })
+    setSending(true)
+    try {
+      const { success } = await sendContactForm(form.name, form.email, form.subject, form.message)
+      if (success) {
+        toast.success('Message sent! We will get back to you soon.')
+        setForm({ name: '', email: '', subject: '', message: '' })
+      } else {
+        toast.error('Failed to send message. Please try again.')
+      }
+    } catch {
+      toast.error('Failed to send message. Please try again.')
+    } finally {
+      setSending(false)
+    }
   }
 
   return (
@@ -34,7 +48,7 @@ export function ContactPage() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Message</label>
                 <textarea rows={5} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} required className="w-full rounded-lg border border-gray-300 bg-white p-3 text-sm dark:border-gray-600 dark:bg-gray-800" />
               </div>
-              <Button type="submit" className="w-full">{t('submit')}</Button>
+              <Button type="submit" className="w-full" loading={sending}>{t('submit')}</Button>
             </form>
           </CardContent>
         </Card>
