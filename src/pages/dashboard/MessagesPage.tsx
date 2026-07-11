@@ -287,7 +287,11 @@ export function MessagesPage() {
   }
 
   const handleContactSupport = async () => {
-    if (!user) return
+    if (!user || !profile) return
+    if (profile.role === 'admin' || profile.role === 'super_admin') {
+      toast('You are a support staff member — admins can reply to users from their inbox.')
+      return
+    }
     setContactingSupport(true)
     try {
       const admins = await messageApi.getAdminUsers()
@@ -299,7 +303,7 @@ export function MessagesPage() {
       if (conversations.find(c => c.userId === admin.user_id)) {
         handleSelectChat(admin.user_id)
       } else {
-        setSelectedNewUser(admin as unknown as Profile)
+        setSelectedNewUser({ ...admin, full_name: admin.full_name || admin.email } as Profile)
         setShowNewMessageDialog(true)
         setNewConvMessage('Hello, I need help with something.')
       }

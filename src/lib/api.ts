@@ -160,7 +160,8 @@ export const messageApi = {
       .from('profiles')
       .select('*')
       .in('role', ['admin', 'super_admin'])
-      .limit(5)
+      .not('user_id', 'is', null)
+      .limit(10)
     if (error) throw error
     return (data || []) as unknown as Profile[]
   },
