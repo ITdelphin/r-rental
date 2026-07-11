@@ -1,6 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js'
 import { corsHeaders, handleCors } from '../_shared/cors.ts'
 import { createTransporter, getAdminEmail, getFromEmail } from '../_shared/smtp.ts'
+import { buildEmailHtml } from '../_shared/templates.ts'
 
 Deno.serve(async (req: Request) => {
   const corsResponse = handleCors(req)
@@ -17,24 +18,27 @@ Deno.serve(async (req: Request) => {
     const adminEmail = getAdminEmail()
 
     const subject = `Contact Form: ${formSubject}`
-    const body = `New Contact Form Submission
-
-Name: ${name}
-Email: ${email}
-Subject: ${formSubject}
-
-Message:
-${message}
-
----
-Sent from EasyRent Contact Page`
+    const htmlBody = buildEmailHtml({
+      title: 'New Contact Form Submission 📬',
+      greeting: 'Hi Admin,',
+      paragraphs: [
+        'A new contact form submission has been received.',
+      ],
+      features: [
+        { icon: '👤', text: `Name: ${name}` },
+        { icon: '📧', text: `Email: ${email}` },
+        { icon: '📝', text: `Subject: ${formSubject}` },
+        { icon: '💬', text: `Message: ${message}` },
+      ],
+      footer: 'This submission was sent from the EasyRent Contact Page.',
+    })
 
     await transporter.sendMail({
       from: `"EasyRent Contact" <${fromEmail}>`,
       to: adminEmail,
       replyTo: email,
       subject,
-      text: body,
+      html: htmlBody,
     })
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''

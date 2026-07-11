@@ -1,6 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js'
 import { corsHeaders, handleCors } from '../_shared/cors.ts'
 import { createTransporter, getFromEmail } from '../_shared/smtp.ts'
+import { buildEmailHtml } from '../_shared/templates.ts'
 
 Deno.serve(async (req: Request) => {
   const corsResponse = handleCors(req)
@@ -33,27 +34,26 @@ Deno.serve(async (req: Request) => {
       return new Response(JSON.stringify({ error: 'Property owner not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
-    const stars = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating)
+    const starIcons = '⭐'.repeat(review.rating)
     const subject = `New Review for ${review.property?.title}`
-    const body = `Hi ${owner.full_name},
-
-${review.user?.full_name} left a ${review.rating}-star review on your property "${review.property?.title}".
-
-${stars}
-
-Comment: "${review.comment || 'No comment'}"
-
-View all reviews in your dashboard:
-https://rwanda-easyrent.vercel.app/dashboard
-
-Best regards,
-The EasyRent Team`
+    const htmlBody = buildEmailHtml({
+      title: 'New Review Received ⭐',
+      greeting: `Hi ${owner.full_name},`,
+      paragraphs: [
+        `${review.user?.full_name} left a review on your property "<strong>${review.property?.title}</strong>".`,
+      ],
+      features: [
+        { icon: starIcons, text: `${review.rating}/5 rating` },
+        { icon: '💬', text: `"${review.comment || 'No comment'}"` },
+      ],
+      cta: { text: 'View Reviews', url: 'https://rwanda-easyrent.vercel.app/dashboard' },
+    })
 
     await transporter.sendMail({
       from: `"EasyRent" <${fromEmail}>`,
       to: owner.email,
       subject,
-      text: body,
+      html: htmlBody,
     })
 
     try { await supabase.from('email_logs').insert({

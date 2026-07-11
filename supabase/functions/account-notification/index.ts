@@ -1,6 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js'
 import { corsHeaders, handleCors } from '../_shared/cors.ts'
 import { createTransporter, getAdminEmail, getFromEmail } from '../_shared/smtp.ts'
+import { buildEmailHtml } from '../_shared/templates.ts'
 
 Deno.serve(async (req: Request) => {
   const corsResponse = handleCors(req)
@@ -26,103 +27,107 @@ Deno.serve(async (req: Request) => {
     const adminEmail = getAdminEmail()
 
     let subject = ''
-    let body = ''
     let emailType = ''
     let recipient = profile.email
+    let htmlBody = ''
 
     switch (event) {
       case 'suspended': {
         subject = 'Your EasyRent Account Has Been Suspended'
-        body = `Hi ${profile.full_name},
-
-Your EasyRent account has been suspended.
-
-Reason: ${details?.reason || 'Violation of platform policies'}
-
-If you believe this is a mistake, please contact our support team.
-
-Best regards,
-The EasyRent Team`
+        htmlBody = buildEmailHtml({
+          title: 'Account Suspended ⚠️',
+          greeting: `Hi ${profile.full_name},`,
+          paragraphs: [
+            'Your EasyRent account has been suspended.',
+            `Reason: ${details?.reason || 'Violation of platform policies'}`,
+            'If you believe this is a mistake, please contact our support team.',
+          ],
+        })
         emailType = 'account_suspended'
         break
       }
       case 'reinstated': {
         subject = 'Your EasyRent Account Has Been Reinstated'
-        body = `Hi ${profile.full_name},
-
-Your EasyRent account has been reinstated. You can now use the platform as normal.
-
-We apologize for any inconvenience caused.
-
-Best regards,
-The EasyRent Team`
+        htmlBody = buildEmailHtml({
+          title: 'Account Reinstated ✅',
+          greeting: `Hi ${profile.full_name},`,
+          paragraphs: [
+            'Your EasyRent account has been reinstated. You can now use the platform as normal.',
+            'We apologize for any inconvenience caused.',
+          ],
+        })
         emailType = 'account_reinstated'
         break
       }
       case 'verified': {
         subject = 'Your EasyRent Account Has Been Verified'
-        body = `Hi ${profile.full_name},
-
-Congratulations! Your EasyRent account has been verified. You now have a verified badge on your profile.
-
-Best regards,
-The EasyRent Team`
+        htmlBody = buildEmailHtml({
+          title: 'Account Verified ✅',
+          greeting: `Hi ${profile.full_name},`,
+          paragraphs: [
+            'Congratulations! Your EasyRent account has been verified.',
+            'You now have a verified badge on your profile, building trust with other users.',
+          ],
+        })
         emailType = 'account_verified'
         break
       }
       case 'unverified': {
         subject = 'Your EasyRent Account Verification Updated'
-        body = `Hi ${profile.full_name},
-
-Your EasyRent account verification status has been updated.
-
-If you have questions, please contact support.
-
-Best regards,
-The EasyRent Team`
+        htmlBody = buildEmailHtml({
+          title: 'Verification Status Updated',
+          greeting: `Hi ${profile.full_name},`,
+          paragraphs: [
+            'Your EasyRent account verification status has been updated.',
+            'If you have questions, please contact support.',
+          ],
+        })
         emailType = 'account_unverified'
         break
       }
       case 'role_changed': {
         const newRole = details?.new_role || profile.role
         subject = 'Your EasyRent Account Role Has Changed'
-        body = `Hi ${profile.full_name},
-
-Your account role on EasyRent has been changed to: ${newRole}.
-
-You can now access features available to ${newRole}s on the platform.
-
-Best regards,
-The EasyRent Team`
+        htmlBody = buildEmailHtml({
+          title: 'Account Role Updated 🔄',
+          greeting: `Hi ${profile.full_name},`,
+          paragraphs: [
+            `Your account role on EasyRent has been changed to: <strong>${newRole}</strong>.`,
+            `You can now access features available to ${newRole}s on the platform.`,
+          ],
+        })
         emailType = 'role_changed'
         break
       }
       case 'password_changed': {
         subject = 'Your EasyRent Password Was Changed'
-        body = `Hi ${profile.full_name},
-
-Your EasyRent account password was recently changed.
-
-If you did not make this change, please reset your password immediately:
-https://rwanda-easyrent.vercel.app/auth/forgot-password
-
-Best regards,
-The EasyRent Team`
+        htmlBody = buildEmailHtml({
+          title: 'Password Changed 🔑',
+          greeting: `Hi ${profile.full_name},`,
+          paragraphs: [
+            'Your EasyRent account password was recently changed.',
+            'If you did not make this change, please reset your password immediately.',
+          ],
+          cta: { text: 'Reset Password', url: 'https://rwanda-easyrent.vercel.app/auth/forgot-password' },
+        })
         emailType = 'password_changed'
         break
       }
       case 'account_deleted': {
-        // Notify admin instead
         recipient = adminEmail
         subject = `User ${profile.full_name} Deleted Their Account`
-        body = `Hi Admin,
-
-User ${profile.full_name} (${profile.email}) has deleted their EasyRent account.
-
-Role: ${profile.role}
-Account created: ${new Date(profile.created_at).toLocaleDateString()}
-
-This account has been removed from the platform.`
+        htmlBody = buildEmailHtml({
+          title: 'Account Deleted 🗑️',
+          greeting: 'Hi Admin,',
+          paragraphs: [
+            `User <strong>${profile.full_name}</strong> (${profile.email}) has deleted their EasyRent account.`,
+          ],
+          features: [
+            { icon: '👤', text: `Role: ${profile.role}` },
+            { icon: '📅', text: `Account created: ${new Date(profile.created_at).toLocaleDateString()}` },
+          ],
+          footer: 'This account has been removed from the platform.',
+        })
         emailType = 'account_deleted_admin'
         break
       }
@@ -135,7 +140,7 @@ This account has been removed from the platform.`
       from: `"EasyRent" <${fromEmail}>`,
       to: recipient,
       subject,
-      text: body,
+      html: htmlBody,
     })
 
     try { await supabase.from('email_logs').insert({

@@ -1,6 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js'
 import { corsHeaders, handleCors } from '../_shared/cors.ts'
 import { createTransporter, getFromEmail } from '../_shared/smtp.ts'
+import { buildEmailHtml } from '../_shared/templates.ts'
 
 Deno.serve(async (req: Request) => {
   const corsResponse = handleCors(req)
@@ -32,23 +33,21 @@ Deno.serve(async (req: Request) => {
 
     const contentPreview = message.content.length > 100 ? message.content.substring(0, 100) + '...' : message.content
     const subject = `New Message from ${message.sender?.full_name}`
-    const body = `Hi ${message.receiver?.full_name},
-
-You have received a new message from ${message.sender?.full_name}:
-
-"${contentPreview}"
-
-View and reply to this message in your dashboard:
-https://rwanda-easyrent.vercel.app/dashboard/messages
-
-Best regards,
-The EasyRent Team`
+    const htmlBody = buildEmailHtml({
+      title: 'New Message 💬',
+      greeting: `Hi ${message.receiver?.full_name},`,
+      paragraphs: [
+        `You have received a new message from <strong>${message.sender?.full_name}</strong>:`,
+        `"${contentPreview}"`,
+      ],
+      cta: { text: 'View Message', url: 'https://rwanda-easyrent.vercel.app/dashboard/messages' },
+    })
 
     await transporter.sendMail({
       from: `"EasyRent" <${fromEmail}>`,
       to: message.receiver?.email,
       subject,
-      text: body,
+      html: htmlBody,
     })
 
     try { await supabase.from('email_logs').insert({

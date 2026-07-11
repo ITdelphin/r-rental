@@ -1,6 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js'
 import { corsHeaders, handleCors } from '../_shared/cors.ts'
 import { createTransporter, getFromEmail } from '../_shared/smtp.ts'
+import { buildEmailHtml } from '../_shared/templates.ts'
 
 Deno.serve(async (req: Request) => {
   const corsResponse = handleCors(req)
@@ -24,29 +25,31 @@ Deno.serve(async (req: Request) => {
     const transporter = createTransporter()
     const fromEmail = getFromEmail()
 
+    const roleFeatures = profile.role === 'owner'
+      ? [{ icon: '🏠', text: 'List your properties for rent or sale' }, { icon: '📋', text: 'Manage bookings and messages' }, { icon: '💰', text: 'Track your earnings' }]
+      : profile.role === 'tenant'
+      ? [{ icon: '🔍', text: 'Browse and search for properties' }, { icon: '📅', text: 'Book visits and message owners' }, { icon: '❤️', text: 'Save your favorite properties' }]
+      : profile.role === 'agent'
+      ? [{ icon: '🏢', text: 'Manage client properties' }, { icon: '📞', text: 'Handle bookings on behalf of owners' }]
+      : [{ icon: '⚙️', text: 'Manage the platform and users' }]
+
     const subject = `Welcome to EasyRent, ${profile.full_name}!`
-    const body = `Hi ${profile.full_name},
-
-Welcome to EasyRent! Your account has been created successfully.
-
-Account Details:
-- Email: ${profile.email}
-- Role: ${profile.role}
-
-As a ${profile.role}, you can:
-${profile.role === 'owner' ? '- List your properties for rent or sale\n- Manage bookings and messages\n- Track your earnings' : profile.role === 'tenant' ? '- Browse and search for properties\n- Book visits and message owners\n- Save your favorite properties' : profile.role === 'agent' ? '- Manage client properties\n- Handle bookings on behalf of owners' : '- Manage the platform and users'}
-
-Get started by visiting your dashboard.
-https://rwanda-easyrent.vercel.app/dashboard
-
-Best regards,
-The EasyRent Team`
+    const htmlBody = buildEmailHtml({
+      title: 'Welcome to EasyRent! 🎉',
+      greeting: `Hi ${profile.full_name},`,
+      paragraphs: [
+        'Welcome to EasyRent! Your account has been created successfully.',
+        `Email: ${profile.email}<br>Account Type: ${profile.role.charAt(0).toUpperCase() + profile.role.slice(1)}`,
+      ],
+      features: roleFeatures,
+      cta: { text: 'Go to Dashboard', url: 'https://rwanda-easyrent.vercel.app/dashboard' },
+    })
 
     await transporter.sendMail({
       from: `"EasyRent" <${fromEmail}>`,
       to: profile.email,
       subject,
-      text: body,
+      html: htmlBody,
     })
 
     try { await supabase.from('email_logs').insert({

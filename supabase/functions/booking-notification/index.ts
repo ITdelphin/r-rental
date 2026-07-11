@@ -1,6 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js'
 import { corsHeaders, handleCors } from '../_shared/cors.ts'
 import { createTransporter, getFromEmail } from '../_shared/smtp.ts'
+import { buildEmailHtml } from '../_shared/templates.ts'
 
 Deno.serve(async (req: Request) => {
   const corsResponse = handleCors(req)
@@ -31,24 +32,24 @@ Deno.serve(async (req: Request) => {
 
     if (event === 'created') {
       const subject = `New Booking Request for ${propertyTitle}`
-      const body = `Hi ${booking.owner?.full_name},
-
-${booking.tenant?.full_name} has requested to book your property "${propertyTitle}".
-
-Visit Date: ${booking.visit_date ? new Date(booking.visit_date).toLocaleDateString() : 'Not specified'}
-Message from tenant: ${booking.message || 'No message'}
-
-Log in to your dashboard to approve or reject this request.
-https://rwanda-easyrent.vercel.app/dashboard/bookings
-
-Best regards,
-The EasyRent Team`
+      const htmlBody = buildEmailHtml({
+        title: 'New Booking Request 📋',
+        greeting: `Hi ${booking.owner?.full_name},`,
+        paragraphs: [
+          `${booking.tenant?.full_name} has requested to book your property "${propertyTitle}".`,
+        ],
+        features: [
+          { icon: '📅', text: `Visit Date: ${booking.visit_date ? new Date(booking.visit_date).toLocaleDateString() : 'Not specified'}` },
+          { icon: '💬', text: `Message: ${booking.message || 'No message'}` },
+        ],
+        cta: { text: 'Review Booking', url: 'https://rwanda-easyrent.vercel.app/dashboard/bookings' },
+      })
 
       await transporter.sendMail({
         from: `"EasyRent" <${fromEmail}>`,
         to: booking.owner?.email,
         subject,
-        text: body,
+        html: htmlBody,
       })
 
       try { await supabase.from('email_logs').insert({
@@ -60,24 +61,24 @@ The EasyRent Team`
       }) } catch { /* non-critical */ }
     } else if (event === 'approved') {
       const subject = `Booking Approved - ${propertyTitle}`
-      const body = `Hi ${booking.tenant?.full_name},
-
-Your booking request for "${propertyTitle}" has been approved by the owner!
-
-Visit Date: ${booking.visit_date ? new Date(booking.visit_date).toLocaleDateString() : 'Not specified'}
-
-Please contact the owner for further details.
-Owner: ${booking.owner?.full_name}
-Email: ${booking.owner?.email}
-
-Best regards,
-The EasyRent Team`
+      const htmlBody = buildEmailHtml({
+        title: 'Booking Approved ✅',
+        greeting: `Hi ${booking.tenant?.full_name},`,
+        paragraphs: [
+          `Your booking request for "${propertyTitle}" has been approved by the owner!`,
+        ],
+        features: [
+          { icon: '📅', text: `Visit Date: ${booking.visit_date ? new Date(booking.visit_date).toLocaleDateString() : 'Not specified'}` },
+          { icon: '👤', text: `Owner: ${booking.owner?.full_name} (${booking.owner?.email})` },
+        ],
+        cta: { text: 'View Booking', url: 'https://rwanda-easyrent.vercel.app/dashboard/bookings' },
+      })
 
       await transporter.sendMail({
         from: `"EasyRent" <${fromEmail}>`,
         to: booking.tenant?.email,
         subject,
-        text: body,
+        html: htmlBody,
       })
 
       try { await supabase.from('email_logs').insert({
@@ -89,20 +90,20 @@ The EasyRent Team`
       }) } catch { /* non-critical */ }
     } else if (event === 'cancelled') {
       const subject = `Booking Cancelled - ${propertyTitle}`
-      const body = `Hi ${booking.owner?.full_name},
-
-${booking.tenant?.full_name} has cancelled their booking request for "${propertyTitle}".
-
-If you have any questions, please contact support.
-
-Best regards,
-The EasyRent Team`
+      const htmlBody = buildEmailHtml({
+        title: 'Booking Cancelled ❌',
+        greeting: `Hi ${booking.owner?.full_name},`,
+        paragraphs: [
+          `${booking.tenant?.full_name} has cancelled their booking request for "${propertyTitle}".`,
+          'If you have any questions, please contact support.',
+        ],
+      })
 
       await transporter.sendMail({
         from: `"EasyRent" <${fromEmail}>`,
         to: booking.owner?.email,
         subject,
-        text: body,
+        html: htmlBody,
       })
 
       try { await supabase.from('email_logs').insert({

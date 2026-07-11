@@ -1,6 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js'
 import { corsHeaders, handleCors } from '../_shared/cors.ts'
 import { createTransporter, getFromEmail, getAdminEmail } from '../_shared/smtp.ts'
+import { buildEmailHtml } from '../_shared/templates.ts'
 
 Deno.serve(async (req: Request) => {
   const corsResponse = handleCors(req)
@@ -27,25 +28,25 @@ Deno.serve(async (req: Request) => {
     const adminEmail = getAdminEmail()
 
     const subject = 'Welcome to EasyRent Newsletter!'
-    const body = `Hi there,
-
-Thank you for subscribing to the EasyRent newsletter!
-
-You'll now receive updates about:
-- New property listings in your area
-- Price drops and special offers
-- Market trends and insights
-
-Stay tuned for our next update!
-
-Best regards,
-The EasyRent Team`
+    const htmlBody = buildEmailHtml({
+      title: 'Newsletter Subscription Confirmed 📧',
+      greeting: 'Hi there,',
+      paragraphs: [
+        'Thank you for subscribing to the EasyRent newsletter!',
+        "You'll now receive updates about new property listings, price drops, special offers, and market trends.",
+      ],
+      features: [
+        { icon: '🏠', text: 'New property listings in your area' },
+        { icon: '📉', text: 'Price drops and special offers' },
+        { icon: '📊', text: 'Market trends and insights' },
+      ],
+    })
 
     await transporter.sendMail({
       from: `"EasyRent" <${fromEmail}>`,
       to: email,
       subject,
-      text: body,
+      html: htmlBody,
     })
 
     try { await supabase.from('email_logs').insert({
@@ -56,11 +57,16 @@ The EasyRent Team`
     }) } catch { /* non-critical */ }
 
     // Notify admin
+    const adminHtml = buildEmailHtml({
+      title: 'New Newsletter Subscriber',
+      greeting: 'Hi Admin,',
+      paragraphs: [`A new user has subscribed to the newsletter: <strong>${email}</strong>.`],
+    })
     await transporter.sendMail({
       from: `"EasyRent" <${fromEmail}>`,
       to: adminEmail,
       subject: 'New Newsletter Subscriber',
-      text: `A new user has subscribed to the newsletter:\n\nEmail: ${email}`,
+      html: adminHtml,
     })
 
     return new Response(JSON.stringify({ success: true }), {

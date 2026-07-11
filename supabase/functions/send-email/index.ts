@@ -1,6 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js'
 import { corsHeaders, handleCors } from '../_shared/cors.ts'
 import { createTransporter, getFromEmail } from '../_shared/smtp.ts'
+import { buildEmailHtml } from '../_shared/templates.ts'
 
 interface SendEmailPayload {
   to: string
@@ -27,11 +28,17 @@ Deno.serve(async (req: Request) => {
     const transporter = createTransporter()
     const fromEmail = getFromEmail()
 
+    const htmlBody = buildEmailHtml({
+      title: subject,
+      greeting: 'Hello,',
+      paragraphs: [body],
+    })
+
     await transporter.sendMail({
       from: `"EasyRent" <${fromEmail}>`,
       to,
       subject,
-      text: body,
+      html: htmlBody,
     })
 
     try {

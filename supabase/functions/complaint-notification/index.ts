@@ -1,6 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js'
 import { corsHeaders, handleCors } from '../_shared/cors.ts'
 import { createTransporter, getFromEmail } from '../_shared/smtp.ts'
+import { buildEmailHtml } from '../_shared/templates.ts'
 
 Deno.serve(async (req: Request) => {
   const corsResponse = handleCors(req)
@@ -29,23 +30,25 @@ Deno.serve(async (req: Request) => {
     const fromEmail = getFromEmail()
 
     const statusLabel = new_status.replace(/_/g, ' ')
+    const statusEmoji = new_status === 'resolved' ? '✅' : new_status === 'in_progress' ? '🔄' : '📝'
     const subject = `Complaint Status Updated: ${statusLabel}`
-    const body = `Hi ${complaint.user?.full_name},
-
-Your complaint "#${complaint.id.substring(0, 8)}" - "${complaint.subject}" has been updated to: ${statusLabel}.
-
-Original description: ${complaint.description}
-
-If you have any questions, please reply to this email or contact support.
-
-Best regards,
-The EasyRent Team`
+    const htmlBody = buildEmailHtml({
+      title: `Complaint ${statusEmoji} ${statusLabel}`,
+      greeting: `Hi ${complaint.user?.full_name},`,
+      paragraphs: [
+        `Your complaint "<strong>${complaint.subject}</strong>" has been updated to: <strong>${statusLabel}</strong>.`,
+      ],
+      features: [
+        { icon: '🆔', text: `Complaint #${complaint.id.substring(0, 8)}` },
+        { icon: '📝', text: `Description: ${complaint.description}` },
+      ],
+    })
 
     await transporter.sendMail({
       from: `"EasyRent" <${fromEmail}>`,
       to: complaint.user?.email,
       subject,
-      text: body,
+      html: htmlBody,
     })
 
     try { await supabase.from('email_logs').insert({
