@@ -42,7 +42,7 @@ Deno.serve(async (req: Request) => {
         `Email: ${profile.email}<br>Account Type: ${profile.role.charAt(0).toUpperCase() + profile.role.slice(1)}`,
       ],
       features: roleFeatures,
-      cta: { text: 'Go to Dashboard', url: 'https://rwanda-easyrent.vercel.app/dashboard' },
+      cta: { text: 'Login to Your Account', url: 'https://rwanda-easyrent.vercel.app/auth/login' },
     })
 
     await transporter.sendMail({
