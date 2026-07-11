@@ -441,5 +441,7 @@
   "delete_message": "Delete Message",
   "delete_message_confirm": "Are you sure you want to delete this message? This cannot be undone.",
   "start_conversation_hint": "Send a message to start the conversation",
-  "interested_in_property": "Hi, I'm interested in your property \"{{property}}\". Is it still available?"
+  "interested_in_property": "Hi, I'm interested in your property \"{{property}}\". Is it still available?",
+  "reset_link_sent": "Password reset link sent to your email!",
+  "sending": "Sending..."
 }

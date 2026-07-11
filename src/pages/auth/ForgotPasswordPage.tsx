@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Home, ArrowLeft } from 'lucide-react'
+import { Home, ArrowLeft, Key, Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -13,18 +13,86 @@ export function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [recovery, setRecovery] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+
+  useEffect(() => {
+    const hash = window.location.hash
+    if (hash && hash.includes('type=recovery')) {
+      setRecovery(true)
+    }
+  }, [])
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    const { error } = await supabase.auth.resetPasswordForEmail(email)
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://rwanda-easyrent.vercel.app/auth/forgot-password',
+    })
     setLoading(false)
     if (error) {
       toast.error(error.message)
       return
     }
     setSent(true)
-    toast.success('Password reset email sent!')
+    toast.success(t('reset_link_sent') || 'Password reset link sent to your email!')
+  }
+
+  const handleSetNewPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (newPassword.length < 6) {
+      toast.error(t('password_too_short'))
+      return
+    }
+    setLoading(true)
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    setLoading(false)
+    if (error) {
+      toast.error(error.message)
+      return
+    }
+    toast.success(t('password_updated'))
+    window.location.hash = ''
+    window.location.href = '/auth/login'
+  }
+
+  if (recovery) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 dark:bg-gray-950">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary-100 dark:bg-primary-900">
+              <Key className="h-6 w-6 text-primary-600" />
+            </div>
+            <CardTitle className="mt-4">{t('reset_password')}</CardTitle>
+            <CardDescription>Enter your new password below.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSetNewPassword} className="space-y-4">
+              <div className="relative">
+                <Input
+                  label={t('new_password')}
+                  type={showPassword ? 'text' : 'password'}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                  minLength={6}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-9 text-gray-400 hover:text-gray-600 cursor-pointer"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              <Button type="submit" className="w-full" loading={loading}>{t('update_password')}</Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (

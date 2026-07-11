@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { profileApi } from '@/lib/api'
 import { sendAccountNotification } from '@/lib/email'
 import { supabase } from '@/lib/supabase'
+import { Link } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
@@ -37,6 +38,7 @@ export function AccountSettingsPage() {
     new_password: '',
     confirm_password: '',
   })
+  const [sendingReset, setSendingReset] = useState(false)
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -92,6 +94,22 @@ export function AccountSettingsPage() {
       setPasswordForm({ current_password: '', new_password: '', confirm_password: '' })
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : t('password_update_failed'))
+    }
+  }
+
+  const handleForgotPassword = async () => {
+    if (!profile?.email) return
+    setSendingReset(true)
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(profile.email, {
+        redirectTo: 'https://rwanda-easyrent.vercel.app/auth/forgot-password',
+      })
+      if (error) throw error
+      toast.success(t('reset_link_sent') || 'Password reset link sent to your email!')
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : t('password_update_failed'))
+    } finally {
+      setSendingReset(false)
     }
   }
 
@@ -186,10 +204,13 @@ export function AccountSettingsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('current_password')}</label>
-                  <input type="password" value={passwordForm.current_password} onChange={(e) => setPasswordForm({ ...passwordForm, current_password: e.target.value })} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
-                </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('current_password')}</label>
+                    <input type="password" value={passwordForm.current_password} onChange={(e) => setPasswordForm({ ...passwordForm, current_password: e.target.value })} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
+                    <button type="button" onClick={handleForgotPassword} disabled={sendingReset} className="mt-1 text-xs text-primary-600 hover:text-primary-700 dark:text-primary-400 cursor-pointer">
+                      {sendingReset ? t('sending') || 'Sending...' : t('forgot_password')}
+                    </button>
+                  </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('new_password')}</label>
                   <input type="password" value={passwordForm.new_password} onChange={(e) => setPasswordForm({ ...passwordForm, new_password: e.target.value })} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
