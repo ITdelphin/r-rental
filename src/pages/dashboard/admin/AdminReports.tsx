@@ -43,13 +43,13 @@ export function AdminReports() {
                 supabase.from('profiles').select('*', { count: 'exact', head: true }),
                 supabase.from('properties').select('*', { count: 'exact', head: true }),
                 supabase.from('bookings').select('*', { count: 'exact', head: true }),
-                supabase.from('bookings').select('total_price').not('status', 'eq', 'cancelled'),
+                supabase.from('bookings').select('property:properties(price)').not('status', 'eq', 'cancelled'),
                 supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', since),
                 supabase.from('properties').select('*', { count: 'exact', head: true }).gte('created_at', since),
             ])
 
-            const revenueData = ((revenueRes as { data: { total_price: number }[] | null }).data || [])
-            const totalRevenue = revenueData.reduce((sum, b) => sum + (b.total_price || 0), 0)
+            const revenueData = ((revenueRes as { data: { property: { price: number } | null }[] | null }).data || [])
+            const totalRevenue = revenueData.reduce((sum, b) => sum + (b.property?.price || 0), 0)
 
             const finalStats: ReportStats = {
                 totalUsers: usersRes.count ?? 0,
