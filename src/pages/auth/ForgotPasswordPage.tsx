@@ -53,6 +53,7 @@ export function ForgotPasswordPage() {
       return
     }
     toast.success(t('password_updated'))
+    await supabase.auth.signOut()
     window.location.hash = ''
     window.location.href = '/auth/login'
   }
