@@ -1,0 +1,128 @@
+import { createClient } from 'npm:@supabase/supabase-js'
+import { corsHeaders, handleCors } from '../_shared/cors.ts'
+import { createTransporter, getFromEmail } from '../_shared/smtp.ts'
+
+Deno.serve(async (req: Request) => {
+  const corsResponse = handleCors(req)
+  if (corsResponse) return corsResponse
+
+  try {
+    const { booking_id, event } = await req.json()
+    if (!booking_id || !event) {
+      return new Response(JSON.stringify({ error: 'Missing booking_id or event' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+    const { data: booking, error } = await supabase
+      .from('bookings')
+      .select('*, property:properties(*), tenant:profiles!tenant_id(*), owner:profiles!owner_id(*)')
+      .eq('id', booking_id)
+      .single()
+    if (error || !booking) {
+      return new Response(JSON.stringify({ error: 'Booking not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+
+    const transporter = createTransporter()
+    const fromEmail = getFromEmail()
+    const propertyTitle = booking.property?.title || 'Property'
+
+    if (event === 'created') {
+      const subject = `New Booking Request for ${propertyTitle}`
+      const body = `Hi ${booking.owner?.full_name},
+
+${booking.tenant?.full_name} has requested to book your property "${propertyTitle}".
+
+Visit Date: ${booking.visit_date ? new Date(booking.visit_date).toLocaleDateString() : 'Not specified'}
+Message from tenant: ${booking.message || 'No message'}
+
+Log in to your dashboard to approve or reject this request.
+https://rwanda-easyrent.vercel.app/dashboard/bookings
+
+Best regards,
+The EasyRent Team`
+
+      await transporter.sendMail({
+        from: `"EasyRent" <${fromEmail}>`,
+        to: booking.owner?.email,
+        subject,
+        text: body,
+      })
+
+      await supabase.from('email_logs').insert({
+        user_id: booking.owner_id,
+        recipient: booking.owner?.email,
+        email_type: 'booking_created',
+        subject,
+        status: 'sent',
+      })
+    } else if (event === 'approved') {
+      const subject = `Booking Approved - ${propertyTitle}`
+      const body = `Hi ${booking.tenant?.full_name},
+
+Your booking request for "${propertyTitle}" has been approved by the owner!
+
+Visit Date: ${booking.visit_date ? new Date(booking.visit_date).toLocaleDateString() : 'Not specified'}
+
+Please contact the owner for further details.
+Owner: ${booking.owner?.full_name}
+Email: ${booking.owner?.email}
+
+Best regards,
+The EasyRent Team`
+
+      await transporter.sendMail({
+        from: `"EasyRent" <${fromEmail}>`,
+        to: booking.tenant?.email,
+        subject,
+        text: body,
+      })
+
+      await supabase.from('email_logs').insert({
+        user_id: booking.tenant_id,
+        recipient: booking.tenant?.email,
+        email_type: 'booking_approved',
+        subject,
+        status: 'sent',
+      })
+    } else if (event === 'cancelled') {
+      const subject = `Booking Cancelled - ${propertyTitle}`
+      const body = `Hi ${booking.owner?.full_name},
+
+${booking.tenant?.full_name} has cancelled their booking request for "${propertyTitle}".
+
+If you have any questions, please contact support.
+
+Best regards,
+The EasyRent Team`
+
+      await transporter.sendMail({
+        from: `"EasyRent" <${fromEmail}>`,
+        to: booking.owner?.email,
+        subject,
+        text: body,
+      })
+
+      await supabase.from('email_logs').insert({
+        user_id: booking.owner_id,
+        recipient: booking.owner?.email,
+        email_type: 'booking_cancelled',
+        subject,
+        status: 'sent',
+      })
+    }
+
+    return new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    return new Response(JSON.stringify({ error: message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+})
