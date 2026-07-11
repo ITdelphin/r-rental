@@ -1,7 +1,7 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { LayoutDashboard, Building2, Calendar, Heart, MessageSquare, Bell, Settings, LogOut, Menu, X, ChevronRight, Home, Users, BarChart3, FileText, Shield, Star, Plus, Activity } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/lib/supabase'
@@ -65,6 +65,16 @@ export function DashboardLayout() {
   const location = useLocation()
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [unreadNotifs, setUnreadNotifs] = useState(0)
+
+  useEffect(() => {
+    if (!user) return
+    supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', user.id).is('is_read', false).then(({ count }) => setUnreadNotifs(count ?? 0))
+    const sub = supabase.channel('notif-count').on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, () => {
+      supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', user.id).is('is_read', false).then(({ count }) => setUnreadNotifs(count ?? 0))
+    }).subscribe()
+    return () => { supabase.removeChannel(sub) }
+  }, [user])
 
   const getNavItems = () => {
     switch (profile?.role) {
@@ -149,6 +159,11 @@ export function DashboardLayout() {
           <div className="flex items-center gap-3">
             <Link to="/dashboard/notifications" className="relative p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
               <Bell className="h-5 w-5" />
+              {unreadNotifs > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                  {unreadNotifs > 9 ? '9+' : unreadNotifs}
+                </span>
+              )}
             </Link>
             <Link to="/dashboard/messages" className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
               <MessageSquare className="h-5 w-5" />

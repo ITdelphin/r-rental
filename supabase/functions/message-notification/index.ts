@@ -50,6 +50,14 @@ Deno.serve(async (req: Request) => {
       html: htmlBody,
     })
 
+    try { await supabase.from('notifications').insert({
+      user_id: message.receiver_id,
+      title: 'New Message',
+      body: `You have a new message from ${message.sender?.full_name || 'a user'}: "${contentPreview}"`,
+      type: 'info',
+      data: { message_id: message.id, sender_id: message.sender_id, url: '/dashboard/messages' },
+    }) } catch { /* non-critical */ }
+
     try { await supabase.from('email_logs').insert({
       user_id: message.receiver_id,
       recipient: message.receiver?.email,
