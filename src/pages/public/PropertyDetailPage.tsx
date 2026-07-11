@@ -369,7 +369,12 @@ export function PropertyDetailPage() {
                   <Button
                     variant="outline"
                     className="mt-2 w-full border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
-                    onClick={() => { const n = whatsappNumber.replace(/[^0-9]/g, ''); window.open(`https://wa.me/${n.startsWith('0') ? '250' + n.slice(1) : n}?text=${encodeURIComponent(`Hi, I'm interested in your property "${property.title}". Is it still available?`)}`, '_blank') }}
+                    onClick={() => {
+                      const n = whatsappNumber.replace(/[^0-9]/g, '')
+                      const p = property
+                      const msg = `*${p.title}*\n💰 ${formatPrice(p.price)}${p.deposit ? ` (Deposit: ${formatPrice(p.deposit)})` : ''}\n📍 ${p.village || ''} ${p.cell || ''} ${p.sector || ''} ${p.district}, ${p.province}\n🛏 ${p.bedrooms} bed • 🛁 ${p.bathrooms} bath • 🍳 ${p.kitchen} kitchen\n${p.description ? `\n${p.description.substring(0, 200)}${p.description.length > 200 ? '...' : ''}` : ''}\n\nView property: https://rwanda-easyrent.vercel.app/properties/${p.id}`
+                      window.open(`https://wa.me/${n.startsWith('0') ? '250' + n.slice(1) : n}?text=${encodeURIComponent(msg)}`, '_blank')
+                    }}
                   >
                     <MessageCircle className="h-4 w-4" /> WhatsApp
                   </Button>
