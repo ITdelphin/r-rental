@@ -53,8 +53,7 @@ const editSchema = z.object({
   sector: z.string().default(''),
   cell: z.string().default(''),
   village: z.string().default(''),
-  latitude: z.string().default(''),
-  longitude: z.string().default(''),
+  whatsapp_number: z.string().default(''),
   parking: z.boolean().default(false),
   balcony: z.boolean().default(false),
   garden: z.boolean().default(false),
@@ -152,8 +151,7 @@ export function EditPropertyPage() {
         sector: property.sector || '',
         cell: property.cell || '',
         village: property.village || '',
-        latitude: property.latitude?.toString() || '',
-        longitude: property.longitude?.toString() || '',
+        whatsapp_number: property.whatsapp_number || '',
         parking: property.parking || false,
         balcony: property.balcony || false,
         garden: property.garden || false,
@@ -253,8 +251,7 @@ export function EditPropertyPage() {
         sector: formData.sector || '',
         cell: formData.cell || '',
         village: formData.village || '',
-        latitude: formData.latitude ? parseFloat(formData.latitude) : null,
-        longitude: formData.longitude ? parseFloat(formData.longitude) : null,
+        whatsapp_number: formData.whatsapp_number || null,
         parking: formData.parking,
         balcony: formData.balcony,
         garden: formData.garden,
@@ -436,15 +433,9 @@ export function EditPropertyPage() {
               selectedVillage={formValues.village}
               onChange={(field, value) => setValue(field as keyof EditFormData, value, { shouldValidate: true })}
             />
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="mb-1.5 block text-sm font-medium">Latitude</label>
-                <Input {...register('latitude')} placeholder="e.g. -1.9541" />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium">Longitude</label>
-                <Input {...register('longitude')} placeholder="e.g. 30.0588" />
-              </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium">WhatsApp Number (optional)</label>
+              <Input {...register('whatsapp_number')} placeholder="e.g. +250788123456" />
             </div>
           </div>
         </FormSection>

@@ -364,6 +364,17 @@ export function PropertyDetailPage() {
                 }}>
                   <MessageCircle className="h-4 w-4" /> {t('send_message')}
                 </Button>
+                {property.whatsapp_number && (
+                  <a
+                    href={`https://wa.me/${property.whatsapp_number.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi, I'm interested in your property "${property.title}". Is it still available?`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Button variant="outline" className="mt-2 w-full border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20">
+                      <MessageCircle className="h-4 w-4" /> WhatsApp
+                    </Button>
+                  </a>
+                )}
               </CardContent>
             </Card>
           )}

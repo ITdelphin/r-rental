@@ -52,8 +52,7 @@ const propertySchema = z.object({
   sector: z.string().default(''),
   cell: z.string().default(''),
   village: z.string().default(''),
-  latitude: z.string().default(''),
-  longitude: z.string().default(''),
+  whatsapp_number: z.string().default(''),
   parking: z.boolean().default(false),
   balcony: z.boolean().default(false),
   garden: z.boolean().default(false),
@@ -82,8 +81,7 @@ const defaultValues: PropertyFormData = {
   sector: '',
   cell: '',
   village: '',
-  latitude: '',
-  longitude: '',
+  whatsapp_number: '',
   parking: false,
   balcony: false,
   garden: false,
@@ -233,8 +231,7 @@ export function AddPropertyPage() {
         sector: formData.sector || '',
         cell: formData.cell || '',
         village: formData.village || '',
-        latitude: formData.latitude ? parseFloat(formData.latitude) : null,
-        longitude: formData.longitude ? parseFloat(formData.longitude) : null,
+        whatsapp_number: formData.whatsapp_number || null,
         parking: formData.parking,
         balcony: formData.balcony,
         garden: formData.garden,
@@ -419,15 +416,9 @@ export function AddPropertyPage() {
                 <AlertCircle className="h-3.5 w-3.5" /> {errors.district.message}
               </p>
             )}
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Latitude (optional)</label>
-                <Input {...register('latitude')} placeholder="e.g. -1.9541" />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Longitude (optional)</label>
-                <Input {...register('longitude')} placeholder="e.g. 30.0588" />
-              </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">WhatsApp Number (optional)</label>
+              <Input {...register('whatsapp_number')} placeholder="e.g. +250788123456" />
             </div>
           </div>
         </FormSection>

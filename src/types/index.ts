@@ -54,6 +54,7 @@ export interface Property {
   village: string
   latitude: number | null
   longitude: number | null
+  whatsapp_number: string | null
   status: PropertyStatus
   is_featured: boolean
   views_count: number
