@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Users, Building2, Calendar, DollarSign, TrendingUp, RefreshCw, ArrowUpRight } from 'lucide-react'
+import { Users, Building2, Calendar, DollarSign, TrendingUp, RefreshCw } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
@@ -19,7 +19,14 @@ type Period = '7d' | '30d' | '90d' | '1y'
 
 const PERIODS: Period[] = ['7d', '30d', '90d', '1y']
 
-function GrowthChart({ data, period }: { data: { label: string; value: number; color: string }[]; period: Period }) {
+const CARD_STYLES: Record<string, string> = {
+  users: 'bg-blue-50 text-blue-700 ring-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:ring-blue-800',
+  properties: 'bg-purple-50 text-purple-700 ring-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:ring-purple-800',
+  bookings: 'bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:ring-emerald-800',
+  revenue: 'bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:ring-amber-800',
+}
+
+function BarChart({ data }: { data: { label: string; value: number; color: string }[] }) {
   const max = Math.max(...data.map(d => d.value), 1)
   return (
     <div className="space-y-3">
@@ -27,15 +34,12 @@ function GrowthChart({ data, period }: { data: { label: string; value: number; c
         const pct = (item.value / max) * 100
         return (
           <div key={item.label}>
-            <div className="flex items-center justify-between text-sm mb-1.5">
-              <span className="text-gray-600 dark:text-gray-400 font-medium">{item.label}</span>
-              <span className="text-gray-900 dark:text-gray-100 font-semibold">{item.value.toLocaleString()}</span>
+            <div className="flex items-center justify-between text-sm mb-1">
+              <span className="text-gray-600 dark:text-gray-400">{item.label}</span>
+              <span className="font-semibold text-gray-900 dark:text-gray-100">{item.value.toLocaleString()}</span>
             </div>
-            <div className="relative h-3 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
-              <div
-                className={`absolute inset-y-0 left-0 rounded-full ${item.color} transition-all duration-700 ease-out`}
-                style={{ width: `${pct}%` }}
-              />
+            <div className="h-2.5 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
+              <div className={`h-full rounded-full ${item.color} transition-all duration-500`} style={{ width: `${pct}%` }} />
             </div>
           </div>
         )
@@ -94,10 +98,10 @@ export function AdminReports() {
     }
 
     const statCards = stats ? [
-        { icon: Users, label: t('total_users'), value: stats.totalUsers.toLocaleString(), gradient: 'from-blue-600 to-blue-700', change: `+${stats.newUsersThisMonth}` },
-        { icon: Building2, label: t('total_properties'), value: stats.totalProperties.toLocaleString(), gradient: 'from-purple-600 to-purple-700', change: `+${stats.newPropertiesThisMonth}` },
-        { icon: Calendar, label: t('total_bookings'), value: stats.totalBookings.toLocaleString(), gradient: 'from-emerald-600 to-emerald-700' },
-        { icon: DollarSign, label: t('total_revenue'), value: `${(stats.totalRevenue / 1000).toFixed(1)}K ${t('rwf')}`, gradient: 'from-amber-500 to-orange-600' },
+        { icon: Users, label: t('total_users'), value: stats.totalUsers.toLocaleString(), style: CARD_STYLES.users, change: `+${stats.newUsersThisMonth}` },
+        { icon: Building2, label: t('total_properties'), value: stats.totalProperties.toLocaleString(), style: CARD_STYLES.properties, change: `+${stats.newPropertiesThisMonth}` },
+        { icon: Calendar, label: t('total_bookings'), value: stats.totalBookings.toLocaleString(), style: CARD_STYLES.bookings },
+        { icon: DollarSign, label: t('total_revenue'), value: `${(stats.totalRevenue / 1000).toFixed(1)}K ${t('rwf')}`, style: CARD_STYLES.revenue },
     ] : []
 
     const chartData = stats ? [
@@ -108,85 +112,72 @@ export function AdminReports() {
     ] : []
 
     return (
-        <div className="space-y-8">
-            {/* Page Header */}
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8">
-                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAyNHYySDI0di0yaDEyeiIvPjwvZz48L2c+PC9zdmc+')]" />
-                <div className="relative flex items-center justify-between">
-                    <div>
-                        <h1 className="text-3xl font-bold text-white tracking-tight">{t('reports')}</h1>
-                        <p className="mt-1.5 text-gray-300 text-sm">{t('view_platform_statistics')}</p>
+        <div className="space-y-6">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('reports')}</h1>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{t('view_platform_statistics')}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                    <div className="flex rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden">
+                        {PERIODS.map(p => (
+                            <button key={p} onClick={() => setPeriod(p)}
+                                className={`px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${period === p ? 'bg-primary-600 text-white' : 'bg-white text-gray-600 dark:bg-gray-800 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                            >
+                                {p === '7d' ? t('7_days') : p === '30d' ? t('30_days') : p === '90d' ? t('90_days') : t('1_year')}
+                            </button>
+                        ))}
                     </div>
-                    <div className="flex items-center gap-3">
-                        <div className="flex rounded-xl bg-white/10 p-1 backdrop-blur-sm">
-                            {PERIODS.map(p => (
-                                <button key={p} onClick={() => setPeriod(p)}
-                                    className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-all cursor-pointer ${
-                                        period === p
-                                            ? 'bg-white text-gray-900 shadow-sm'
-                                            : 'text-white/70 hover:text-white hover:bg-white/10'
-                                    }`}
-                                >
-                                    {p === '7d' ? t('7_days') : p === '30d' ? t('30_days') : p === '90d' ? t('90_days') : t('1_year')}
-                                </button>
-                            ))}
-                        </div>
-                        <Button variant="secondary" size="sm" onClick={fetchStats} className="bg-white/10 text-white hover:bg-white/20 border-0">
-                            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                        </Button>
-                    </div>
+                    <Button variant="outline" size="sm" onClick={fetchStats}><RefreshCw className="h-4 w-4" /></Button>
                 </div>
             </div>
 
             {loading ? (
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    {[1, 2, 3, 4].map(i => <Card key={i} className="border-0 shadow-sm ring-1 ring-gray-200 dark:ring-gray-700"><CardContent className="p-6"><TableSkeleton rows={2} /></CardContent></Card>)}
+                    {[1, 2, 3, 4].map(i => <Card key={i}><CardContent className="p-6"><TableSkeleton rows={2} /></CardContent></Card>)}
                 </div>
             ) : !stats ? (
-                <Card className="border-0 shadow-sm ring-1 ring-gray-200 dark:ring-gray-700">
-                    <CardContent className="py-16 text-center text-gray-500">{t('failed_to_load_reports')}</CardContent>
-                </Card>
+                <Card><CardContent className="py-12 text-center text-gray-500">{t('failed_to_load_reports')}</CardContent></Card>
             ) : (
                 <>
                     {/* Stat Cards */}
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         {statCards.map(card => (
-                            <div key={card.label} className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${card.gradient} p-5 shadow-lg shadow-black/10`}>
-                                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAyNHYySDI0di0yaDEyeiIvPjwvZz48L2c+PC9zdmc+')]" />
-                                <div className="relative">
-                                    <div className="flex items-start justify-between">
-                                        <div className="rounded-xl bg-white/20 p-2.5 backdrop-blur-sm">
-                                            <card.icon className="h-5 w-5 text-white" />
+                            <Card key={card.label}>
+                                <CardContent className="p-5">
+                                    <div className="flex items-center justify-between">
+                                        <div className={`rounded-lg p-3 ring-1 ${card.style}`}>
+                                            <card.icon className="h-6 w-6" />
                                         </div>
                                         {card.change && (
-                                            <span className="inline-flex items-center gap-0.5 rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
-                                                <ArrowUpRight className="h-3 w-3" />
+                                            <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
                                                 {card.change}
                                             </span>
                                         )}
                                     </div>
-                                    <p className="mt-4 text-2xl font-bold tracking-tight text-white">{card.value}</p>
-                                    <p className="mt-0.5 text-xs font-medium text-white/70">{card.label}</p>
-                                </div>
-                            </div>
+                                    <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">{card.label}</p>
+                                    <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{card.value}</p>
+                                </CardContent>
+                            </Card>
                         ))}
                     </div>
 
                     {/* Growth Chart */}
-                    <Card className="border-0 shadow-sm ring-1 ring-gray-200 dark:ring-gray-700">
-                        <CardHeader className="pb-4 border-b border-gray-100 dark:border-gray-800">
+                    <Card>
+                        <CardHeader className="pb-4">
                             <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-sm">
-                                    <TrendingUp className="h-5 w-5 text-white" />
+                                <div className="rounded-lg bg-primary-100 p-3 dark:bg-primary-900/30">
+                                    <TrendingUp className="h-6 w-6 text-primary-600" />
                                 </div>
                                 <div>
-                                    <CardTitle className="text-lg">{t('growth_trends')}</CardTitle>
+                                    <h3 className="font-semibold text-gray-900 dark:text-gray-100">{t('growth_trends')}</h3>
                                     <p className="text-sm text-gray-500">{t('growth_trends_description')}</p>
                                 </div>
                             </div>
                         </CardHeader>
-                        <CardContent className="pt-6">
-                            <GrowthChart data={chartData} period={period} />
+                        <CardContent>
+                            <BarChart data={chartData} />
                         </CardContent>
                     </Card>
                 </>

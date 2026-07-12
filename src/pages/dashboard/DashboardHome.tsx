@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatsSkeleton } from '@/components/ui/loading'
-import { Building2, Calendar, MessageSquare, DollarSign, Users, TrendingUp, Activity, UserCheck, Settings, FileText, AlertTriangle, Globe, Eye, ArrowUpRight, ArrowDownRight, Zap } from 'lucide-react'
+import { Building2, Calendar, Heart, MessageSquare, Star, DollarSign, Users, TrendingUp, Activity, UserCheck, Settings, FileText, AlertTriangle, Globe, Eye, Zap } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 interface DashboardStats {
@@ -17,70 +17,14 @@ interface DashboardStats {
   totalViews: number
 }
 
-interface StatCard {
-  icon: typeof Users
-  label: string
-  value: string | number
-  gradient: string
-  trend?: { value: number; positive: boolean }
-  sub?: string
-}
-
-const GRADIENTS: Record<string, string> = {
-  users: 'from-blue-600 to-blue-700',
-  properties: 'from-purple-600 to-purple-700',
-  bookings: 'from-emerald-600 to-emerald-700',
-  views: 'from-cyan-600 to-cyan-700',
-  revenue: 'from-amber-500 to-orange-600',
-  pending: 'from-orange-500 to-red-600',
-  complaints: 'from-red-500 to-rose-600',
-}
-
-const ICON_BG: Record<string, string> = {
-  users: 'bg-blue-500/20 text-blue-200',
-  properties: 'bg-purple-500/20 text-purple-200',
-  bookings: 'bg-emerald-500/20 text-emerald-200',
-  views: 'bg-cyan-500/20 text-cyan-200',
-  revenue: 'bg-amber-500/20 text-amber-200',
-  pending: 'bg-orange-500/20 text-orange-200',
-  complaints: 'bg-red-500/20 text-red-200',
-}
-
-function StatCard({ icon: Icon, label, value, gradient, sub }: StatCard) {
-  return (
-    <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${gradient} p-5 shadow-lg shadow-black/10 transition-all hover:shadow-xl hover:scale-[1.02] hover:-translate-y-0.5`}>
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAyNHYySDI0di0yaDEyeiIvPjwvZz48L2c+PC9zdmc+')] opacity-50" />
-      <div className="relative">
-        <div className="flex items-start justify-between">
-          <div className={`rounded-xl p-2.5 ${ICON_BG[gradient.split('-')[1]] || 'bg-white/10'} backdrop-blur-sm`}>
-            <Icon className="h-5 w-5" />
-          </div>
-          {sub && (
-            <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
-              {sub}
-            </span>
-          )}
-        </div>
-        <p className="mt-4 text-2xl font-bold tracking-tight text-white">{value}</p>
-        <p className="mt-0.5 text-xs font-medium text-white/70">{label}</p>
-      </div>
-    </div>
-  )
-}
-
-function QuickAction({ to, icon: Icon, label, gradient }: { to: string; icon: typeof Users; label: string; gradient: string }) {
-  return (
-    <Link
-      to={to}
-      className={`flex items-center gap-3 rounded-xl bg-gradient-to-br ${gradient} p-4 text-sm font-medium text-white shadow-sm transition-all hover:shadow-md hover:scale-[1.02] hover:-translate-y-0.5 group`}
-    >
-      <div className="rounded-lg bg-white/20 p-2 backdrop-blur-sm">
-        <Icon className="h-4 w-4" />
-      </div>
-      <span className="flex-1">{label}</span>
-      <ArrowUpRight className="h-3.5 w-3.5 text-white/50 group-hover:text-white/90 transition-colors" />
-    </Link>
-  )
+const CARD_STYLES: Record<string, string> = {
+  users: 'bg-blue-50 text-blue-700 ring-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:ring-blue-800',
+  properties: 'bg-purple-50 text-purple-700 ring-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:ring-purple-800',
+  bookings: 'bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:ring-emerald-800',
+  views: 'bg-cyan-50 text-cyan-700 ring-cyan-200 dark:bg-cyan-900/20 dark:text-cyan-400 dark:ring-cyan-800',
+  revenue: 'bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:ring-amber-800',
+  pending: 'bg-orange-50 text-orange-700 ring-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:ring-orange-800',
+  complaints: 'bg-red-50 text-red-700 ring-red-200 dark:bg-red-900/20 dark:text-red-400 dark:ring-red-800',
 }
 
 export function DashboardHome() {
@@ -125,7 +69,7 @@ export function DashboardHome() {
   if (authLoading || loading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-48 animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700" />
+        <div className="h-8 w-48 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
         <div className="mt-2 h-4 w-64 animate-pulse rounded bg-gray-100 dark:bg-gray-800" />
         <StatsSkeleton />
       </div>
@@ -135,140 +79,128 @@ export function DashboardHome() {
   const isAdmin = profile?.role === 'super_admin' || profile?.role === 'admin'
   const isOwner = profile?.role === 'owner' || profile?.role === 'agent'
 
-  const adminCards: StatCard[] = [
-    { icon: Users, label: t('total_users'), value: stats?.totalUsers ?? 0, gradient: GRADIENTS.users, sub: t('active') },
-    { icon: Building2, label: t('total_properties'), value: stats?.totalProperties ?? 0, gradient: GRADIENTS.properties, sub: `${stats?.pendingProperties ?? 0} ${t('pending')}` },
-    { icon: Calendar, label: t('total_bookings'), value: stats?.totalBookings ?? 0, gradient: GRADIENTS.bookings },
-    { icon: Eye, label: t('total_views'), value: (stats?.totalViews ?? 0).toLocaleString(), gradient: GRADIENTS.views },
-    { icon: DollarSign, label: `${t('total_revenue')} (${t('rwf')})`, value: (stats?.totalRevenue ?? 0).toLocaleString(), gradient: GRADIENTS.revenue },
-    { icon: AlertTriangle, label: t('pending_properties'), value: stats?.pendingProperties ?? 0, gradient: GRADIENTS.pending },
-    { icon: MessageSquare, label: t('open_complaints'), value: stats?.openComplaints ?? 0, gradient: GRADIENTS.complaints },
+  const adminCards = [
+    { icon: Users, label: t('total_users'), value: stats?.totalUsers ?? 0, style: CARD_STYLES.users },
+    { icon: Building2, label: t('total_properties'), value: stats?.totalProperties ?? 0, style: CARD_STYLES.properties },
+    { icon: Calendar, label: t('total_bookings'), value: stats?.totalBookings ?? 0, style: CARD_STYLES.bookings },
+    { icon: Eye, label: t('total_views'), value: (stats?.totalViews ?? 0).toLocaleString(), style: CARD_STYLES.views },
+    { icon: DollarSign, label: `${t('total_revenue')} (${t('rwf')})`, value: (stats?.totalRevenue ?? 0).toLocaleString(), style: CARD_STYLES.revenue },
+    { icon: AlertTriangle, label: t('pending_properties'), value: stats?.pendingProperties ?? 0, style: CARD_STYLES.pending },
+    { icon: MessageSquare, label: t('open_complaints'), value: stats?.openComplaints ?? 0, style: CARD_STYLES.complaints },
   ]
 
-  const ownerCards: StatCard[] = [
-    { icon: Building2, label: t('total_properties'), value: stats?.totalProperties ?? 0, gradient: GRADIENTS.properties },
-    { icon: Calendar, label: t('active_bookings'), value: t('zero'), gradient: GRADIENTS.bookings },
-    { icon: DollarSign, label: t('monthly_earnings'), value: t('rwf_zero'), gradient: GRADIENTS.revenue },
-    { icon: TrendingUp, label: t('average_rating'), value: t('zero'), gradient: GRADIENTS.views },
+  const ownerCards = [
+    { icon: Building2, label: t('total_properties'), value: stats?.totalProperties ?? 0, style: CARD_STYLES.properties },
+    { icon: Calendar, label: t('active_bookings'), value: t('zero'), style: CARD_STYLES.bookings },
+    { icon: DollarSign, label: t('monthly_earnings'), value: t('rwf_zero'), style: CARD_STYLES.revenue },
+    { icon: Star, label: t('average_rating'), value: t('zero'), style: CARD_STYLES.views },
   ]
 
-  const tenantCards: StatCard[] = [
-    { icon: Calendar, label: t('active_bookings'), value: t('zero'), gradient: GRADIENTS.bookings },
-    { icon: Eye, label: t('saved_properties'), value: t('zero'), gradient: GRADIENTS.views },
-    { icon: MessageSquare, label: t('unread_messages'), value: t('zero'), gradient: GRADIENTS.complaints },
-    { icon: TrendingUp, label: t('reviews_given'), value: t('zero'), gradient: GRADIENTS.pending },
+  const tenantCards = [
+    { icon: Calendar, label: t('active_bookings'), value: t('zero'), style: CARD_STYLES.bookings },
+    { icon: Heart, label: t('saved_properties'), value: t('zero'), style: CARD_STYLES.views },
+    { icon: MessageSquare, label: t('unread_messages'), value: t('zero'), style: CARD_STYLES.complaints },
+    { icon: Star, label: t('reviews_given'), value: t('zero'), style: CARD_STYLES.pending },
   ]
 
   const statCards = isAdmin ? adminCards : isOwner ? ownerCards : tenantCards
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAyNHYySDI0di0yaDEyeiIvPjwvZz48L2c+PC9zdmc+')]" />
-        <div className="relative">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-white tracking-tight">
-                {t('welcome_back')}, {profile?.full_name?.split(' ')[0] || t('user')}
-              </h1>
-              <p className="mt-1.5 text-gray-300 text-sm">
-                {isAdmin ? t('admin_dashboard_description') : t('dashboard_description')}
-              </p>
-            </div>
-            {isAdmin && (
-              <Link to="/dashboard/activity-logs" className="flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2.5 text-sm font-medium text-white hover:bg-white/20 transition-all backdrop-blur-sm">
-                <Activity className="h-4 w-4" />
-                {t('view_activity_logs')}
-              </Link>
-            )}
-          </div>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {isAdmin ? t('admin_dashboard') : t('dashboard')}
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {t('welcome')}, {profile?.full_name || t('user')}!
+          </p>
         </div>
+        {isAdmin && (
+          <Link to="/dashboard/activity-logs" className="flex items-center gap-2 text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400">
+            <Activity className="h-4 w-4" />
+            {t('view_activity_logs')}
+          </Link>
+        )}
       </div>
 
       {/* Stats Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {statCards.map((stat) => (
-          <StatCard key={stat.label} {...stat} />
+        {statCards.map(stat => (
+          <Card key={stat.label}>
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg ring-1 ${stat.style}`}>
+                <stat.icon className="h-6 w-6" />
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-sm text-gray-500 dark:text-gray-400">{stat.label}</p>
+                <p className="text-xl font-bold text-gray-900 dark:text-gray-100">{stat.value}</p>
+              </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
-      {/* Admin Quick Actions + Overview */}
+      {/* Admin Only: Quick Actions + Overview */}
       {isAdmin && (
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Quick Actions */}
-          <Card className="border-0 shadow-sm ring-1 ring-gray-200 dark:ring-gray-700">
-            <CardHeader className="pb-3 border-b border-gray-100 dark:border-gray-800">
+          <Card>
+            <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
                 <Zap className="h-4 w-4 text-amber-500" />
                 {t('quick_actions')}
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-4">
-              <div className="grid grid-cols-2 gap-2.5">
-                <QuickAction to="/dashboard/users" icon={Users} label={t('users')} gradient="from-blue-600 to-blue-700" />
-                <QuickAction to="/dashboard/properties" icon={Building2} label={t('properties')} gradient="from-purple-600 to-purple-700" />
-                <QuickAction to="/dashboard/settings" icon={Globe} label={t('cms')} gradient="from-emerald-600 to-emerald-700" />
-                <QuickAction to="/dashboard/settings" icon={Settings} label={t('settings')} gradient="from-amber-500 to-orange-600" />
-                <QuickAction to="/dashboard/reports" icon={FileText} label={t('reports')} gradient="from-cyan-600 to-cyan-700" />
-                <QuickAction to="/dashboard/complaints" icon={AlertTriangle} label={t('complaints')} gradient="from-red-500 to-rose-600" />
+            <CardContent>
+              <div className="grid grid-cols-2 gap-2">
+                <Link to="/dashboard/users" className="flex flex-col items-center gap-2 rounded-lg bg-blue-50 p-4 text-sm font-medium text-blue-600 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40">
+                  <Users className="h-6 w-6" /> {t('users')}
+                </Link>
+                <Link to="/dashboard/properties" className="flex flex-col items-center gap-2 rounded-lg bg-purple-50 p-4 text-sm font-medium text-purple-600 hover:bg-purple-100 dark:bg-purple-900/20 dark:text-purple-400 dark:hover:bg-purple-900/40">
+                  <Building2 className="h-6 w-6" /> {t('properties')}
+                </Link>
+                <Link to="/dashboard/settings" className="flex flex-col items-center gap-2 rounded-lg bg-green-50 p-4 text-sm font-medium text-green-600 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/40">
+                  <Globe className="h-6 w-6" /> {t('cms')}
+                </Link>
+                <Link to="/dashboard/settings" className="flex flex-col items-center gap-2 rounded-lg bg-orange-50 p-4 text-sm font-medium text-orange-600 hover:bg-orange-100 dark:bg-orange-900/20 dark:text-orange-400 dark:hover:bg-orange-900/40">
+                  <Settings className="h-6 w-6" /> {t('settings')}
+                </Link>
+                <Link to="/dashboard/reports" className="flex flex-col items-center gap-2 rounded-lg bg-yellow-50 p-4 text-sm font-medium text-yellow-600 hover:bg-yellow-100 dark:bg-yellow-900/20 dark:text-yellow-400 dark:hover:bg-yellow-900/40">
+                  <FileText className="h-6 w-6" /> {t('reports')}
+                </Link>
+                <Link to="/dashboard/complaints" className="flex flex-col items-center gap-2 rounded-lg bg-red-50 p-4 text-sm font-medium text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40">
+                  <AlertTriangle className="h-6 w-6" /> {t('complaints')}
+                </Link>
               </div>
             </CardContent>
           </Card>
 
           {/* Platform Overview */}
-          <Card className="lg:col-span-2 border-0 shadow-sm ring-1 ring-gray-200 dark:ring-gray-700">
-            <CardHeader className="pb-4 border-b border-gray-100 dark:border-gray-800">
+          <Card className="lg:col-span-2">
+            <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
-                <TrendingUp className="h-4 w-4 text-primary-500" />
+                <TrendingUp className="h-5 w-5 text-primary-600" />
                 {t('platform_overview')}
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-5">
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  {[
-                    { label: t('total_users'), value: stats?.totalUsers ?? 0, color: 'bg-blue-500' },
-                    { label: t('total_properties'), value: stats?.totalProperties ?? 0, color: 'bg-purple-500' },
-                    { label: t('pending_approval'), value: stats?.pendingProperties ?? 0, color: 'bg-orange-500' },
-                    { label: t('total_bookings'), value: stats?.totalBookings ?? 0, color: 'bg-emerald-500' },
-                  ].map(item => {
-                    const max = Math.max(stats?.totalUsers ?? 1, stats?.totalProperties ?? 1, stats?.totalBookings ?? 1, 1)
-                    const pct = ((item.value as number) / max) * 100
-                    return (
-                      <div key={item.label}>
-                        <div className="flex items-center justify-between text-sm mb-1.5">
-                          <span className="text-gray-600 dark:text-gray-400">{item.label}</span>
-                          <span className="font-semibold text-gray-900 dark:text-gray-100">{item.value}</span>
-                        </div>
-                        <div className="h-2 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
-                          <div className={`h-full rounded-full ${item.color} transition-all duration-500`} style={{ width: `${pct}%` }} />
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-                <div className="space-y-4">
-                  {[
-                    { label: t('total_views'), value: stats?.totalViews?.toLocaleString() ?? '0', color: 'bg-cyan-500' },
-                    { label: t('open_complaints'), value: stats?.openComplaints ?? 0, color: 'bg-red-500' },
-                    { label: t('total_revenue'), value: `${t('rwf')} ${(stats?.totalRevenue ?? 0).toLocaleString()}`, color: 'bg-amber-500' },
-                  ].map(item => (
-                    <div key={item.label} className="rounded-xl border border-gray-100 dark:border-gray-800 p-4 hover:border-gray-200 dark:hover:border-gray-700 transition-colors">
-                      <p className="text-xs text-gray-500 dark:text-gray-400">{item.label}</p>
-                      <p className="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">{item.value}</p>
-                    </div>
-                  ))}
-                  <div className="rounded-xl bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 p-4 border border-primary-200 dark:border-primary-800">
-                    <p className="text-xs text-primary-600 dark:text-primary-400 font-medium">{t('platform_health')}</p>
-                    <div className="mt-2 flex items-center gap-2">
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500">
-                        <Activity className="h-3 w-3 text-white" />
-                      </div>
-                      <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">{t('all_systems_operational')}</span>
-                    </div>
+            <CardContent>
+              <div className="space-y-4">
+                {[
+                  { label: t('total_users'), value: stats?.totalUsers ?? 0 },
+                  { label: t('total_properties'), value: stats?.totalProperties ?? 0 },
+                  { label: t('pending_approval'), value: stats?.pendingProperties ?? 0 },
+                  { label: t('total_bookings'), value: stats?.totalBookings ?? 0 },
+                  { label: t('total_views'), value: (stats?.totalViews ?? 0).toLocaleString() },
+                  { label: t('open_complaints'), value: stats?.openComplaints ?? 0 },
+                  { label: `${t('total_revenue')} (${t('rwf')})`, value: (stats?.totalRevenue ?? 0).toLocaleString() },
+                ].map(item => (
+                  <div key={item.label} className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3 last:border-0 last:pb-0">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">{item.label}</span>
+                    <span className="font-semibold text-gray-900 dark:text-gray-100">{item.value}</span>
                   </div>
-                </div>
+                ))}
               </div>
             </CardContent>
           </Card>

@@ -19,19 +19,19 @@ const TABS: { key: Section; labelKey: string; icon: typeof Building }[] = [
 
 function SectionCard({ title, description, icon: Icon, children }: { title: string; description?: string; icon: typeof Building; children: React.ReactNode }) {
   return (
-    <Card className="border-0 shadow-sm ring-1 ring-gray-200 dark:ring-gray-700">
-      <CardHeader className="pb-4 border-b border-gray-100 dark:border-gray-800">
+    <Card>
+      <CardHeader className="pb-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-sm">
-            <Icon className="h-5 w-5 text-white" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100 dark:bg-primary-900/30">
+            <Icon className="h-5 w-5 text-primary-600 dark:text-primary-400" />
           </div>
           <div>
-            <CardTitle className="text-xl">{title}</CardTitle>
-            {description && <CardDescription className="text-sm">{description}</CardDescription>}
+            <CardTitle className="text-lg">{title}</CardTitle>
+            {description && <CardDescription>{description}</CardDescription>}
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pt-6">{children}</CardContent>
+      <CardContent className="pt-5">{children}</CardContent>
     </Card>
   )
 }
@@ -41,14 +41,14 @@ function InputField({ label, value, onChange, type = 'text', placeholder, error 
 }) {
   return (
     <div>
-      <label className="mb-1.5 block text-sm font-semibold text-gray-700 dark:text-gray-300">{label}</label>
+      <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
       <input
         type={type}
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
-        className={`w-full rounded-xl border bg-white px-4 py-2.5 text-sm shadow-sm transition-colors dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 outline-none ${
-          error ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+        className={`w-full rounded-lg border bg-white px-3 py-2 text-sm dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 outline-none ${
+          error ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'
         }`}
       />
       {error && <p className="mt-1 text-xs text-red-500 flex items-center gap-1"><AlertCircle className="h-3 w-3" />{error}</p>}
@@ -71,25 +71,19 @@ function UploadZone({ label, accept, currentUrl, onUpload, onRemove, uploading, 
 
   return (
     <div className="space-y-3">
-      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">{label}</label>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
       {currentUrl ? (
-        <div className="group relative overflow-hidden rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-          <div className="p-4 flex items-center gap-4">
-            {accept.startsWith('image') ? (
-              <img src={currentUrl} alt="" className="h-16 w-auto object-contain rounded-lg" />
-            ) : (
-              <div className="h-16 w-24 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center text-xs text-gray-400">
-                <Image className="h-6 w-6" />
-              </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{currentUrl.split('/').pop()}</p>
-              <p className="text-xs text-gray-500 truncate">{currentUrl}</p>
-            </div>
-            <button onClick={onRemove} className="shrink-0 flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors cursor-pointer">
-              <X className="h-3.5 w-3.5" /> Remove
-            </button>
+        <div className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-3">
+          {accept.startsWith('image') ? (
+            <img src={currentUrl} alt="" className="h-12 w-auto rounded object-contain" />
+          ) : (
+            <div className="flex h-12 w-16 items-center justify-center rounded bg-gray-200 dark:bg-gray-700 text-gray-400"><Image className="h-5 w-5" /></div>
+          )}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{currentUrl.split('/').pop()}</p>
+            <p className="text-xs text-gray-500 truncate">{currentUrl}</p>
           </div>
+          <button onClick={onRemove} className="shrink-0 rounded p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer"><X className="h-4 w-4" /></button>
         </div>
       ) : (
         <div
@@ -97,18 +91,16 @@ function UploadZone({ label, accept, currentUrl, onUpload, onRemove, uploading, 
           onDragLeave={() => setDragOver(false)}
           onDrop={handleDrop}
           onClick={() => inputRef.current?.click()}
-          className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-8 transition-all ${
-            dragOver
-              ? 'border-primary-400 bg-primary-50 dark:bg-primary-900/20'
-              : 'border-gray-300 dark:border-gray-600 hover:border-primary-300 hover:bg-gray-50 dark:hover:bg-gray-800/50'
+          className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-6 transition-colors ${
+            dragOver ? 'border-primary-400 bg-primary-50 dark:bg-primary-900/20' : 'border-gray-300 dark:border-gray-600 hover:border-primary-300 hover:bg-gray-50 dark:hover:bg-gray-800/50'
           }`}
         >
-          <div className={`rounded-full p-3 ${dragOver ? 'bg-primary-100 text-primary-600' : 'bg-gray-100 text-gray-400 dark:bg-gray-800'}`}>
+          <div className={`rounded-full p-2.5 ${dragOver ? 'bg-primary-100 text-primary-600' : 'bg-gray-100 text-gray-400 dark:bg-gray-800'}`}>
             <Upload className="h-5 w-5" />
           </div>
           <div className="text-center">
             <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{uploadLabel}</p>
-            <p className="text-xs text-gray-500 mt-0.5">Click to browse or drag & drop</p>
+            <p className="text-xs text-gray-500 mt-0.5">Click or drag to upload</p>
           </div>
           <input ref={inputRef} type="file" accept={accept} className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) onUpload(f) }} />
         </div>
@@ -297,7 +289,7 @@ export function SuperAdminSettings() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <div className="h-8 w-48 animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700" />
+          <div className="h-8 w-48 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
           <div className="mt-2 h-4 w-64 animate-pulse rounded bg-gray-100 dark:bg-gray-800" />
         </div>
       </div>
@@ -307,32 +299,29 @@ export function SuperAdminSettings() {
   )
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Page Header */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAyNHYySDI0di0yaDEyeiIvPjwvZz48L2c+PC9zdmc+')] opacity-50" />
-        <div className="relative flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">{t('settings')}</h1>
-            <p className="mt-1.5 text-gray-300 text-sm">{t('manage_platform_settings')}</p>
-          </div>
-          <Button variant="secondary" size="sm" onClick={fetchAll} className="bg-white/10 text-white hover:bg-white/20 border-0">
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            {t('refresh')}
-          </Button>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('settings')}</h1>
+          <p className="mt-1 text-sm text-gray-500">{t('manage_platform_settings')}</p>
         </div>
+        <Button variant="outline" size="sm" onClick={fetchAll}>
+          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+          {t('refresh')}
+        </Button>
       </div>
 
       {/* Tab Bar */}
-      <div className="flex gap-1 rounded-xl bg-gray-100 dark:bg-gray-800 p-1.5">
+      <div className="flex gap-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-1">
         {TABS.map(tab => (
           <button
             key={tab.key}
             onClick={() => setSection(tab.key)}
-            className={`flex items-center gap-2.5 rounded-lg px-5 py-2.5 text-sm font-medium transition-all cursor-pointer ${
+            className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors cursor-pointer ${
               section === tab.key
                 ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm'
-                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-700/50'
+                : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
             }`}
           >
             <tab.icon className="h-4 w-4" />
@@ -341,48 +330,20 @@ export function SuperAdminSettings() {
         ))}
       </div>
 
-      {/* Section Content */}
+      {/* Sections */}
       <div className="space-y-6">
         {section === 'general' && (
           <SectionCard title={t('general_settings')} description={t('general_settings_description')} icon={Building}>
-            <div className="grid gap-5 sm:grid-cols-2">
-              <InputField
-                label={t('platform_name')}
-                value={platformName}
-                onChange={v => { setPlatformName(v); setGeneralDirty(true); setGeneralErrors(p => ({ ...p, platformName: '' })) }}
-                placeholder="Rwanda EasyRent"
-                error={generalErrors.platformName}
-              />
-              <InputField
-                label={t('support_email')}
-                value={supportEmail}
-                onChange={v => { setSupportEmail(v); setGeneralDirty(true); setGeneralErrors(p => ({ ...p, supportEmail: '' })) }}
-                type="email"
-                placeholder="support@example.com"
-                error={generalErrors.supportEmail}
-              />
-              <InputField
-                label={t('phone_number')}
-                value={phoneNumber}
-                onChange={v => { setPhoneNumber(v); setGeneralDirty(true) }}
-                type="tel"
-                placeholder="+250 788 000 000"
-              />
-              <InputField
-                label={t('address')}
-                value={address}
-                onChange={v => { setAddress(v); setGeneralDirty(true) }}
-                placeholder="Kigali, Rwanda"
-              />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <InputField label={t('platform_name')} value={platformName} onChange={v => { setPlatformName(v); setGeneralDirty(true); setGeneralErrors(p => ({ ...p, platformName: '' })) }} placeholder="Rwanda EasyRent" error={generalErrors.platformName} />
+              <InputField label={t('support_email')} value={supportEmail} onChange={v => { setSupportEmail(v); setGeneralDirty(true); setGeneralErrors(p => ({ ...p, supportEmail: '' })) }} type="email" placeholder="support@example.com" error={generalErrors.supportEmail} />
+              <InputField label={t('phone_number')} value={phoneNumber} onChange={v => { setPhoneNumber(v); setGeneralDirty(true) }} type="tel" placeholder="+250 788 000 000" />
+              <InputField label={t('address')} value={address} onChange={v => { setAddress(v); setGeneralDirty(true) }} placeholder="Kigali, Rwanda" />
             </div>
-            <div className="mt-6 flex items-center justify-between border-t border-gray-100 dark:border-gray-800 pt-5">
-              <p className="text-xs text-gray-400">{generalDirty ? t('unsaved_changes') : t('all_changes_saved')}</p>
+            <div className="mt-6 flex items-center justify-between border-t border-gray-100 dark:border-gray-800 pt-4">
+              <span className="text-xs text-gray-400">{generalDirty ? t('unsaved_changes') : t('all_changes_saved')}</span>
               <Button disabled={saving === 'general'} onClick={saveGeneral}>
-                {saving === 'general' ? (
-                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> {t('saving')}...</>
-                ) : (
-                  <><Save className="h-4 w-4 mr-2" /> {t('save_changes')}</>
-                )}
+                {saving === 'general' ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> {t('saving')}...</> : <><Save className="h-4 w-4 mr-2" /> {t('save_changes')}</>}
               </Button>
             </div>
           </SectionCard>
@@ -391,64 +352,34 @@ export function SuperAdminSettings() {
         {section === 'branding' && (
           <div className="space-y-6">
             <SectionCard title={t('logo_favicon')} description={t('brand_assets_description')} icon={Image}>
-              <div className="grid gap-8 sm:grid-cols-2">
-                <UploadZone
-                  label={t('site_logo')}
-                  accept="image/*"
-                  currentUrl={logoUrl}
-                  onUpload={handleUpload('logo_url', 'logo', setLogoUrl)}
-                  onRemove={async () => { setLogoUrl(''); try { await upsertSetting('logo_url', '') } catch { toast.error(t('failed_to_save')) } }}
-                  uploading={uploading === 'logo_url'}
-                  uploadLabel={t('upload_logo')}
-                />
-                <UploadZone
-                  label={t('favicon')}
-                  accept="image/*"
-                  currentUrl={faviconUrl}
-                  onUpload={handleUpload('favicon_url', 'favicon', setFaviconUrl)}
-                  onRemove={async () => { setFaviconUrl(''); try { await upsertSetting('favicon_url', '') } catch { toast.error(t('failed_to_save')) } }}
-                  uploading={uploading === 'favicon_url'}
-                  uploadLabel={t('upload_favicon')}
-                />
+              <div className="grid gap-6 sm:grid-cols-2">
+                <UploadZone label={t('site_logo')} accept="image/*" currentUrl={logoUrl} onUpload={handleUpload('logo_url', 'logo', setLogoUrl)} onRemove={async () => { setLogoUrl(''); try { await upsertSetting('logo_url', '') } catch { toast.error(t('failed_to_save')) } }} uploading={uploading === 'logo_url'} uploadLabel={t('upload_logo')} />
+                <UploadZone label={t('favicon')} accept="image/*" currentUrl={faviconUrl} onUpload={handleUpload('favicon_url', 'favicon', setFaviconUrl)} onRemove={async () => { setFaviconUrl(''); try { await upsertSetting('favicon_url', '') } catch { toast.error(t('failed_to_save')) } }} uploading={uploading === 'favicon_url'} uploadLabel={t('upload_favicon')} />
               </div>
             </SectionCard>
 
             <SectionCard title={t('hero_section')} description={t('hero_section_description')} icon={Eye}>
-              <UploadZone
-                label={t('hero_background')}
-                accept="image/*"
-                currentUrl={heroBgUrl}
-                onUpload={handleUpload('hero_background', 'hero-bg', setHeroBgUrl)}
-                onRemove={async () => { setHeroBgUrl(''); try { await upsertSetting('hero_background', '') } catch { toast.error(t('failed_to_save')) } }}
-                uploading={uploading === 'hero_background'}
-                uploadLabel={t('upload_image')}
-              />
+              <UploadZone label={t('hero_background')} accept="image/*" currentUrl={heroBgUrl} onUpload={handleUpload('hero_background', 'hero-bg', setHeroBgUrl)} onRemove={async () => { setHeroBgUrl(''); try { await upsertSetting('hero_background', '') } catch { toast.error(t('failed_to_save')) } }} uploading={uploading === 'hero_background'} uploadLabel={t('upload_image')} />
             </SectionCard>
 
-            {/* Preview Card */}
             {(logoUrl || heroBgUrl) && (
-              <Card className="border-0 shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 overflow-hidden">
-                <CardHeader className="pb-3 border-b border-gray-100 dark:border-gray-800">
+              <Card>
+                <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-base">
                     <Globe className="h-4 w-4 text-primary-500" />
                     {t('preview')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
-                  <div className="relative" style={{ background: heroBgUrl ? `url(${heroBgUrl}) center/cover no-repeat` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-                    <div className="bg-black/40 backdrop-brightness-75 p-8">
-                      <div className="flex items-center gap-3">
-                        {logoUrl ? (
-                          <img src={logoUrl} alt="" className="h-10 w-auto" />
-                        ) : (
-                          <div className="h-10 w-10 rounded-lg bg-white/20 flex items-center justify-center text-white font-bold text-lg">R</div>
-                        )}
-                        <div className="h-2 flex-1 max-w-[200px] rounded-full bg-white/20" />
-                      </div>
-                      <div className="mt-6 space-y-3">
-                        <div className="h-6 w-3/4 rounded-md bg-white/20" />
-                        <div className="h-3 w-1/2 rounded-md bg-white/10" />
-                      </div>
+                  <div className="relative aspect-[3/1] overflow-hidden rounded-b-lg bg-gradient-to-r from-primary-600 to-primary-800">
+                    {heroBgUrl && <img src={heroBgUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />}
+                    <div className="absolute inset-0 bg-black/40" />
+                    <div className="relative flex h-full items-center p-6">
+                      {logoUrl ? (
+                        <img src={logoUrl} alt="" className="h-10 w-auto" />
+                      ) : (
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/20 text-lg font-bold text-white">R</div>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -459,64 +390,44 @@ export function SuperAdminSettings() {
 
         {section === 'pages' && (
           <SectionCard title={t('cms_pages')} description={t('manage_cms_pages')} icon={FileText}>
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-500">{t('total')}: </span>
-                <span className="inline-flex items-center justify-center rounded-full bg-primary-50 dark:bg-primary-900/30 px-2.5 py-0.5 text-sm font-semibold text-primary-700 dark:text-primary-300">
-                  {pages.length}
-                </span>
+                <span className="text-sm text-gray-500">{t('total')}:</span>
+                <span className="inline-flex items-center justify-center rounded-full bg-primary-50 dark:bg-primary-900/30 px-2.5 py-0.5 text-sm font-semibold text-primary-700 dark:text-primary-300">{pages.length}</span>
               </div>
-              <Button size="sm" onClick={openNewPage} className="shadow-sm">
-                <Plus className="h-4 w-4 mr-1.5" /> {t('new_page')}
-              </Button>
+              <Button size="sm" onClick={openNewPage}><Plus className="h-4 w-4 mr-1.5" /> {t('new_page')}</Button>
             </div>
 
             {pagesLoading ? (
-              <div className="space-y-3">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="h-16 animate-pulse rounded-xl bg-gray-100 dark:bg-gray-800" />
-                ))}
-              </div>
+              <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-14 animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800" />)}</div>
             ) : pages.length === 0 ? (
-              <div className="py-16 text-center">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100 dark:bg-gray-800">
-                  <FileText className="h-8 w-8 text-gray-400" />
-                </div>
-                <h3 className="mt-4 text-base font-semibold text-gray-900 dark:text-gray-100">{t('no_pages_yet')}</h3>
-                <p className="mt-1 text-sm text-gray-500">{t('create_first_page')}</p>
-                <Button size="sm" onClick={openNewPage} className="mt-4">
-                  <Plus className="h-4 w-4 mr-1.5" /> {t('new_page')}
-                </Button>
+              <div className="py-12 text-center">
+                <FileText className="mx-auto h-8 w-8 text-gray-300" />
+                <h3 className="mt-3 text-sm font-medium text-gray-900 dark:text-gray-100">{t('no_pages_yet')}</h3>
+                <p className="mt-1 text-xs text-gray-500">{t('create_first_page')}</p>
+                <Button size="sm" onClick={openNewPage} className="mt-3"><Plus className="h-4 w-4 mr-1.5" /> {t('new_page')}</Button>
               </div>
             ) : (
               <div className="space-y-2">
                 {pages.map(page => (
-                  <div key={page.id} className="group flex items-center justify-between rounded-xl border border-gray-200 dark:border-gray-700 px-5 py-4 hover:border-primary-200 dark:hover:border-primary-800 hover:shadow-sm transition-all bg-white dark:bg-gray-800/50">
-                    <div className="flex items-center gap-4 min-w-0 flex-1">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/30 dark:to-primary-800/30">
-                        <FileText className="h-5 w-5 text-primary-600 dark:text-primary-400" />
-                      </div>
+                  <div key={page.id} className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <FileText className="h-5 w-5 shrink-0 text-gray-400" />
                       <div className="min-w-0">
-                        <div className="flex items-center gap-2.5">
-                          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{page.title}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{page.title}</p>
                           <span className={`shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                            page.is_published
-                              ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 ring-1 ring-emerald-200 dark:ring-emerald-800'
-                              : 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 ring-1 ring-amber-200 dark:ring-amber-800'
+                            page.is_published ? 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
                           }`}>
                             {page.is_published ? t('published') : t('draft')}
                           </span>
                         </div>
-                        <p className="mt-0.5 text-xs text-gray-400 font-mono">/{page.slug}</p>
+                        <p className="text-xs text-gray-400 font-mono">/{page.slug}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="sm" onClick={() => openEditPage(page)} className="text-gray-500 hover:text-primary-600">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(page.id)} className="text-gray-500 hover:text-red-600">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Button variant="ghost" size="sm" onClick={() => openEditPage(page)}><Edit className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="sm" className="text-red-500" onClick={() => setDeleteTarget(page.id)}><Trash2 className="h-4 w-4" /></Button>
                     </div>
                   </div>
                 ))}
@@ -528,97 +439,55 @@ export function SuperAdminSettings() {
 
       {/* Page Editor Modal */}
       <Dialog open={showPageModal} onOpenChange={setShowPageModal}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="text-xl">{editPage ? t('edit_page') : t('new_page')}</DialogTitle>
+            <DialogTitle>{editPage ? t('edit_page') : t('new_page')}</DialogTitle>
             <DialogDescription>{t('create_edit_page_description')}</DialogDescription>
           </DialogHeader>
-          <div className="space-y-5">
-            <div className="grid grid-cols-2 gap-5">
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{t('title')} *</label>
-                <input
-                  type="text"
-                  value={pageForm.title}
-                  onChange={e => {
-                    const title = e.target.value
-                    setPageForm(p => ({
-                      ...p,
-                      title,
-                      slug: editPage ? p.slug : title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
-                    }))
-                    setPageErrors(prev => ({ ...prev, title: '' }))
-                  }}
-                  className={`w-full rounded-xl border bg-white px-4 py-2.5 text-sm shadow-sm dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 outline-none ${
-                    pageErrors.title ? 'border-red-400' : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
-                  }`}
-                  placeholder={t('page_title_placeholder')}
-                />
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('title')} *</label>
+                <input type="text" value={pageForm.title} onChange={e => { const t = e.target.value; setPageForm(p => ({ ...p, title: t, slug: editPage ? p.slug : t.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') })); setPageErrors(prev => ({ ...prev, title: '' })) }}
+                  className={`w-full rounded-lg border bg-white px-3 py-2 text-sm dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 outline-none ${pageErrors.title ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
+                  placeholder={t('page_title_placeholder')} />
                 {pageErrors.title && <p className="mt-1 text-xs text-red-500">{pageErrors.title}</p>}
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{t('slug')} *</label>
-                <input
-                  type="text"
-                  value={pageForm.slug}
-                  onChange={e => { setPageForm(p => ({ ...p, slug: e.target.value })); setPageErrors(prev => ({ ...prev, slug: '' })) }}
-                  className={`w-full rounded-xl border bg-white px-4 py-2.5 text-sm shadow-sm dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 outline-none ${
-                    pageErrors.slug ? 'border-red-400' : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
-                  }`}
-                  placeholder="about-us"
-                />
-                <p className="mt-1 text-xs text-gray-400">{t('url_prefix')}/<span className="font-mono text-primary-600">{pageForm.slug || '...'}</span></p>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('slug')} *</label>
+                <input type="text" value={pageForm.slug} onChange={e => { setPageForm(p => ({ ...p, slug: e.target.value })); setPageErrors(prev => ({ ...prev, slug: '' })) }}
+                  className={`w-full rounded-lg border bg-white px-3 py-2 text-sm dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 outline-none ${pageErrors.slug ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
+                  placeholder="about-us" />
+                <p className="mt-1 text-xs text-gray-400">{t('url_prefix')}/<span className="text-primary-600 font-mono">{pageForm.slug || '...'}</span></p>
               </div>
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{t('content')}</label>
-              <textarea
-                value={pageForm.content}
-                onChange={e => setPageForm(p => ({ ...p, content: e.target.value }))}
-                rows={8}
-                className="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-white px-4 py-2.5 text-sm shadow-sm dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 outline-none hover:border-gray-400 font-mono"
-                placeholder={t('page_content_placeholder')}
-              />
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('content')}</label>
+              <textarea value={pageForm.content} onChange={e => setPageForm(p => ({ ...p, content: e.target.value }))} rows={8}
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white px-3 py-2 text-sm dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 outline-none"
+                placeholder={t('page_content_placeholder')} />
             </div>
-            <div className="grid grid-cols-2 gap-5">
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{t('meta_title')}</label>
-                <input
-                  type="text"
-                  value={pageForm.meta_title}
-                  onChange={e => setPageForm(p => ({ ...p, meta_title: e.target.value }))}
-                  className="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-white px-4 py-2.5 text-sm shadow-sm dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 outline-none hover:border-gray-400"
-                />
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('meta_title')}</label>
+                <input type="text" value={pageForm.meta_title} onChange={e => setPageForm(p => ({ ...p, meta_title: e.target.value }))}
+                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white px-3 py-2 text-sm dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 outline-none" />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{t('meta_description')}</label>
-                <input
-                  type="text"
-                  value={pageForm.meta_description}
-                  onChange={e => setPageForm(p => ({ ...p, meta_description: e.target.value }))}
-                  className="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-white px-4 py-2.5 text-sm shadow-sm dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 outline-none hover:border-gray-400"
-                />
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('meta_description')}</label>
+                <input type="text" value={pageForm.meta_description} onChange={e => setPageForm(p => ({ ...p, meta_description: e.target.value }))}
+                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white px-3 py-2 text-sm dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 outline-none" />
               </div>
             </div>
-            <label className="relative inline-flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={pageForm.is_published}
-                onChange={e => setPageForm(p => ({ ...p, is_published: e.target.checked }))}
-                className="peer sr-only"
-              />
-              <div className="h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all peer-checked:bg-primary-600 peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-gray-700" />
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={pageForm.is_published} onChange={e => setPageForm(p => ({ ...p, is_published: e.target.checked }))} className="rounded" />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('published')}</span>
             </label>
           </div>
-          <DialogFooter className="mt-2">
+          <DialogFooter>
             <Button variant="outline" onClick={() => setShowPageModal(false)}>{t('cancel')}</Button>
             <Button onClick={savePage} disabled={saving === 'page'}>
-              {saving === 'page' ? (
-                <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> {t('saving')}...</>
-              ) : (
-                <><Save className="h-4 w-4 mr-2" /> {editPage ? t('update') : t('create')}</>
-              )}
+              {saving === 'page' ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> {t('saving')}...</> : <><Save className="h-4 w-4 mr-2" /> {editPage ? t('update') : t('create')}</>}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -628,15 +497,12 @@ export function SuperAdminSettings() {
       <Dialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 dark:bg-red-900/20 mb-2">
-              <Trash2 className="h-7 w-7 text-red-500" />
-            </div>
-            <DialogTitle className="text-center text-xl">{t('delete_page')}</DialogTitle>
-            <DialogDescription className="text-center">{t('delete_page_warning')}</DialogDescription>
+            <DialogTitle>{t('delete_page')}</DialogTitle>
+            <DialogDescription>{t('delete_page_warning')}</DialogDescription>
           </DialogHeader>
-          <DialogFooter className="justify-center gap-3">
-            <Button variant="outline" onClick={() => setDeleteTarget(null)} className="min-w-[100px]">{t('cancel')}</Button>
-            <Button variant="destructive" onClick={deletePage} className="min-w-[100px]">{t('delete')}</Button>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>{t('cancel')}</Button>
+            <Button variant="destructive" onClick={deletePage}>{t('delete')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
