@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { TableSkeleton } from '@/components/ui/loading'
 import { EmptyState } from '@/components/ui/empty-state'
-import { Activity, UserPlus, Building2, LogIn, Settings, Trash2, Shield, RefreshCw } from 'lucide-react'
+import { Activity, UserPlus, Building2, LogIn, Settings, Trash2, Shield, RefreshCw, Filter, ChevronLeft, ChevronRight, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 
@@ -18,23 +18,16 @@ interface ActivityLog {
     user?: { full_name: string; email: string }
 }
 
-const actionIcons: Record<string, typeof Activity> = {
-    login: LogIn,
-    register: UserPlus,
-    property_created: Building2,
-    property_deleted: Trash2,
-    settings_changed: Settings,
-    user_suspended: Shield,
+const ACTION_CONFIG: Record<string, { icon: typeof Activity; color: string; label: string }> = {
+    login: { icon: LogIn, color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 ring-1 ring-green-200 dark:ring-green-800', label: 'login' },
+    register: { icon: UserPlus, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 ring-1 ring-blue-200 dark:ring-blue-800', label: 'register' },
+    property_created: { icon: Building2, color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 ring-1 ring-purple-200 dark:ring-purple-800', label: 'property_created' },
+    property_deleted: { icon: Trash2, color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 ring-1 ring-red-200 dark:ring-red-800', label: 'property_deleted' },
+    settings_changed: { icon: Settings, color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 ring-1 ring-yellow-200 dark:ring-yellow-800', label: 'settings_changed' },
+    user_suspended: { icon: Shield, color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 ring-1 ring-orange-200 dark:ring-orange-800', label: 'user_suspended' },
 }
 
-const actionColors: Record<string, string> = {
-    login: 'bg-green-100 text-green-600 dark:bg-green-900/30',
-    register: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30',
-    property_created: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30',
-    property_deleted: 'bg-red-100 text-red-600 dark:bg-red-900/30',
-    settings_changed: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30',
-    user_suspended: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30',
-}
+const ALL_ACTIONS = Object.keys(ACTION_CONFIG)
 
 function timeAgo(dateStr: string, t: (key: string) => string) {
     const diff = Date.now() - new Date(dateStr).getTime()
@@ -46,77 +39,168 @@ function timeAgo(dateStr: string, t: (key: string) => string) {
     return `${m}m ${t('ago')}`
 }
 
+function formatDate(dateStr: string) {
+    const d = new Date(dateStr)
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
 export function ActivityLogsPage() {
     const { t } = useTranslation()
     const [loading, setLoading] = useState(true)
     const [logs, setLogs] = useState<ActivityLog[]>([])
+    const [actionFilter, setActionFilter] = useState<string | null>(null)
+    const [page, setPage] = useState(0)
+    const [hasMore, setHasMore] = useState(true)
+    const PAGE_SIZE = 20
 
     useEffect(() => {
-        fetchLogs()
-    }, [])
+        setPage(0)
+        fetchLogs(true)
+    }, [actionFilter])
 
-    const fetchLogs = async () => {
+    const fetchLogs = async (reset = false) => {
         setLoading(true)
+        const currentPage = reset ? 0 : page
         try {
-            const { data, error } = await supabase
+            let query = supabase
                 .from('audit_logs')
                 .select('*, user:profiles!user_id(full_name, email)')
                 .order('created_at', { ascending: false })
-                .limit(50)
+                .range(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE)
+
+            if (actionFilter) {
+                query = query.eq('action', actionFilter)
+            }
+
+            const { data, error } = await query
             if (error) throw error
-            setLogs((data || []) as unknown as ActivityLog[])
+            const result = (data || []) as unknown as ActivityLog[]
+            setLogs(reset ? result : prev => [...prev, ...result])
+            setHasMore(result.length === PAGE_SIZE)
         } catch {
-            setLogs([])
+            if (reset) setLogs([])
         } finally {
             setLoading(false)
         }
     }
 
+    const loadMore = () => {
+        const nextPage = page + 1
+        setPage(nextPage)
+        fetchLogs(false)
+    }
+
+    const filteredActions = actionFilter ? [actionFilter] : ALL_ACTIONS
+
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('activity_logs')}</h1>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{t('view_system_activity')}</p>
+        <div className="space-y-8">
+            {/* Page Header */}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8">
+                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAyNHYySDI0di0yaDEyeiIvPjwvZz48L2c+PC9zdmc+')]" />
+                <div className="relative flex items-center justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold text-white tracking-tight">{t('activity_logs')}</h1>
+                        <p className="mt-1.5 text-gray-300 text-sm">{t('view_system_activity')}</p>
+                    </div>
+                    <Button variant="secondary" size="sm" onClick={() => fetchLogs(true)} className="bg-white/10 text-white hover:bg-white/20 border-0">
+                        <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                        {t('refresh')}
+                    </Button>
                 </div>
-                <Button variant="outline" size="sm" onClick={fetchLogs}><RefreshCw className="h-4 w-4" /> {t('refresh')}</Button>
             </div>
 
-            <Card>
+            {/* Action Filter Pills */}
+            <div className="flex flex-wrap items-center gap-2">
+                <Filter className="h-4 w-4 text-gray-400" />
+                <button
+                    onClick={() => setActionFilter(null)}
+                    className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-all cursor-pointer ${
+                        !actionFilter
+                            ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900 shadow-sm'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'
+                    }`}
+                >
+                    {t('all')}
+                </button>
+                {ALL_ACTIONS.map(action => {
+                    const config = ACTION_CONFIG[action]
+                    return (
+                        <button
+                            key={action}
+                            onClick={() => setActionFilter(actionFilter === action ? null : action)}
+                            className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-all cursor-pointer ${
+                                actionFilter === action
+                                    ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900 shadow-sm'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'
+                            }`}
+                        >
+                            {t(config.label)}
+                        </button>
+                    )
+                })}
+            </div>
+
+            {/* Timeline */}
+            <Card className="border-0 shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 overflow-hidden">
                 <CardContent className="p-0">
-                    {loading ? (
+                    {loading && logs.length === 0 ? (
                         <div className="p-6"><TableSkeleton rows={5} /></div>
                     ) : logs.length === 0 ? (
                         <EmptyState icon={Activity} title={t('no_activity_logs')} description={t('no_activity_logs_description')} />
                     ) : (
-                        <div className="divide-y dark:divide-gray-700">
-                            {logs.map(log => {
-                                const IconComp = actionIcons[log.action] || Activity
-                                const colorClass = actionColors[log.action] || 'bg-gray-100 text-gray-600 dark:bg-gray-800'
-                                return (
-                                    <div key={log.id} className="flex items-start gap-4 px-4 py-4 hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                                        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${colorClass}`}>
-                                            <IconComp className="h-4 w-4" />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                    {log.user?.full_name || t('unknown')}
-                                                </span>
-                                                <Badge variant="secondary" className="text-xs capitalize">
-                                                    {t(log.action)}
-                                                </Badge>
+                        <div className="relative">
+                            {/* Timeline line */}
+                            <div className="absolute left-8 top-0 bottom-0 w-px bg-gradient-to-b from-primary-500 via-gray-200 to-gray-100 dark:via-gray-700 dark:to-gray-800" />
+
+                            <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                                {logs.map((log, idx) => {
+                                    const config = ACTION_CONFIG[log.action] || { icon: Activity, color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400 ring-1 ring-gray-200 dark:ring-gray-700', label: log.action }
+                                    const IconComp = config.icon
+                                    const isFirst = idx === 0
+                                    return (
+                                        <div key={log.id} className="relative flex items-start gap-5 px-4 py-5 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
+                                            {/* Timeline dot */}
+                                            <div className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${config.color} shadow-sm`}>
+                                                <IconComp className="h-4 w-4" />
                                             </div>
-                                            {log.details && <p className="mt-0.5 text-sm text-gray-500">{log.details}</p>}
-                                            <p className="mt-0.5 text-xs text-gray-400">{log.user?.email} • {timeAgo(log.created_at, t)}</p>
+
+                                            <div className="flex-1 min-w-0 pt-0.5">
+                                                <div className="flex flex-wrap items-center gap-2.5">
+                                                    <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                                        {log.user?.full_name || t('unknown')}
+                                                    </span>
+                                                    <Badge variant="secondary" className="text-[10px] uppercase tracking-wider font-semibold">
+                                                        {t(config.label)}
+                                                    </Badge>
+                                                    <span className="text-xs text-gray-400 ml-auto flex items-center gap-1 shrink-0">
+                                                        <Clock className="h-3 w-3" />
+                                                        {timeAgo(log.created_at, t)}
+                                                    </span>
+                                                </div>
+                                                {log.details && (
+                                                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-lg px-3 py-2 inline-block">
+                                                        {log.details}
+                                                    </p>
+                                                )}
+                                                <p className="mt-1 text-xs text-gray-400">{log.user?.email} &middot; {formatDate(log.created_at)}</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                )
-                            })}
+                                    )
+                                })}
+                            </div>
                         </div>
                     )}
                 </CardContent>
             </Card>
+
+            {/* Load More */}
+            {!loading && hasMore && logs.length > 0 && (
+                <div className="flex justify-center">
+                    <Button variant="outline" onClick={loadMore} className="rounded-xl px-8">
+                        {t('load_more')}
+                    </Button>
+                </div>
+            )}
         </div>
     )
 }

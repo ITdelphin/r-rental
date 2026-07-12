@@ -26,7 +26,6 @@ import { AddPropertyPage } from '@/pages/dashboard/owner/AddPropertyPage'
 import { EditPropertyPage } from '@/pages/dashboard/owner/EditPropertyPage'
 import { AdminUsers } from '@/pages/dashboard/admin/AdminUsers'
 import { AdminReports } from '@/pages/dashboard/admin/AdminReports'
-import { SuperAdminCms } from '@/pages/dashboard/super-admin/SuperAdminCms'
 import { SuperAdminSettings } from '@/pages/dashboard/super-admin/SuperAdminSettings'
 import { AccountSettingsPage } from '@/pages/dashboard/AccountSettingsPage'
 import { MessagesPage } from '@/pages/dashboard/MessagesPage'
@@ -99,14 +98,17 @@ function AppRoutes() {
             <Route path="/dashboard/earnings" element={<OwnerEarnings />} />
 
             {/* Admin / Super-Admin */}
-            <Route path="/dashboard/users" element={<AdminUsers />} />
-            <Route path="/dashboard/reports" element={<AdminReports />} />
+            <Route element={<ProtectedRoute allowedRoles={['admin', 'super_admin']} />}>
+              <Route path="/dashboard/users" element={<AdminUsers />} />
+              <Route path="/dashboard/reports" element={<AdminReports />} />
+            </Route>
             <Route path="/dashboard/complaints" element={<ComplaintsPage />} />
 
             {/* Super-Admin only */}
-            <Route path="/dashboard/cms" element={<SuperAdminCms />} />
-            <Route path="/dashboard/settings" element={<SuperAdminSettings />} />
-            <Route path="/dashboard/activity-logs" element={<ActivityLogsPage />} />
+            <Route element={<ProtectedRoute allowedRoles={['super_admin']} />}>
+              <Route path="/dashboard/settings" element={<SuperAdminSettings />} />
+              <Route path="/dashboard/activity-logs" element={<ActivityLogsPage />} />
+            </Route>
           </Route>
         </Route>
       </Routes>

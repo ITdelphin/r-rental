@@ -7,11 +7,13 @@ import { Search, Shield, UserX, RefreshCw, UserCheck } from 'lucide-react'
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { sendAccountNotification } from '@/lib/email'
+import { useAuth } from '@/hooks/useAuth'
 import toast from 'react-hot-toast'
 import type { Profile } from '@/types'
 
 export function AdminUsers() {
   const { t } = useTranslation()
+  const { profile: currentUser } = useAuth()
   const [loading, setLoading] = useState(true)
   const [users, setUsers] = useState<Profile[]>([])
   const [search, setSearch] = useState('')
@@ -149,7 +151,9 @@ export function AdminUsers() {
                           <option value="owner">{t('owner')}</option>
                           <option value="agent">{t('agent')}</option>
                           <option value="admin">{t('admin')}</option>
-                          <option value="super_admin">{t('super_admin')}</option>
+                          {currentUser?.role === 'super_admin' && (
+                            <option value="super_admin">{t('super_admin')}</option>
+                          )}
                         </select>
                       </td>
                       <td className="px-4 py-3">

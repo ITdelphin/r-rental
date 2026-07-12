@@ -52,7 +52,6 @@ const superAdminNav: NavItem[] = [
   { to: '/dashboard/bookings', key: 'my_bookings', icon: Calendar },
   { to: '/dashboard/reports', key: 'reports', icon: BarChart3 },
   { to: '/dashboard/complaints', key: 'complaints', icon: Shield },
-  { to: '/dashboard/cms', key: 'cms_pages', icon: FileText },
   { to: '/dashboard/settings', key: 'settings', icon: Settings },
   { to: '/dashboard/activity-logs', key: 'activity_logs', icon: Activity },
   { to: '/dashboard/messages', key: 'messages', icon: MessageSquare },
