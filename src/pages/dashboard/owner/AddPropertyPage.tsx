@@ -38,17 +38,17 @@ const amenityFields = [
 ]
 
 const propertySchema = z.object({
-  title: z.string().min(5, 'Title must be at least 5 characters').max(200, 'Title too long'),
-  description: z.string().max(2000, 'Description too long').default(''),
+  title: z.string().min(5, 'title_min_length').max(200, 'title_too_long'),
+  description: z.string().max(2000, 'description_too_long').default(''),
   category: z.string(),
   property_type: z.string(),
   bedrooms: z.coerce.number().int().min(0).max(50).default(1),
   bathrooms: z.coerce.number().int().min(0).max(50).default(1),
   kitchen: z.coerce.number().int().min(0).max(20).default(1),
-  price: z.coerce.number().positive('Price must be greater than 0'),
+  price: z.coerce.number().positive('price_positive'),
   deposit: z.coerce.number().min(0).nullable().default(null),
-  province: z.string().min(1, 'Province is required'),
-  district: z.string().min(1, 'District is required'),
+  province: z.string().min(1, 'province_required'),
+  district: z.string().min(1, 'district_required'),
   sector: z.string().default(''),
   cell: z.string().default(''),
   village: z.string().default(''),
@@ -161,11 +161,11 @@ export function AddPropertyPage() {
 
     for (const file of files) {
       if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-        validationErrors.push(`${file.name}: Unsupported format. Use PNG, JPG, or WEBP.`)
+        validationErrors.push(`${file.name}: ${t('unsupported_format')}`)
         continue
       }
       if (file.size > MAX_FILE_SIZE) {
-        validationErrors.push(`${file.name}: File too large (max 10MB).`)
+        validationErrors.push(`${file.name}: ${t('file_too_large')}`)
         continue
       }
       validFiles.push(file)
@@ -183,7 +183,7 @@ export function AddPropertyPage() {
     try {
       for (let i = 0; i < validFiles.length; i++) {
         const file = validFiles[i]
-        setUploadProgress(`Uploading ${i + 1} of ${validFiles.length}...`)
+        setUploadProgress(t('uploading_n_of_m', { current: i + 1, total: validFiles.length }))
         const ext = file.name.split('.').pop() || 'jpg'
         const path = `properties/${user.id}-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
         const { error: uploadError } = await supabase.storage.from('property-images').upload(path, file)
@@ -192,9 +192,9 @@ export function AddPropertyPage() {
         urls.push(publicUrl)
       }
       setUploadedImages(prev => [...prev, ...urls])
-      toast.success(`${urls.length} image(s) uploaded successfully`)
+      toast.success(t('images_uploaded_successfully', { count: urls.length }))
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Image upload failed')
+      toast.error(err instanceof Error ? err.message : t('image_upload_failed'))
     } finally {
       setUploadingImages(false)
       setUploadProgress(null)
@@ -258,14 +258,14 @@ export function AddPropertyPage() {
         const { error: imgError } = await supabase.from('property_images').insert(imageRows as never)
         if (imgError) {
           console.error('Failed to save image metadata:', imgError)
-          toast.error('Property created but images may not display. Contact support.')
+          toast.error(t('property_created_image_issue'))
         }
       }
 
-      toast.success('Property published successfully!')
+      toast.success(t('property_published_successfully'))
       navigate('/dashboard/properties')
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to submit property'
+      const msg = err instanceof Error ? err.message : t('failed_to_submit_property')
       toast.error(msg)
     } finally {
       setSubmitting(false)
@@ -297,79 +297,79 @@ export function AddPropertyPage() {
         {hasImages && (
           <span className="flex items-center gap-1.5 rounded-full bg-primary-50 px-3 py-1 text-xs font-medium text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">
             <ImageIcon className="h-3.5 w-3.5" />
-            {uploadedImages.length} image{uploadedImages.length !== 1 ? 's' : ''}
+            {t('n_images', { count: uploadedImages.length })}
           </span>
         )}
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Section 1: Basic Information */}
-        <FormSection icon={Home} title="Basic Information" subtitle="Tell us about your property" step={1}>
+        <FormSection icon={Home} title={t('basic_information')} subtitle={t('tell_us_about_your_property')} step={1}>
           <div className="space-y-4">
             <div>
               <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Property Title <span className="text-red-500">*</span>
+                {t('property_title')} <span className="text-red-500">*</span>
               </label>
               <Input
                 {...register('title')}
-                error={errors.title?.message}
-                placeholder="e.g. Modern 2BR Apartment in Kicukiro"
+                error={errors.title?.message ? t(errors.title.message) : undefined}
+                placeholder={t('property_title_placeholder')}
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{t('description')}</label>
               <textarea
                 {...register('description')}
                 rows={4}
-                placeholder="Describe your property in detail - size, condition, surroundings, nearby amenities..."
+                placeholder={t('description_placeholder')}
                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
-              {errors.description?.message && (
-                <p className="mt-1 text-sm text-red-500">{errors.description.message}</p>
+                {errors.description?.message && (
+                <p className="mt-1 text-sm text-red-500">{t(errors.description.message)}</p>
               )}
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Category <span className="text-red-500">*</span>
+                  {t('category')} <span className="text-red-500">*</span>
                 </label>
-                <Select {...register('category')} options={categories.map(c => ({ value: c, label: c }))} />
-                {errors.category?.message && <p className="mt-1 text-sm text-red-500">{errors.category.message}</p>}
+                <Select {...register('category')} options={categories.map(c => ({ value: c, label: t(c.replace(/[\s-]+/g, '_').toLowerCase()) }))} />
+                {errors.category?.message && <p className="mt-1 text-sm text-red-500">{t(errors.category.message)}</p>}
               </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Property Type <span className="text-red-500">*</span>
+                  {t('property_type')} <span className="text-red-500">*</span>
                 </label>
-                <Select {...register('property_type')} options={propertyTypes.map(pt => ({ value: pt, label: pt }))} />
-                {errors.property_type?.message && <p className="mt-1 text-sm text-red-500">{errors.property_type.message}</p>}
+                <Select {...register('property_type')} options={propertyTypes.map(pt => ({ value: pt, label: t(pt.toLowerCase()) }))} />
+                {errors.property_type?.message && <p className="mt-1 text-sm text-red-500">{t(errors.property_type.message)}</p>}
               </div>
             </div>
             <div className="grid gap-4 sm:grid-cols-3">
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Bedrooms</label>
+                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{t('bedrooms')}</label>
                 <Input type="number" min={0} {...register('bedrooms', { valueAsNumber: true })} />
-                {errors.bedrooms?.message && <p className="mt-1 text-sm text-red-500">{errors.bedrooms.message}</p>}
+                {errors.bedrooms?.message && <p className="mt-1 text-sm text-red-500">{t(errors.bedrooms.message)}</p>}
               </div>
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Bathrooms</label>
+                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{t('bathrooms')}</label>
                 <Input type="number" min={0} {...register('bathrooms', { valueAsNumber: true })} />
-                {errors.bathrooms?.message && <p className="mt-1 text-sm text-red-500">{errors.bathrooms.message}</p>}
+                {errors.bathrooms?.message && <p className="mt-1 text-sm text-red-500">{t(errors.bathrooms.message)}</p>}
               </div>
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Kitchens</label>
+                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{t('kitchens')}</label>
                 <Input type="number" min={0} {...register('kitchen', { valueAsNumber: true })} />
-                {errors.kitchen?.message && <p className="mt-1 text-sm text-red-500">{errors.kitchen.message}</p>}
+                {errors.kitchen?.message && <p className="mt-1 text-sm text-red-500">{t(errors.kitchen.message)}</p>}
               </div>
             </div>
           </div>
         </FormSection>
 
         {/* Section 2: Pricing */}
-        <FormSection icon={DollarSign} title="Pricing" subtitle="Set your price and deposit" step={2}>
+        <FormSection icon={DollarSign} title={t('pricing')} subtitle={t('set_your_price_and_deposit')} step={2}>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Price (RWF/month) <span className="text-red-500">*</span>
+                {t('price_rwf_month')} <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">RWF</span>
@@ -377,31 +377,31 @@ export function AddPropertyPage() {
                   type="number"
                   min={0}
                   {...register('price', { valueAsNumber: true })}
-                  placeholder="250000"
+                  placeholder={t('price_placeholder')}
                   className="flex h-10 w-full rounded-lg border border-gray-300 bg-white pl-12 pr-3 py-2 text-sm shadow-xs transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                 />
               </div>
-              {errors.price?.message && <p className="mt-1 text-sm text-red-500">{errors.price.message}</p>}
+              {errors.price?.message && <p className="mt-1 text-sm text-red-500">{t(errors.price.message)}</p>}
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Deposit (RWF)</label>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{t('deposit_rwf')}</label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">RWF</span>
                 <input
                   type="number"
                   min={0}
                   {...register('deposit', { valueAsNumber: true, setValueAs: (v) => v === '' || v === null ? null : Number(v) })}
-                  placeholder="50000"
+                  placeholder={t('deposit_placeholder')}
                   className="flex h-10 w-full rounded-lg border border-gray-300 bg-white pl-12 pr-3 py-2 text-sm shadow-xs transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                 />
               </div>
-              {errors.deposit?.message && <p className="mt-1 text-sm text-red-500">{errors.deposit.message}</p>}
+              {errors.deposit?.message && <p className="mt-1 text-sm text-red-500">{t(errors.deposit.message)}</p>}
             </div>
           </div>
         </FormSection>
 
         {/* Section 3: Location */}
-        <FormSection icon={MapPin} title="Location" subtitle="Where is your property located?" step={3}>
+        <FormSection icon={MapPin} title={t('location')} subtitle={t('where_is_your_property_located')} step={3}>
           <div className="space-y-4">
             <LocationSelect
               selectedProvince={formValues.province}
@@ -412,19 +412,19 @@ export function AddPropertyPage() {
               onChange={(field, value) => setValue(field as keyof PropertyFormData, value, { shouldValidate: true })}
             />
             {errors.district?.message && (
-              <p className="text-sm text-red-500 flex items-center gap-1">
-                <AlertCircle className="h-3.5 w-3.5" /> {errors.district.message}
-              </p>
+                <p className="text-sm text-red-500 flex items-center gap-1">
+                  <AlertCircle className="h-3.5 w-3.5" /> {t(errors.district.message)}
+                </p>
             )}
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">WhatsApp Number (optional)</label>
-              <Input {...register('whatsapp_number')} placeholder="e.g. +250788123456" />
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{t('whatsapp_number_optional')}</label>
+              <Input {...register('whatsapp_number')} placeholder={t('whatsapp_placeholder')} />
             </div>
           </div>
         </FormSection>
 
         {/* Section 4: Amenities */}
-        <FormSection icon={Sparkles} title="Amenities & Features" subtitle="What does your property offer?" step={4}>
+        <FormSection icon={Sparkles} title={t('amenities_and_features')} subtitle={t('what_does_your_property_offer')} step={4}>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {amenityFields.map(({ key, label }) => {
               const isOn = formValues[key as keyof PropertyFormData] as boolean
@@ -444,7 +444,7 @@ export function AddPropertyPage() {
                   }`}>
                     {isOn ? <Check className="h-3 w-3" /> : null}
                   </span>
-                  {label}
+                  {t(key)}
                 </button>
               )
             })}
@@ -452,13 +452,13 @@ export function AddPropertyPage() {
         </FormSection>
 
         {/* Section 5: Images */}
-        <FormSection icon={ImageIcon} title="Property Images" subtitle="Upload photos of your property" step={5}>
+        <FormSection icon={ImageIcon} title={t('property_images')} subtitle={t('upload_photos_of_your_property')} step={5}>
           <div className="space-y-4">
             {imageErrors.length > 0 && (
               <div className="rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-950/30">
                 <div className="flex items-center gap-2 text-sm font-medium text-red-700 dark:text-red-400">
                   <AlertCircle className="h-4 w-4" />
-                  Image upload issues:
+                  {t('image_upload_issues')}:
                 </div>
                 <ul className="mt-1 space-y-1">
                   {imageErrors.map((err, i) => (
@@ -474,7 +474,7 @@ export function AddPropertyPage() {
                   <Loader2 className="h-8 w-8 animate-spin text-primary-500" />
                   <div className="text-center">
                     <p className="text-sm font-medium text-primary-600 dark:text-primary-400">
-                      {uploadProgress || 'Uploading...'}
+                      {uploadProgress || t('uploading')}
                     </p>
                   </div>
                 </>
@@ -483,9 +483,9 @@ export function AddPropertyPage() {
                   <Upload className="h-8 w-8 text-gray-400" />
                   <div className="text-center">
                     <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Click to upload images
+                      {t('click_to_upload_images')}
                     </p>
-                    <p className="text-xs text-gray-400 mt-1">PNG, JPG, WEBP, JFIF up to 10MB each</p>
+                    <p className="text-xs text-gray-400 mt-1">{t('accepted_image_formats')}</p>
                   </div>
                 </>
               )}
@@ -503,20 +503,20 @@ export function AddPropertyPage() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {uploadedImages.length} image{uploadedImages.length !== 1 ? 's' : ''} selected
+                    {t('n_images_selected', { count: uploadedImages.length })}
                   </p>
                   <button
                     type="button"
                     onClick={removeAllImages}
                     className="flex items-center gap-1 text-xs text-red-500 hover:text-red-600 transition-colors"
                   >
-                    <Trash2 className="h-3.5 w-3.5" /> Remove all
+                    <Trash2 className="h-3.5 w-3.5" /> {t('remove_all')}
                   </button>
                 </div>
                 <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
                   {uploadedImages.map((url, i) => (
                     <div key={i} className="group relative aspect-square overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
-                      <img src={url} alt={`Property ${i + 1}`} className="h-full w-full object-cover" />
+                      <img src={url} alt={t('property_image_n', { n: i + 1 })} className="h-full w-full object-cover" />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors" />
                       <button
                         type="button"
@@ -539,18 +539,18 @@ export function AddPropertyPage() {
         {/* Submit Buttons */}
         <div className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
           <Button type="button" variant="outline" onClick={handleCancel} className="flex items-center gap-2">
-            <X className="h-4 w-4" /> Cancel
+            <X className="h-4 w-4" /> {t('cancel')}
           </Button>
           <Button type="submit" disabled={submitting} className="flex items-center gap-2 min-w-[180px]">
             {submitting ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Submitting...
+                {t('submitting')}
               </>
             ) : (
               <>
                 <Save className="h-4 w-4" />
-                Submit for Review
+                {t('submit_for_review')}
               </>
             )}
           </Button>
@@ -561,21 +561,21 @@ export function AddPropertyPage() {
       <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Discard changes?</DialogTitle>
+            <DialogTitle>{t('discard_changes')}</DialogTitle>
             <DialogDescription>
-              You have unsaved changes. Are you sure you want to leave this page?
+              {t('unsaved_changes_warning')}
             </DialogDescription>
           </DialogHeader>
           <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-400">
             <div className="flex items-start gap-2">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>Any entered data and uploaded images will be lost.</span>
+              <span>{t('data_and_images_lost_warning')}</span>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCancelDialog(false)}>Continue Editing</Button>
+            <Button variant="outline" onClick={() => setShowCancelDialog(false)}>{t('continue_editing')}</Button>
             <Button variant="destructive" onClick={() => { setShowCancelDialog(false); navigate(-1) }}>
-              Discard Changes
+              {t('discard_changes_confirm')}
             </Button>
           </DialogFooter>
         </DialogContent>

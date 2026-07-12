@@ -77,23 +77,23 @@ export function DashboardHome() {
         { icon: Users, label: t('total_users'), value: stats?.totalUsers ?? 0, color: 'bg-blue-100 text-blue-600 dark:bg-blue-900/50' },
         { icon: Building2, label: t('total_properties'), value: stats?.totalProperties ?? 0, color: 'bg-purple-100 text-purple-600 dark:bg-purple-900/50' },
         { icon: Calendar, label: t('total_bookings'), value: stats?.totalBookings ?? 0, color: 'bg-green-100 text-green-600 dark:bg-green-900/50' },
-        { icon: Eye, label: t('total_views'), value: stats?.totalViews?.toLocaleString() ?? '0', color: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/50' },
-        { icon: DollarSign, label: `${t('total_revenue')} (RWF)`, value: stats?.totalRevenue?.toLocaleString() ?? '0', color: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/50' },
+        { icon: Eye, label: t('total_views'), value: stats?.totalViews?.toLocaleString() ?? t('zero'), color: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/50' },
+        { icon: DollarSign, label: `${t('total_revenue')} (${t('rwf')})`, value: stats?.totalRevenue?.toLocaleString() ?? t('zero'), color: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/50' },
         { icon: AlertTriangle, label: t('pending_properties'), value: stats?.pendingProperties ?? 0, color: 'bg-orange-100 text-orange-600 dark:bg-orange-900/50' },
         { icon: MessageSquare, label: t('open_complaints'), value: stats?.openComplaints ?? 0, color: 'bg-red-100 text-red-600 dark:bg-red-900/50' },
       ]
     : isOwner
     ? [
         { icon: Building2, label: t('total_properties'), value: stats?.totalProperties ?? 0, color: 'bg-blue-100 text-blue-600 dark:bg-blue-900/50' },
-        { icon: Calendar, label: t('active_bookings'), value: '0', color: 'bg-green-100 text-green-600 dark:bg-green-900/50' },
-        { icon: DollarSign, label: t('monthly_earnings'), value: 'RWF 0', color: 'bg-purple-100 text-purple-600 dark:bg-purple-900/50' },
-        { icon: Star, label: t('average_rating'), value: '0', color: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/50' },
+        { icon: Calendar, label: t('active_bookings'), value: t('zero'), color: 'bg-green-100 text-green-600 dark:bg-green-900/50' },
+        { icon: DollarSign, label: t('monthly_earnings'), value: t('rwf_zero'), color: 'bg-purple-100 text-purple-600 dark:bg-purple-900/50' },
+        { icon: Star, label: t('average_rating'), value: t('zero'), color: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/50' },
       ]
     : [
-        { icon: Calendar, label: t('active_bookings'), value: '0', color: 'bg-green-100 text-green-600 dark:bg-green-900/50' },
-        { icon: Heart, label: t('saved_properties'), value: '0', color: 'bg-red-100 text-red-600 dark:bg-red-900/50' },
-        { icon: MessageSquare, label: t('unread_messages'), value: '0', color: 'bg-blue-100 text-blue-600 dark:bg-blue-900/50' },
-        { icon: Star, label: t('reviews_given'), value: '0', color: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/50' },
+        { icon: Calendar, label: t('active_bookings'), value: t('zero'), color: 'bg-green-100 text-green-600 dark:bg-green-900/50' },
+        { icon: Heart, label: t('saved_properties'), value: t('zero'), color: 'bg-red-100 text-red-600 dark:bg-red-900/50' },
+        { icon: MessageSquare, label: t('unread_messages'), value: t('zero'), color: 'bg-blue-100 text-blue-600 dark:bg-blue-900/50' },
+        { icon: Star, label: t('reviews_given'), value: t('zero'), color: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/50' },
       ]
 
   return (
@@ -148,7 +148,7 @@ export function DashboardHome() {
                   <Building2 className="h-6 w-6" /> {t('properties')}
                 </Link>
                 <Link to="/dashboard/cms" className="flex flex-col items-center gap-2 rounded-lg bg-green-50 p-4 text-sm font-medium text-green-600 transition-colors hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/40">
-                  <Globe className="h-6 w-6" /> CMS
+                  <Globe className="h-6 w-6" /> {t('cms')}
                 </Link>
                 <Link to="/dashboard/settings" className="flex flex-col items-center gap-2 rounded-lg bg-orange-50 p-4 text-sm font-medium text-orange-600 transition-colors hover:bg-orange-100 dark:bg-orange-900/20 dark:text-orange-400 dark:hover:bg-orange-900/40">
                   <Settings className="h-6 w-6" /> {t('settings')}
@@ -197,7 +197,7 @@ export function DashboardHome() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600 dark:text-gray-400">{t('total_revenue')}</span>
-                  <span className="font-semibold text-gray-900 dark:text-gray-100">RWF {stats?.totalRevenue?.toLocaleString() ?? '0'}</span>
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">{t('rwf')} {stats?.totalRevenue?.toLocaleString() ?? t('zero')}</span>
                 </div>
               </div>
             </CardContent>

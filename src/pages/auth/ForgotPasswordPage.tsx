@@ -39,7 +39,7 @@ export function ForgotPasswordPage() {
       return
     }
     setSent(true)
-    toast.success(t('reset_link_sent') || 'Password reset link sent to your email!')
+    toast.success(t('reset_link_sent'))
   }
 
   const handleSetNewPassword = async (e: React.FormEvent) => {
@@ -73,7 +73,7 @@ export function ForgotPasswordPage() {
               <Key className="h-6 w-6 text-primary-600" />
             </div>
             <CardTitle className="mt-4">{t('reset_password')}</CardTitle>
-            <CardDescription>Enter your new password below.</CardDescription>
+            <CardDescription>{t('enter_new_password')}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSetNewPassword} className="space-y-4">
@@ -118,13 +118,13 @@ export function ForgotPasswordPage() {
             <Home className="h-6 w-6" /> {t('app_name')}
           </Link>
           <CardTitle className="mt-4">{t('reset_password')}</CardTitle>
-          <CardDescription>{sent ? 'Check your email for the reset link.' : 'Enter your email and we will send you a reset link.'}</CardDescription>
+          <CardDescription>{sent ? t('check_email_reset') : t('enter_email_reset')}</CardDescription>
         </CardHeader>
         <CardContent>
           {sent ? (
             <div className="text-center space-y-4">
-              <p className="text-sm text-gray-600 dark:text-gray-400">We have sent a password reset link to <strong>{email}</strong></p>
-              <Button variant="outline" className="w-full" onClick={() => setSent(false)}>Send again</Button>
+              <p className="text-sm text-gray-600 dark:text-gray-400">{t('sent_reset_link_to')} <strong>{email}</strong></p>
+              <Button variant="outline" className="w-full" onClick={() => setSent(false)}>{t('send_again')}</Button>
             </div>
           ) : (
             <form onSubmit={handleReset} className="space-y-4">
@@ -134,7 +134,7 @@ export function ForgotPasswordPage() {
           )}
           <p className="mt-4 text-center">
             <Link to="/auth/login" className="inline-flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700">
-              <ArrowLeft className="h-4 w-4" /> {t('back')} to {t('login')}
+              <ArrowLeft className="h-4 w-4" /> {t('back_to_login')}
             </Link>
           </p>
         </CardContent>

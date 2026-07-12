@@ -77,7 +77,7 @@ export function MessagesPage() {
       setActiveChatUser(toUser)
       setShowMobileChat(true)
       if (propertyTitle) {
-        setNewMessage(t('interested_in_property', { property: propertyTitle }) || `Hi, I'm interested in your property "${propertyTitle}". Is it still available?`)
+        setNewMessage(t('interested_in_property', { property: propertyTitle }))
       }
       // Clear search params after reading
       setSearchParams({}, { replace: true })
@@ -161,7 +161,7 @@ export function MessagesPage() {
           name: otherProfile?.full_name || t('unknown'),
           avatarUrl: otherProfile?.avatar_url || null,
           lastMessage: msg.content,
-          lastMessageTime: formatMessageTime(msg.created_at),
+          lastMessageTime: formatMessageTime(msg.created_at, t),
           lastMessageTimestamp: msgTimestamp,
           unreadCount: isUnread ? 1 : 0,
           lastSenderId: msg.sender_id,
@@ -226,7 +226,7 @@ export function MessagesPage() {
       inputRef.current?.focus()
       if (data?.id) sendMessageNotification(data.id)
     } catch {
-      toast.error(t('message_send_failed') || 'Failed to send message')
+      toast.error(t('message_send_failed'))
     } finally {
       setSending(false)
     }
@@ -238,9 +238,9 @@ export function MessagesPage() {
       await messageApi.update(id, { content: editContent.trim() } as never)
       setEditingId(null)
       setEditContent('')
-      toast.success(t('message_updated') || 'Message updated')
+      toast.success(t('message_updated'))
     } catch {
-      toast.error(t('message_update_failed') || 'Failed to update message')
+      toast.error(t('message_update_failed'))
     }
   }
 
@@ -249,9 +249,9 @@ export function MessagesPage() {
     try {
       await messageApi.remove(deleteTarget.id)
       setDeleteTarget({ id: '', show: false })
-      toast.success(t('message_deleted') || 'Message deleted')
+      toast.success(t('message_deleted'))
     } catch {
-      toast.error(t('message_delete_failed') || 'Failed to delete message')
+      toast.error(t('message_delete_failed'))
     }
   }
 
@@ -269,7 +269,7 @@ export function MessagesPage() {
         receiver_id: selectedNewUser.user_id,
         content: newConvMessage.trim(),
       } as never)
-      toast.success(t('message_sent') || 'Message sent!')
+      toast.success(t('message_sent'))
       if (data?.id) sendMessageNotification(data.id)
       setShowNewMessageDialog(false)
       setSelectedNewUser(null)
@@ -280,7 +280,7 @@ export function MessagesPage() {
       setActiveChatUser(selectedNewUser.user_id)
       setShowMobileChat(true)
     } catch {
-      toast.error(t('message_send_failed') || 'Failed to send message')
+      toast.error(t('message_send_failed'))
     } finally {
       setSendingNewConv(false)
     }
@@ -289,7 +289,7 @@ export function MessagesPage() {
   const handleContactSupport = async () => {
     if (!user || !profile) return
     if (profile.role === 'admin' || profile.role === 'super_admin') {
-      toast('You are a support staff member — admins can reply to users from their inbox.')
+      toast(t('support_staff_message'))
       return
     }
     setContactingSupport(true)
@@ -297,7 +297,7 @@ export function MessagesPage() {
       const admins = await messageApi.getAdminUsers()
       const admin = admins.find(a => a.user_id !== user.id)
       if (!admin) {
-        toast.error('No support staff available')
+        toast.error(t('no_support_staff'))
         return
       }
       if (conversations.find(c => c.userId === admin.user_id)) {
@@ -305,10 +305,10 @@ export function MessagesPage() {
       } else {
         setSelectedNewUser({ ...admin, full_name: admin.full_name || admin.email } as Profile)
         setShowNewMessageDialog(true)
-        setNewConvMessage('Hello, I need help with something.')
+        setNewConvMessage(t('default_support_message'))
       }
     } catch {
-      toast.error('Failed to contact support')
+      toast.error(t('failed_contact_support'))
     } finally {
       setContactingSupport(false)
     }
@@ -346,7 +346,7 @@ export function MessagesPage() {
                     className="h-8 px-2 text-xs"
                     onClick={handleContactSupport}
                     disabled={contactingSupport}
-                    title="Contact Support"
+                    title={t('contact_support')}
                   >
                     <MessageSquare className="h-3.5 w-3.5 mr-1" /> Support
                   </Button>
@@ -355,7 +355,7 @@ export function MessagesPage() {
                     variant="ghost"
                     className="h-8 w-8 p-0"
                     onClick={() => setShowNewMessageDialog(true)}
-                    title={t('new_message') || 'New Message'}
+                    title={t('new_message')}
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
@@ -379,17 +379,17 @@ export function MessagesPage() {
                 <MessageSquare className="h-7 w-7 text-primary-400" />
               </div>
               <p className="mt-4 text-sm font-medium text-gray-900 dark:text-gray-100">
-                {searchQuery ? (t('no_search_results') || 'No results found') : t('no_conversations')}
+                {searchQuery ? t('no_search_results') : t('no_conversations')}
               </p>
               {!searchQuery && (
                 <>
                   <p className="mt-1 text-xs text-gray-500 max-w-[200px]">{t('no_conversations_description')}</p>
                   <div className="mt-4 flex flex-col gap-2 w-full max-w-[200px]">
                     <Button size="sm" className="w-full" onClick={() => setShowNewMessageDialog(true)}>
-                      <Plus className="h-4 w-4" /> {t('new_message') || 'New Message'}
+                      <Plus className="h-4 w-4" /> {t('new_message')}
                     </Button>
                     <Button size="sm" variant="outline" className="w-full" onClick={handleContactSupport} disabled={contactingSupport}>
-                      <MessageSquare className="h-4 w-4" /> Contact Support
+                      <MessageSquare className="h-4 w-4" /> {t('contact_support')}
                     </Button>
                   </div>
                 </>
@@ -479,7 +479,7 @@ export function MessagesPage() {
                     <MessageSquare className="h-8 w-8 text-primary-400" />
                   </div>
                   <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
-                    {t('start_conversation_hint') || 'Send a message to start the conversation'}
+                    {t('start_conversation_hint')}
                   </p>
                 </div>
               ) : (
@@ -487,14 +487,14 @@ export function MessagesPage() {
                   {/* Date separator helper */}
                   {chatMessages.map((msg, index) => {
                     const isMine = msg.sender_id === user?.id
-                    const showDate = index === 0 || formatDateSeparator(msg.created_at) !== formatDateSeparator(chatMessages[index - 1].created_at)
+                    const showDate = index === 0 || formatDateSeparator(msg.created_at, t) !== formatDateSeparator(chatMessages[index - 1].created_at, t)
                     return (
                       <div key={msg.id}>
                         {showDate && (
                           <div className="flex items-center justify-center my-4">
                             <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
                             <span className="px-3 text-xs text-gray-400 font-medium">
-                              {formatDateSeparator(msg.created_at)}
+                              {formatDateSeparator(msg.created_at, t)}
                             </span>
                             <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
                           </div>
@@ -599,7 +599,7 @@ export function MessagesPage() {
                 onClick={() => setShowNewMessageDialog(true)}
               >
                 <Plus className="h-4 w-4" />
-                {t('new_message') || 'New Message'}
+                {t('new_message')}
               </Button>
             </div>
           </div>
@@ -610,8 +610,8 @@ export function MessagesPage() {
       <Dialog open={deleteTarget.show} onOpenChange={(open) => !open && setDeleteTarget({ id: '', show: false })}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{t('delete_message') || 'Delete Message'}</DialogTitle>
-            <DialogDescription>{t('delete_message_confirm') || 'Are you sure you want to delete this message? This cannot be undone.'}</DialogDescription>
+            <DialogTitle>{t('delete_message')}</DialogTitle>
+            <DialogDescription>{t('delete_message_confirm')}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteTarget({ id: '', show: false })}>{t('cancel')}</Button>
@@ -632,8 +632,8 @@ export function MessagesPage() {
       }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{t('new_message') || 'New Message'}</DialogTitle>
-            <DialogDescription>{t('new_message_description') || 'Search for a user to start a conversation.'}</DialogDescription>
+            <DialogTitle>{t('new_message')}</DialogTitle>
+            <DialogDescription>{t('new_message_description')}</DialogDescription>
           </DialogHeader>
 
           {!selectedNewUser ? (
@@ -644,7 +644,7 @@ export function MessagesPage() {
                   type="text"
                   value={userSearchQuery}
                   onChange={(e) => handleUserSearch(e.target.value)}
-                  placeholder={t('search_users') || 'Search users by name or email...'}
+                  placeholder={t('search_users')}
                   className="w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-4 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
                   autoFocus
                 />
@@ -657,8 +657,8 @@ export function MessagesPage() {
                 ) : searchedUsers.length === 0 ? (
                   <div className="py-8 text-center text-sm text-gray-500">
                     {userSearchQuery.trim().length >= 2
-                      ? (t('no_users_found') || 'No users found')
-                      : (t('type_to_search') || 'Type at least 2 characters to search')}
+                      ? t('no_users_found')
+                      : t('type_to_search')}
                   </div>
                 ) : (
                   <div className="divide-y dark:divide-gray-700">
@@ -693,7 +693,7 @@ export function MessagesPage() {
                         </div>
                         {conversations.find(c => c.userId === u.user_id) && (
                           <span className="text-xs text-primary-600 bg-primary-50 dark:bg-primary-900/30 px-2 py-0.5 rounded-full">
-                            {t('existing') || 'Existing'}
+                            {t('existing')}
                           </span>
                         )}
                       </button>
@@ -723,7 +723,7 @@ export function MessagesPage() {
               <textarea
                 value={newConvMessage}
                 onChange={(e) => setNewConvMessage(e.target.value)}
-                placeholder={t('type_your_message') || 'Type your message...'}
+                placeholder={t('type_your_message')}
                 rows={3}
                 className="w-full rounded-lg border border-gray-300 bg-white p-3 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 autoFocus
@@ -747,17 +747,17 @@ export function MessagesPage() {
   )
 }
 
-function formatMessageTime(dateStr: string) {
+function formatMessageTime(dateStr: string, t: (key: string, options?: Record<string, unknown>) => string) {
   const date = new Date(dateStr)
   const now = new Date()
   const diffMs = now.getTime() - date.getTime()
   const diffMin = Math.floor(diffMs / 60000)
-  if (diffMin < 1) return 'Just now'
-  if (diffMin < 60) return `${diffMin}m ago`
+  if (diffMin < 1) return t('just_now')
+  if (diffMin < 60) return `${diffMin}${t('m_ago')}`
   const diffHrs = Math.floor(diffMin / 60)
-  if (diffHrs < 24) return `${diffHrs}h ago`
+  if (diffHrs < 24) return `${diffHrs}${t('h_ago')}`
   const diffDays = Math.floor(diffHrs / 24)
-  if (diffDays < 7) return `${diffDays}d ago`
+  if (diffDays < 7) return `${diffDays}${t('d_ago')}`
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
@@ -769,11 +769,11 @@ function formatChatTime(dateStr: string) {
   })
 }
 
-function formatDateSeparator(dateStr: string) {
+function formatDateSeparator(dateStr: string, t: (key: string, options?: Record<string, unknown>) => string) {
   const date = new Date(dateStr)
   const now = new Date()
   const diffDays = Math.floor((now.getTime() - date.getTime()) / 86400000)
-  if (diffDays === 0) return 'Today'
-  if (diffDays === 1) return 'Yesterday'
+  if (diffDays === 0) return t('today')
+  if (diffDays === 1) return t('yesterday')
   return date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
 }

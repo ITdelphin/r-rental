@@ -21,10 +21,10 @@ interface Complaint {
 }
 
 const statusConfig: Record<string, { label: string; variant: 'warning' | 'default' | 'success' | 'secondary'; icon: typeof Clock }> = {
-    open: { label: 'Open', variant: 'warning', icon: AlertTriangle },
-    in_progress: { label: 'In Progress', variant: 'default', icon: Clock },
-    resolved: { label: 'Resolved', variant: 'success', icon: CheckCircle },
-    closed: { label: 'Closed', variant: 'secondary', icon: XCircle },
+    open: { label: 'open', variant: 'warning', icon: AlertTriangle },
+    in_progress: { label: 'in_progress', variant: 'default', icon: Clock },
+    resolved: { label: 'resolved', variant: 'success', icon: CheckCircle },
+    closed: { label: 'closed', variant: 'secondary', icon: XCircle },
 }
 
 export function ComplaintsPage() {
@@ -58,11 +58,11 @@ export function ComplaintsPage() {
         try {
             const { error } = await supabase.from('complaints').update({ status } as never).eq('id', id)
             if (error) throw error
-            toast.success('Status updated')
+            toast.success(t('status_updated'))
             sendComplaintNotification(id, status)
             setComplaints(prev => prev.map(c => c.id === id ? { ...c, status: status as Complaint['status'] } : c))
         } catch {
-            toast.error('Failed to update status')
+            toast.error(t('failed_to_update_status'))
         }
     }
 
@@ -92,7 +92,7 @@ export function ComplaintsPage() {
                     type="text"
                     value={search}
                     onChange={e => setSearch(e.target.value)}
-                    placeholder={t('search_complaints') || 'Search complaints...'}
+                    placeholder={t('search_complaints')}
                     className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                 />
             </div>
@@ -119,7 +119,7 @@ export function ComplaintsPage() {
                                                     <h3 className="font-medium text-gray-900 dark:text-gray-100">{complaint.subject}</h3>
                                                     <Badge variant={config.variant} className="flex items-center gap-1">
                                                         <StatusIcon className="h-3 w-3" />
-                                                        {config.label}
+                                                        {t(config.label)}
                                                     </Badge>
                                                 </div>
                                                 <p className="mt-1 text-sm text-gray-500">{complaint.user?.full_name} • {complaint.user?.email}</p>
@@ -130,17 +130,17 @@ export function ComplaintsPage() {
                                         <div className="flex items-center gap-2 self-end sm:self-start">
                                             {complaint.status === 'open' && (
                                                 <Button size="sm" variant="outline" onClick={() => updateStatus(complaint.id, 'in_progress')}>
-                                                    In Progress
+                                                    {t('in_progress')}
                                                 </Button>
                                             )}
                                             {(complaint.status === 'open' || complaint.status === 'in_progress') && (
                                                 <Button size="sm" onClick={() => updateStatus(complaint.id, 'resolved')}>
-                                                    Resolve
+                                                    {t('resolve')}
                                                 </Button>
                                             )}
                                             {complaint.status === 'resolved' && (
                                                 <Button size="sm" variant="secondary" onClick={() => updateStatus(complaint.id, 'closed')}>
-                                                    Close
+                                                    {t('close')}
                                                 </Button>
                                             )}
                                         </div>

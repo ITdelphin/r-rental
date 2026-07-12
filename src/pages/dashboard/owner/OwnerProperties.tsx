@@ -16,12 +16,12 @@ import toast from 'react-hot-toast'
 import type { Property, PropertyStatus } from '@/types'
 
 const statusConfig: Record<string, { variant: 'default' | 'warning' | 'success' | 'danger' | 'secondary'; label: string }> = {
-  published: { variant: 'success', label: 'Published' },
-  pending_approval: { variant: 'warning', label: 'Pending' },
-  draft: { variant: 'secondary', label: 'Draft' },
-  rejected: { variant: 'danger', label: 'Rejected' },
-  rented: { variant: 'default', label: 'Rented' },
-  sold: { variant: 'default', label: 'Sold' },
+  published: { variant: 'success', label: 'published' },
+  pending_approval: { variant: 'warning', label: 'pending' },
+  draft: { variant: 'secondary', label: 'draft' },
+  rejected: { variant: 'danger', label: 'rejected' },
+  rented: { variant: 'default', label: 'rented' },
+  sold: { variant: 'default', label: 'sold' },
 }
 
 export function OwnerProperties() {
@@ -160,16 +160,16 @@ export function OwnerProperties() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2 self-end sm:self-center">
-                      <Button variant="ghost" size="icon" onClick={() => navigate(`/dashboard/properties/${prop.id}/edit`)} title="Edit full details">
+                      <Button variant="ghost" size="icon" onClick={() => navigate(`/dashboard/properties/${prop.id}/edit`)} title={t('edit_full_details')}>
                         <Pencil className="h-4 w-4 text-blue-500" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => navigate(`/properties/${prop.id}`)} title="View on site">
+                      <Button variant="ghost" size="icon" onClick={() => navigate(`/properties/${prop.id}`)} title={t('view_on_site')}>
                         <ExternalLink className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleEdit(prop)} title="Quick edit">
+                      <Button variant="ghost" size="icon" onClick={() => handleEdit(prop)} title={t('quick_edit')}>
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="text-red-500" onClick={() => handleDelete(prop)} title="Delete">
+                      <Button variant="ghost" size="icon" className="text-red-500" onClick={() => handleDelete(prop)} title={t('delete')}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -268,12 +268,12 @@ function EditPropertyModal({ property, isOpen, onClose, onSave, saving }: {
               value={form.status}
               onChange={e => setForm(p => ({ ...p, status: e.target.value as PropertyStatus }))}
               options={[
-                { value: 'draft', label: 'Draft' },
-                { value: 'pending_approval', label: 'Pending Approval' },
-                { value: 'published', label: 'Published' },
-                { value: 'rejected', label: 'Rejected' },
-                { value: 'rented', label: 'Rented' },
-                { value: 'sold', label: 'Sold' },
+                { value: 'draft', label: t('draft') },
+                { value: 'pending_approval', label: t('pending_approval') },
+                { value: 'published', label: t('published') },
+                { value: 'rejected', label: t('rejected') },
+                { value: 'rented', label: t('rented') },
+                { value: 'sold', label: t('sold') },
               ]}
             />
           </div>

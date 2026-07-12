@@ -57,9 +57,9 @@ export function NotificationsPage() {
         .is('is_read', false)
       if (error) throw error
       setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })))
-      toast.success('All marked as read')
+      toast.success(t('all_marked_as_read'))
     } catch {
-      toast.error('Failed to mark as read')
+      toast.error(t('failed_to_mark_as_read'))
     }
   }
 
@@ -69,7 +69,7 @@ export function NotificationsPage() {
       if (error) throw error
       setNotifications((prev) => prev.filter((n) => n.id !== id))
     } catch {
-      toast.error('Failed to delete notification')
+      toast.error(t('failed_to_delete_notification'))
     }
   }
 

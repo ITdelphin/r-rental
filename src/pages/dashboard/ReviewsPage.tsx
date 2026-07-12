@@ -77,7 +77,7 @@ export function ReviewsPage() {
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-medium text-gray-900 dark:text-gray-100">{review.property?.title || 'Unknown Property'}</h3>
+                      <h3 className="font-medium text-gray-900 dark:text-gray-100">{review.property?.title || t('unknown_property')}</h3>
                       <span className="text-xs text-gray-400">• {new Date(review.created_at).toLocaleDateString()}</span>
                     </div>
                     <div className="mt-1 flex items-center gap-1">

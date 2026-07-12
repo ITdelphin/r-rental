@@ -23,13 +23,13 @@ export function Footer() {
     try {
       const { success } = await sendNewsletterSubscribe(newsletterEmail.trim())
       if (success) {
-        toast.success('Subscribed successfully! Check your email.')
+        toast.success(t('subscribed_success'))
         setNewsletterEmail('')
       } else {
-        toast.error('Failed to subscribe. Please try again.')
+        toast.error(t('subscribe_failed'))
       }
     } catch {
-      toast.error('Failed to subscribe. Please try again.')
+      toast.error(t('subscribe_failed'))
     } finally {
       setSubscribing(false)
     }
@@ -69,7 +69,7 @@ export function Footer() {
 
           <div>
             <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t('newsletter')}</h3>
-            <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">Stay updated with new properties.</p>
+            <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">{t('newsletter_desc')}</p>
             <div className="mt-3 flex gap-2">
               <input
                 type="email"

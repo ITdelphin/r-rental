@@ -44,10 +44,10 @@ export function TenantFavorites() {
     try {
       const { error } = await supabase.from('favorites').delete().eq('id', id)
       if (error) throw error
-      toast.success('Removed from favorites')
+      toast.success(t('removed_from_favorites'))
       setFavorites(prev => prev.filter(f => f.id !== id))
     } catch {
-      toast.error('Failed to remove favorite')
+      toast.error(t('failed_to_remove_favorite'))
     }
   }
 
@@ -104,7 +104,7 @@ export function TenantFavorites() {
                       <p className="text-lg font-bold text-primary-600">{formatPrice(prop.price)}/{t('mo')}</p>
                     </div>
                     <Link to={`/properties/${prop.id}`} className="mt-3 block">
-                      <Button variant="outline" size="sm" className="w-full">View Property</Button>
+                      <Button variant="outline" size="sm" className="w-full">{t('view_property')}</Button>
                     </Link>
                   </div>
                 </CardContent>

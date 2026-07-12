@@ -15,11 +15,11 @@ import type { Booking } from '@/types'
 import toast from 'react-hot-toast'
 
 const statusConfig: Record<string, { label: string; variant: 'warning' | 'success' | 'danger' | 'secondary' | 'default'; icon: typeof Clock }> = {
-  pending: { label: 'Pending', variant: 'warning', icon: Clock },
-  approved: { label: 'Approved', variant: 'success', icon: CheckCircle },
-  rejected: { label: 'Rejected', variant: 'danger', icon: XCircle },
-  cancelled: { label: 'Cancelled', variant: 'secondary', icon: XCircle },
-  completed: { label: 'Completed', variant: 'default', icon: CheckCircle },
+  pending: { label: 'pending', variant: 'warning', icon: Clock },
+  approved: { label: 'approved', variant: 'success', icon: CheckCircle },
+  rejected: { label: 'rejected', variant: 'danger', icon: XCircle },
+  cancelled: { label: 'cancelled', variant: 'secondary', icon: XCircle },
+  completed: { label: 'completed', variant: 'default', icon: CheckCircle },
 }
 
 export function TenantBookings() {
@@ -57,11 +57,11 @@ export function TenantBookings() {
     try {
       const { error } = await supabase.from('bookings').update({ status: 'cancelled' } as never).eq('id', id)
       if (error) throw error
-      toast.success('Booking cancelled')
+      toast.success(t('booking_cancelled'))
       sendBookingNotification(id, 'cancelled')
       setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'cancelled' } : b))
     } catch {
-      toast.error('Failed to cancel booking')
+      toast.error(t('failed_to_cancel_booking'))
     }
   }
 
@@ -69,11 +69,11 @@ export function TenantBookings() {
     try {
       const { error } = await supabase.from('bookings').update({ status: 'approved' } as never).eq('id', id)
       if (error) throw error
-      toast.success('Booking approved')
+      toast.success(t('booking_approved'))
       sendBookingNotification(id, 'approved')
       setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'approved' } : b))
     } catch {
-      toast.error('Failed to approve booking')
+      toast.error(t('failed_to_approve_booking'))
     }
   }
 
@@ -122,7 +122,7 @@ export function TenantBookings() {
                         )}
                       </div>
                       <div>
-                        <h3 className="font-medium text-gray-900 dark:text-gray-100">{property?.title || 'Property'}</h3>
+                        <h3 className="font-medium text-gray-900 dark:text-gray-100">{property?.title || t('property')}</h3>
                         <p className="text-sm text-gray-500">{property?.district}, {property?.province}</p>
                         <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-gray-500">
                           {booking.visit_date && (
@@ -135,13 +135,13 @@ export function TenantBookings() {
                     </div>
                     <div className="flex items-center gap-3 self-end sm:self-center flex-wrap">
                       <Badge variant={config.variant} className="flex items-center gap-1 capitalize">
-                        <StatusIcon className="h-3 w-3" /> {t(config.label.toLowerCase())}
+                        <StatusIcon className="h-3 w-3" /> {t(config.label)}
                       </Badge>
                       {isOwner && booking.status === 'pending' && (
-                        <Button size="sm" onClick={() => handleApprove(booking.id)}>Approve</Button>
+                          <Button size="sm" onClick={() => handleApprove(booking.id)}>{t('approve')}</Button>
                       )}
                       {!isOwner && booking.status === 'pending' && (
-                        <Button size="sm" variant="outline" className="text-red-600" onClick={() => handleCancel(booking.id)}>Cancel</Button>
+                          <Button size="sm" variant="outline" className="text-red-600" onClick={() => handleCancel(booking.id)}>{t('cancel')}</Button>
                       )}
                       {property && (
                         <Link to={`/properties/${booking.property_id}`}>

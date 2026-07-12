@@ -37,7 +37,7 @@ export function OwnerEarnings() {
       setRecentPayments(payments.slice(0, 5).map(p => ({
         date: p.created_at,
         amount: Number(p.amount),
-        property: p.booking?.property?.title || 'Property',
+        property: p.booking?.property?.title || t('property'),
       })))
     } catch {
       setStats({ total: 0, thisMonth: 0, pending: 0, pendingCount: 0 })

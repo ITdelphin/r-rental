@@ -16,9 +16,9 @@ const steps = [
 ]
 
 const features = [
-  { icon: Shield, title: 'Secure Platform', desc: 'Verified properties and secure transactions' },
-  { icon: MapPin, title: 'Location Based', desc: 'Find properties in any province of Rwanda' },
-  { icon: Star, title: 'Trusted Reviews', desc: 'Real reviews from real tenants' },
+  { icon: Shield, titleKey: 'secure_platform', descKey: 'secure_platform_desc' },
+  { icon: MapPin, titleKey: 'location_based', descKey: 'location_based_desc' },
+  { icon: Star, titleKey: 'trusted_reviews', descKey: 'trusted_reviews_desc' },
 ]
 
 const stats = [
@@ -62,7 +62,7 @@ export function HomePage() {
             <Button onClick={() => navigate('/properties')} className="rounded-full px-8">{t('search')}</Button>
           </div>
           <div className="mt-8 flex justify-center gap-4 text-sm text-primary-200">
-            <span>Kigali</span> <span>Musanze</span> <span>Rubavu</span> <span>Huye</span> <span>Nyagatare</span>
+            <span>{t('kigali')}</span> <span>{t('musanze')}</span> <span>{t('rubavu')}</span> <span>{t('huye')}</span> <span>{t('nyagatare')}</span>
           </div>
         </div>
       </section>
@@ -70,9 +70,9 @@ export function HomePage() {
       <section className="py-20 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="text-center">
-            <Badge variant="secondary" className="mb-4">How It Works</Badge>
+            <Badge variant="secondary" className="mb-4">{t('how_it_works')}</Badge>
             <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 sm:text-4xl">{t('how_it_works')}</h2>
-            <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">Three simple steps to find your perfect rental in Rwanda</p>
+            <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">{t('how_it_works_subtitle')}</p>
           </div>
           <div className="mt-16 grid gap-8 sm:grid-cols-3">
             {steps.map((step, i) => (
@@ -96,9 +96,9 @@ export function HomePage() {
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
               <div>
-                <Badge variant="secondary" className="mb-4">Featured Listings</Badge>
+                <Badge variant="secondary" className="mb-4">{t('featured_listings')}</Badge>
                 <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 sm:text-4xl">{t('featured_properties')}</h2>
-                <p className="mt-2 text-gray-600 dark:text-gray-400">Hand-picked premium properties for you</p>
+                <p className="mt-2 text-gray-600 dark:text-gray-400">{t('featured_listings_subtitle')}</p>
               </div>
               <Link to="/properties" className="flex items-center gap-1 text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors">
                 {t('view_all')} <ChevronRight className="h-4 w-4" />
@@ -117,7 +117,7 @@ export function HomePage() {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                       <Badge className="absolute left-3 top-3">{property.category}</Badge>
                       {property.is_featured && (
-                        <Badge variant="secondary" className="absolute right-3 top-3 bg-amber-500 text-white hover:bg-amber-600">Featured</Badge>
+                        <Badge variant="secondary" className="absolute right-3 top-3 bg-amber-500 text-white hover:bg-amber-600">{t('featured')}</Badge>
                       )}
                     </div>
                     <CardContent className="p-5">
@@ -126,11 +126,11 @@ export function HomePage() {
                         <MapPin className="h-3.5 w-3.5 shrink-0" /> {property.district}, {property.province}
                       </p>
                       <div className="mt-4 flex items-center justify-between border-t pt-4 dark:border-gray-700">
-                        <span className="text-lg font-bold text-primary-600">{formatPrice(property.price)}<span className="text-sm font-normal text-gray-400">/mo</span></span>
+                        <span className="text-lg font-bold text-primary-600">{formatPrice(property.price)}<span className="text-sm font-normal text-gray-400">/{t('mo')}</span></span>
                         <div className="flex items-center gap-3 text-sm text-gray-500">
-                          <span>{property.bedrooms} beds</span>
+                          <span>{property.bedrooms} {t('beds')}</span>
                           <span className="text-gray-300 dark:text-gray-600">|</span>
-                          <span>{property.bathrooms} baths</span>
+                          <span>{property.bathrooms} {t('baths')}</span>
                         </div>
                       </div>
                     </CardContent>
@@ -145,18 +145,18 @@ export function HomePage() {
       <section className="py-20 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="text-center">
-            <Badge variant="secondary" className="mb-4">Why Choose Us</Badge>
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 sm:text-4xl">Why Rwanda EasyRent?</h2>
-            <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">We make property rental simple, secure, and stress-free</p>
+            <Badge variant="secondary" className="mb-4">{t('why_choose_us')}</Badge>
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 sm:text-4xl">{t('why_choose_us_title')}</h2>
+            <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">{t('why_choose_us_subtitle')}</p>
           </div>
           <div className="mt-16 grid gap-8 sm:grid-cols-3">
             {features.map((feature) => (
-              <div key={feature.title} className="group rounded-2xl border border-gray-200 p-8 transition-all duration-300 hover:border-primary-200 hover:shadow-lg hover:shadow-primary-100/50 dark:border-gray-700 dark:hover:border-primary-800 dark:hover:shadow-primary-900/30">
+              <div key={feature.titleKey} className="group rounded-2xl border border-gray-200 p-8 transition-all duration-300 hover:border-primary-200 hover:shadow-lg hover:shadow-primary-100/50 dark:border-gray-700 dark:hover:border-primary-800 dark:hover:shadow-primary-900/30">
                 <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary-50 text-primary-600 transition-colors group-hover:bg-primary-100 dark:bg-primary-900/30 dark:group-hover:bg-primary-900/50">
                   <feature.icon className="h-7 w-7" />
                 </div>
-                <h3 className="mt-6 text-lg font-semibold text-gray-900 dark:text-gray-100">{feature.title}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-gray-600 dark:text-gray-400">{feature.desc}</p>
+                <h3 className="mt-6 text-lg font-semibold text-gray-900 dark:text-gray-100">{t(feature.titleKey)}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-gray-600 dark:text-gray-400">{t(feature.descKey)}</p>
               </div>
             ))}
           </div>
@@ -183,9 +183,9 @@ export function HomePage() {
       <section className="py-20 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="text-center">
-            <Badge variant="secondary" className="mb-4">Testimonials</Badge>
+            <Badge variant="secondary" className="mb-4">{t('testimonials_title')}</Badge>
             <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 sm:text-4xl">{t('testimonials_title')}</h2>
-            <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">Hear from our happy customers</p>
+            <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">{t('testimonials_subtitle')}</p>
           </div>
           <div className="mt-16 grid gap-8 sm:grid-cols-3">
             {testimonials.map((tItem, i) => (
@@ -214,15 +214,15 @@ export function HomePage() {
       <section className="relative overflow-hidden bg-gradient-to-br from-gray-900 to-gray-950 py-20">
         <div className="absolute inset-0 bg-[url('/images/4.jfif')] bg-cover bg-center opacity-5" />
         <div className="relative mx-auto max-w-3xl px-4 sm:px-6 text-center">
-          <Badge variant="secondary" className="mb-4 bg-white/10 text-white hover:bg-white/20">Get Started</Badge>
-          <h2 className="text-3xl font-bold text-white sm:text-4xl">Ready to Find Your Dream Home?</h2>
-          <p className="mt-4 text-lg text-gray-300">Join thousands of happy tenants and property owners across Rwanda. Start your journey today.</p>
+          <Badge variant="secondary" className="mb-4 bg-white/10 text-white hover:bg-white/20">{t('get_started')}</Badge>
+          <h2 className="text-3xl font-bold text-white sm:text-4xl">{t('ready_to_find_home')}</h2>
+          <p className="mt-4 text-lg text-gray-300">{t('ready_to_find_home_desc')}</p>
           <div className="mt-10 flex justify-center gap-4">
             <Button size="lg" className="bg-white text-gray-900 hover:bg-gray-100 shadow-xl" onClick={() => navigate('/auth/register')}>
               {t('sign_up')}
             </Button>
             <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10" onClick={() => navigate('/properties')}>
-              {t('browse') || 'Browse Properties'}
+              {t('browse_properties')}
             </Button>
           </div>
         </div>

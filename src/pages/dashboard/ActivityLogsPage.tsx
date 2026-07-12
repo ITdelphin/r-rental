@@ -104,7 +104,7 @@ export function ActivityLogsPage() {
                                                     {log.user?.full_name || t('unknown')}
                                                 </span>
                                                 <Badge variant="secondary" className="text-xs capitalize">
-                                                    {log.action.replace(/_/g, ' ')}
+                                                    {t(log.action)}
                                                 </Badge>
                                             </div>
                                             {log.details && <p className="mt-0.5 text-sm text-gray-500">{log.details}</p>}

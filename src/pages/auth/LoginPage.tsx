@@ -23,7 +23,7 @@ export function LoginPage() {
       await authApi.login(email, password)
       navigate('/dashboard')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Login failed')
+      toast.error(error instanceof Error ? error.message : t('login_failed'))
     } finally {
       setLoading(false)
     }
@@ -37,7 +37,7 @@ export function LoginPage() {
             <Home className="h-6 w-6" /> {t('app_name')}
           </Link>
           <CardTitle className="mt-4">{t('sign_in')}</CardTitle>
-          <CardDescription>{t('welcome')} back! Sign in to your account.</CardDescription>
+          <CardDescription>{t('welcome_back')}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">

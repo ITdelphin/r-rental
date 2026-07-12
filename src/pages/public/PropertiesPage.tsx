@@ -9,9 +9,9 @@ import { Badge } from '@/components/ui/badge'
 import { useProperties } from '@/hooks/useProperties'
 import { formatPrice } from '@/lib/utils'
 
-const provinces = ['Kigali', 'Eastern', 'Western', 'Northern', 'Southern']
-const propertyTypes = ['House', 'Apartment', 'Villa', 'Cottage', 'Studio', 'Commercial']
-const categories = ['Rent', 'Sale', 'Short-term']
+const provinces = ['kigali', 'eastern', 'western', 'northern', 'southern']
+const propertyTypes = ['house', 'apartment', 'villa', 'cottage', 'studio', 'commercial']
+const categories = ['rent', 'sale', 'short_term']
 
 export function PropertiesPage() {
   const { t } = useTranslation()
@@ -46,7 +46,7 @@ export function PropertiesPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('properties')}</h1>
-          <p className="mt-1 text-gray-600 dark:text-gray-400">{filteredProperties?.length || 0} properties found</p>
+          <p className="mt-1 text-gray-600 dark:text-gray-400">{filteredProperties?.length || 0} {t('properties_found')}</p>
         </div>
         <div className="flex items-center gap-2">
           <div className="relative flex-1 sm:w-80">
@@ -76,7 +76,7 @@ export function PropertiesPage() {
                 <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">{t('province')}</label>
                 <div className="flex flex-wrap gap-2">
                   {provinces.map((p) => (
-                    <button key={p} onClick={() => toggleFilter('province', p)} className={`rounded-full px-3 py-1 text-xs font-medium border cursor-pointer ${filters.province === p ? 'bg-primary-600 text-white border-primary-600' : 'border-gray-300 dark:border-gray-600 hover:border-primary-300'}`}>{p}</button>
+                    <button key={p} onClick={() => toggleFilter('province', p)} className={`rounded-full px-3 py-1 text-xs font-medium border cursor-pointer ${filters.province === p ? 'bg-primary-600 text-white border-primary-600' : 'border-gray-300 dark:border-gray-600 hover:border-primary-300'}`}>{t(p)}</button>
                   ))}
                 </div>
               </div>
@@ -84,7 +84,7 @@ export function PropertiesPage() {
                 <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">{t('category')}</label>
                 <div className="flex flex-wrap gap-2">
                   {categories.map((c) => (
-                    <button key={c} onClick={() => toggleFilter('category', c)} className={`rounded-full px-3 py-1 text-xs font-medium border cursor-pointer ${filters.category === c ? 'bg-primary-600 text-white border-primary-600' : 'border-gray-300 dark:border-gray-600 hover:border-primary-300'}`}>{c}</button>
+                    <button key={c} onClick={() => toggleFilter('category', c)} className={`rounded-full px-3 py-1 text-xs font-medium border cursor-pointer ${filters.category === c ? 'bg-primary-600 text-white border-primary-600' : 'border-gray-300 dark:border-gray-600 hover:border-primary-300'}`}>{t(c)}</button>
                   ))}
                 </div>
               </div>
@@ -92,7 +92,7 @@ export function PropertiesPage() {
                 <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">{t('property_type')}</label>
                 <div className="flex flex-wrap gap-2">
                   {propertyTypes.map((pt) => (
-                    <button key={pt} onClick={() => toggleFilter('property_type', pt)} className={`rounded-full px-3 py-1 text-xs font-medium border cursor-pointer ${filters.property_type === pt ? 'bg-primary-600 text-white border-primary-600' : 'border-gray-300 dark:border-gray-600 hover:border-primary-300'}`}>{pt}</button>
+                    <button key={pt} onClick={() => toggleFilter('property_type', pt)} className={`rounded-full px-3 py-1 text-xs font-medium border cursor-pointer ${filters.property_type === pt ? 'bg-primary-600 text-white border-primary-600' : 'border-gray-300 dark:border-gray-600 hover:border-primary-300'}]`}>{t(pt)}</button>
                   ))}
                 </div>
               </div>
@@ -141,10 +141,10 @@ export function PropertiesPage() {
                     <h3 className="font-semibold text-gray-900 dark:text-gray-100">{property.title}</h3>
                     <p className="mt-1 flex items-center gap-1 text-sm text-gray-500"><MapPin className="h-3 w-3" /> {property.district}, {property.province}</p>
                     <div className="mt-3 flex items-center justify-between">
-                      <span className="text-lg font-bold text-primary-600">{formatPrice(property.price)}/mo</span>
+                      <span className="text-lg font-bold text-primary-600">{formatPrice(property.price)}/{t('mo')}</span>
                       <div className="flex items-center gap-3 text-sm text-gray-500">
-                        <span>{property.bedrooms} bed</span>
-                        <span>{property.bathrooms} bath</span>
+                        <span>{property.bedrooms} {t('bed')}</span>
+                        <span>{property.bathrooms} {t('bath')}</span>
                       </div>
                     </div>
                   </CardContent>
@@ -156,7 +156,7 @@ export function PropertiesPage() {
           <div className="py-20 text-center">
             <Home className="mx-auto h-12 w-12 text-gray-300" />
             <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-gray-100">{t('no_results')}</h3>
-            <p className="mt-2 text-sm text-gray-500">Try adjusting your search or filter criteria.</p>
+            <p className="mt-2 text-sm text-gray-500">{t('try_adjusting_search')}</p>
             <Button variant="outline" className="mt-4" onClick={clearFilters}>{t('clear_filters')}</Button>
           </div>
         )}

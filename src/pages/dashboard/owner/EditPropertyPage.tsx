@@ -39,17 +39,17 @@ const amenityFields = [
 ]
 
 const editSchema = z.object({
-  title: z.string().min(5, 'Title must be at least 5 characters').max(200),
-  description: z.string().max(2000).default(''),
+  title: z.string().min(5, 'title_min_length').max(200, 'title_too_long'),
+  description: z.string().max(2000, 'description_too_long').default(''),
   category: z.string(),
   property_type: z.string(),
   bedrooms: z.coerce.number().int().min(0).max(50).default(1),
   bathrooms: z.coerce.number().int().min(0).max(50).default(1),
   kitchen: z.coerce.number().int().min(0).max(20).default(1),
-  price: z.coerce.number().positive('Price must be greater than 0'),
+  price: z.coerce.number().positive('price_positive'),
   deposit: z.coerce.number().min(0).nullable().default(null),
-  province: z.string().min(1, 'Province is required'),
-  district: z.string().min(1, 'District is required'),
+  province: z.string().min(1, 'province_required'),
+  district: z.string().min(1, 'district_required'),
   sector: z.string().default(''),
   cell: z.string().default(''),
   village: z.string().default(''),
@@ -124,7 +124,7 @@ export function EditPropertyPage() {
       const isOwner = property.owner_id === user?.id
       const isAdmin = false
       if (!isOwner && !isAdmin) {
-        toast.error('You do not have permission to edit this property')
+        toast.error(t('no_permission_to_edit'))
         navigate('/dashboard/properties')
         return
       }
@@ -177,11 +177,11 @@ export function EditPropertyPage() {
 
     for (const file of files) {
       if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-        validationErrors.push(`${file.name}: Unsupported format. Use PNG, JPG, or WEBP.`)
+        validationErrors.push(`${file.name}: ${t('unsupported_format')}`)
         continue
       }
       if (file.size > MAX_FILE_SIZE) {
-        validationErrors.push(`${file.name}: File too large (max 10MB).`)
+        validationErrors.push(`${file.name}: ${t('file_too_large')}`)
         continue
       }
       validFiles.push(file)
@@ -196,7 +196,7 @@ export function EditPropertyPage() {
     try {
       for (let i = 0; i < validFiles.length; i++) {
         const file = validFiles[i]
-        setUploadProgress(`Uploading ${i + 1} of ${validFiles.length}...`)
+        setUploadProgress(t('uploading_n_of_m', { current: i + 1, total: validFiles.length }))
         const ext = file.name.split('.').pop() || 'jpg'
         const path = `properties/${user.id}-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
         const { error: uploadError } = await supabase.storage.from('property-images').upload(path, file)
@@ -205,9 +205,9 @@ export function EditPropertyPage() {
         urls.push(publicUrl)
       }
       setUploadedImages(prev => [...prev, ...urls])
-      toast.success(`${urls.length} image(s) uploaded`)
+      toast.success(t('images_uploaded_successfully', { count: urls.length }))
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Upload failed')
+      toast.error(err instanceof Error ? err.message : t('upload_failed'))
     } finally {
       setUploadingImages(false)
       setUploadProgress(null)
@@ -216,15 +216,15 @@ export function EditPropertyPage() {
   }, [user])
 
   const removeExistingImage = async (imageId: string) => {
-    const confirmed = window.confirm('Remove this image?')
+    const confirmed = window.confirm(t('remove_this_image'))
     if (!confirmed) return
     try {
       const { error } = await supabase.from('property_images').delete().eq('id', imageId)
       if (error) throw error
       setExistingImages(prev => prev.filter(img => img.id !== imageId))
-      toast.success('Image removed')
+      toast.success(t('image_removed'))
     } catch {
-      toast.error('Failed to remove image')
+      toast.error(t('failed_to_remove_image'))
     }
   }
 
@@ -276,14 +276,14 @@ export function EditPropertyPage() {
         const { error: imgError } = await supabase.from('property_images').insert(imageRows as never)
         if (imgError) {
           console.error('Failed to save image metadata:', imgError)
-          toast.error('Property updated but some images may not display.')
+          toast.error(t('property_updated_image_issue'))
         }
       }
 
-      toast.success('Property updated successfully')
+      toast.success(t('property_updated_successfully'))
       navigate('/dashboard/properties')
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to update property')
+      toast.error(err instanceof Error ? err.message : t('failed_to_update_property'))
     } finally {
       setSubmitting(false)
     }
@@ -309,9 +309,9 @@ export function EditPropertyPage() {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-gray-500">
         <Building2 className="h-12 w-12 mb-3" />
-        <p>Property not found</p>
+        <p>{t('property_not_found')}</p>
         <Button variant="outline" className="mt-4" onClick={() => navigate('/dashboard/properties')}>
-          Back to Properties
+          {t('back_to_properties')}
         </Button>
       </div>
     )
@@ -335,31 +335,31 @@ export function EditPropertyPage() {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1.5 block text-sm font-medium">Status</label>
+            <label className="mb-1.5 block text-sm font-medium">{t('status')}</label>
             <Select
               {...register('status')}
               options={[
-                { value: 'draft', label: 'Draft' },
-                { value: 'pending_approval', label: 'Pending Approval' },
-                { value: 'published', label: 'Published' },
-                { value: 'rejected', label: 'Rejected' },
-                { value: 'rented', label: 'Rented' },
-                { value: 'sold', label: 'Sold' },
+                { value: 'draft', label: t('draft') },
+                { value: 'pending_approval', label: t('pending_approval') },
+                { value: 'published', label: t('published') },
+                { value: 'rejected', label: t('rejected') },
+                { value: 'rented', label: t('rented') },
+                { value: 'sold', label: t('sold') },
               ]}
             />
           </div>
         </div>
 
-        <FormSection icon={Home} title="Basic Information" subtitle="Edit property details">
+        <FormSection icon={Home} title={t('basic_information')} subtitle={t('edit_property_details')}>
           <div className="space-y-4">
             <div>
               <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Property Title <span className="text-red-500">*</span>
+                {t('property_title')} <span className="text-red-500">*</span>
               </label>
-              <Input {...register('title')} error={errors.title?.message} />
+              <Input {...register('title')} error={errors.title?.message ? t(errors.title.message) : undefined} />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{t('description')}</label>
               <textarea
                 {...register('description')}
                 rows={4}
@@ -368,35 +368,35 @@ export function EditPropertyPage() {
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="mb-1.5 block text-sm font-medium">Category *</label>
-                <Select {...register('category')} options={categories.map(c => ({ value: c, label: c }))} />
+                <label className="mb-1.5 block text-sm font-medium">{t('category')} *</label>
+                <Select {...register('category')} options={categories.map(c => ({ value: c, label: t(c.replace(/[\s-]+/g, '_').toLowerCase()) }))} />
               </div>
               <div>
-                <label className="mb-1.5 block text-sm font-medium">Property Type *</label>
-                <Select {...register('property_type')} options={propertyTypes.map(pt => ({ value: pt, label: pt }))} />
+                <label className="mb-1.5 block text-sm font-medium">{t('property_type')} *</label>
+                <Select {...register('property_type')} options={propertyTypes.map(pt => ({ value: pt, label: t(pt.toLowerCase()) }))} />
               </div>
             </div>
             <div className="grid gap-4 sm:grid-cols-3">
               <div>
-                <label className="mb-1.5 block text-sm font-medium">Bedrooms</label>
+                <label className="mb-1.5 block text-sm font-medium">{t('bedrooms')}</label>
                 <Input type="number" min={0} {...register('bedrooms', { valueAsNumber: true })} />
               </div>
               <div>
-                <label className="mb-1.5 block text-sm font-medium">Bathrooms</label>
+                <label className="mb-1.5 block text-sm font-medium">{t('bathrooms')}</label>
                 <Input type="number" min={0} {...register('bathrooms', { valueAsNumber: true })} />
               </div>
               <div>
-                <label className="mb-1.5 block text-sm font-medium">Kitchens</label>
+                <label className="mb-1.5 block text-sm font-medium">{t('kitchens')}</label>
                 <Input type="number" min={0} {...register('kitchen', { valueAsNumber: true })} />
               </div>
             </div>
           </div>
         </FormSection>
 
-        <FormSection icon={DollarSign} title="Pricing" subtitle="Update price and deposit">
+        <FormSection icon={DollarSign} title={t('pricing')} subtitle={t('update_price_and_deposit')}>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Price (RWF/month) *</label>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{t('price_rwf_month')} *</label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">RWF</span>
                 <input
@@ -406,10 +406,10 @@ export function EditPropertyPage() {
                   className="flex h-10 w-full rounded-lg border border-gray-300 bg-white pl-12 pr-3 py-2 text-sm shadow-xs transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                 />
               </div>
-              {errors.price?.message && <p className="mt-1 text-sm text-red-500">{errors.price.message}</p>}
+              {errors.price?.message && <p className="mt-1 text-sm text-red-500">{t(errors.price.message)}</p>}
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium">Deposit (RWF)</label>
+              <label className="mb-1.5 block text-sm font-medium">{t('deposit_rwf')}</label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">RWF</span>
                 <input
@@ -423,7 +423,7 @@ export function EditPropertyPage() {
           </div>
         </FormSection>
 
-        <FormSection icon={MapPin} title="Location" subtitle="Update location">
+        <FormSection icon={MapPin} title={t('location')} subtitle={t('update_location')}>
           <div className="space-y-4">
             <LocationSelect
               selectedProvince={formValues.province}
@@ -434,13 +434,13 @@ export function EditPropertyPage() {
               onChange={(field, value) => setValue(field as keyof EditFormData, value, { shouldValidate: true })}
             />
             <div>
-              <label className="mb-1.5 block text-sm font-medium">WhatsApp Number (optional)</label>
-              <Input {...register('whatsapp_number')} placeholder="e.g. +250788123456" />
+              <label className="mb-1.5 block text-sm font-medium">{t('whatsapp_number_optional')}</label>
+              <Input {...register('whatsapp_number')} placeholder={t('whatsapp_placeholder')} />
             </div>
           </div>
         </FormSection>
 
-        <FormSection icon={Sparkles} title="Amenities & Features" subtitle="Update amenities">
+        <FormSection icon={Sparkles} title={t('amenities_and_features')} subtitle={t('update_amenities')}>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {amenityFields.map(({ key, label }) => {
               const isOn = formValues[key as keyof EditFormData] as boolean
@@ -460,20 +460,20 @@ export function EditPropertyPage() {
                   }`}>
                     {isOn ? <Check className="h-3 w-3" /> : null}
                   </span>
-                  {label}
+                  {t(key)}
                 </button>
               )
             })}
           </div>
         </FormSection>
 
-        <FormSection icon={ImageIcon} title="Property Images" subtitle="Manage images">
+        <FormSection icon={ImageIcon} title={t('property_images')} subtitle={t('manage_images')}>
           <div className="space-y-4">
             {imageErrors.length > 0 && (
               <div className="rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-950/30">
                 <div className="flex items-center gap-2 text-sm font-medium text-red-700 dark:text-red-400">
                   <AlertCircle className="h-4 w-4" />
-                  Image issues:
+                  {t('image_issues')}:
                 </div>
                 <ul className="mt-1 space-y-1">
                   {imageErrors.map((err, i) => (
@@ -485,7 +485,7 @@ export function EditPropertyPage() {
 
             {existingImages.length > 0 && (
               <div className="space-y-2">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Current Images</p>
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('current_images')}</p>
                 <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
                   {existingImages.map((img) => (
                     <div key={img.id} className="group relative aspect-square overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
@@ -508,14 +508,14 @@ export function EditPropertyPage() {
               {uploadingImages ? (
                 <>
                   <Loader2 className="h-8 w-8 animate-spin text-primary-500" />
-                  <p className="text-sm font-medium text-primary-600">{uploadProgress || 'Uploading...'}</p>
+                  <p className="text-sm font-medium text-primary-600">{uploadProgress || t('uploading')}</p>
                 </>
               ) : (
                 <>
                   <Upload className="h-8 w-8 text-gray-400" />
                   <div className="text-center">
-                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Click to add more images</p>
-                    <p className="text-xs text-gray-400 mt-1">PNG, JPG, WEBP, JFIF up to 10MB each</p>
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('click_to_add_more_images')}</p>
+                    <p className="text-xs text-gray-400 mt-1">{t('accepted_image_formats')}</p>
                   </div>
                 </>
               )}
@@ -524,7 +524,7 @@ export function EditPropertyPage() {
 
             {uploadedImages.length > 0 && (
               <div className="space-y-2">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">New Images ({uploadedImages.length})</p>
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('new_images', { count: uploadedImages.length })}</p>
                 <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
                   {uploadedImages.map((url, i) => (
                     <div key={i} className="group relative aspect-square overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
@@ -547,13 +547,13 @@ export function EditPropertyPage() {
 
         <div className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
           <Button type="button" variant="outline" onClick={handleCancel}>
-            <X className="h-4 w-4" /> Cancel
+            <X className="h-4 w-4" /> {t('cancel')}
           </Button>
           <Button type="submit" disabled={submitting} className="min-w-[180px]">
             {submitting ? (
-              <><Loader2 className="h-4 w-4 animate-spin" /> Saving...</>
+              <><Loader2 className="h-4 w-4 animate-spin" /> {t('saving')}</>
             ) : (
-              <><Save className="h-4 w-4" /> Save Changes</>
+              <><Save className="h-4 w-4" /> {t('save_changes')}</>
             )}
           </Button>
         </div>
@@ -562,19 +562,19 @@ export function EditPropertyPage() {
       <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Discard changes?</DialogTitle>
-            <DialogDescription>You have unsaved changes. Are you sure?</DialogDescription>
+            <DialogTitle>{t('discard_changes')}</DialogTitle>
+            <DialogDescription>{t('unsaved_changes_are_you_sure')}</DialogDescription>
           </DialogHeader>
           <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-400">
             <div className="flex items-start gap-2">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>Any unsaved changes will be lost.</span>
+              <span>{t('unsaved_changes_lost')}</span>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCancelDialog(false)}>Continue Editing</Button>
+            <Button variant="outline" onClick={() => setShowCancelDialog(false)}>{t('continue_editing')}</Button>
             <Button variant="destructive" onClick={() => { setShowCancelDialog(false); navigate('/dashboard/properties') }}>
-              Discard Changes
+              {t('discard_changes_confirm')}
             </Button>
           </DialogFooter>
         </DialogContent>

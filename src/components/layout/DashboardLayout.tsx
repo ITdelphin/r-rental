@@ -9,54 +9,54 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 
 interface NavItem {
   to: string
-  label: string
+  key: string
   icon: typeof LayoutDashboard
   roles?: string[]
 }
 
 const tenantNav: NavItem[] = [
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/dashboard/bookings', label: 'My Bookings', icon: Calendar },
-  { to: '/dashboard/favorites', label: 'Favorites', icon: Heart },
-  { to: '/dashboard/messages', label: 'Messages', icon: MessageSquare },
-  { to: '/dashboard/reviews', label: 'Reviews', icon: FileText },
-  { to: '/dashboard/account', label: 'Account Settings', icon: Settings },
+  { to: '/dashboard', key: 'dashboard', icon: LayoutDashboard },
+  { to: '/dashboard/bookings', key: 'my_bookings', icon: Calendar },
+  { to: '/dashboard/favorites', key: 'my_favorites', icon: Heart },
+  { to: '/dashboard/messages', key: 'messages', icon: MessageSquare },
+  { to: '/dashboard/reviews', key: 'reviews', icon: FileText },
+  { to: '/dashboard/account', key: 'account_settings', icon: Settings },
 ]
 
 const ownerNav: NavItem[] = [
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/dashboard/properties', label: 'My Properties', icon: Building2 },
-  { to: '/dashboard/properties/add', label: 'Add Property', icon: Plus },
-  { to: '/dashboard/bookings', label: 'Bookings', icon: Calendar },
-  { to: '/dashboard/earnings', label: 'Earnings', icon: BarChart3 },
-  { to: '/dashboard/messages', label: 'Messages', icon: MessageSquare },
-  { to: '/dashboard/reviews', label: 'Reviews', icon: Star },
-  { to: '/dashboard/account', label: 'Account Settings', icon: Settings },
+  { to: '/dashboard', key: 'dashboard', icon: LayoutDashboard },
+  { to: '/dashboard/properties', key: 'my_properties', icon: Building2 },
+  { to: '/dashboard/properties/add', key: 'add_property', icon: Plus },
+  { to: '/dashboard/bookings', key: 'my_bookings', icon: Calendar },
+  { to: '/dashboard/earnings', key: 'earnings', icon: BarChart3 },
+  { to: '/dashboard/messages', key: 'messages', icon: MessageSquare },
+  { to: '/dashboard/reviews', key: 'reviews', icon: Star },
+  { to: '/dashboard/account', key: 'account_settings', icon: Settings },
 ]
 
 const adminNav: NavItem[] = [
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/dashboard/users', label: 'Users', icon: Users },
-  { to: '/dashboard/properties', label: 'Properties', icon: Building2 },
-  { to: '/dashboard/bookings', label: 'Bookings', icon: Calendar },
-  { to: '/dashboard/reports', label: 'Reports', icon: BarChart3 },
-  { to: '/dashboard/complaints', label: 'Complaints', icon: Shield },
-  { to: '/dashboard/messages', label: 'Messages', icon: MessageSquare },
-  { to: '/dashboard/account', label: 'Account Settings', icon: Settings },
+  { to: '/dashboard', key: 'dashboard', icon: LayoutDashboard },
+  { to: '/dashboard/users', key: 'users', icon: Users },
+  { to: '/dashboard/properties', key: 'properties', icon: Building2 },
+  { to: '/dashboard/bookings', key: 'my_bookings', icon: Calendar },
+  { to: '/dashboard/reports', key: 'reports', icon: BarChart3 },
+  { to: '/dashboard/complaints', key: 'complaints', icon: Shield },
+  { to: '/dashboard/messages', key: 'messages', icon: MessageSquare },
+  { to: '/dashboard/account', key: 'account_settings', icon: Settings },
 ]
 
 const superAdminNav: NavItem[] = [
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/dashboard/users', label: 'Users', icon: Users },
-  { to: '/dashboard/properties', label: 'Properties', icon: Building2 },
-  { to: '/dashboard/bookings', label: 'Bookings', icon: Calendar },
-  { to: '/dashboard/reports', label: 'Reports', icon: BarChart3 },
-  { to: '/dashboard/complaints', label: 'Complaints', icon: Shield },
-  { to: '/dashboard/cms', label: 'CMS', icon: FileText },
-  { to: '/dashboard/settings', label: 'Settings', icon: Settings },
-  { to: '/dashboard/activity-logs', label: 'Activity Logs', icon: Activity },
-  { to: '/dashboard/messages', label: 'Messages', icon: MessageSquare },
-  { to: '/dashboard/account', label: 'Account Settings', icon: Settings },
+  { to: '/dashboard', key: 'dashboard', icon: LayoutDashboard },
+  { to: '/dashboard/users', key: 'users', icon: Users },
+  { to: '/dashboard/properties', key: 'properties', icon: Building2 },
+  { to: '/dashboard/bookings', key: 'my_bookings', icon: Calendar },
+  { to: '/dashboard/reports', key: 'reports', icon: BarChart3 },
+  { to: '/dashboard/complaints', key: 'complaints', icon: Shield },
+  { to: '/dashboard/cms', key: 'cms_pages', icon: FileText },
+  { to: '/dashboard/settings', key: 'settings', icon: Settings },
+  { to: '/dashboard/activity-logs', key: 'activity_logs', icon: Activity },
+  { to: '/dashboard/messages', key: 'messages', icon: MessageSquare },
+  { to: '/dashboard/account', key: 'account_settings', icon: Settings },
 ]
 
 export function DashboardLayout() {
@@ -113,8 +113,8 @@ export function DashboardLayout() {
             <AvatarFallback>{profile?.full_name?.charAt(0) || 'U'}</AvatarFallback>
           </Avatar>
           <div className="text-sm">
-            <p className="font-medium text-gray-900 dark:text-gray-100">{profile?.full_name || 'User'}</p>
-            <p className="text-gray-500 dark:text-gray-400 capitalize">{profile?.role || 'User'}</p>
+            <p className="font-medium text-gray-900 dark:text-gray-100">{profile?.full_name || t('user')}</p>
+            <p className="text-gray-500 dark:text-gray-400 capitalize">{profile?.role || t('user')}</p>
           </div>
         </div>
 
@@ -132,7 +132,7 @@ export function DashboardLayout() {
               )}
             >
               <item.icon className="h-4 w-4" />
-              {item.label}
+              {t(item.key)}
             </Link>
           ))}
         </nav>
@@ -154,7 +154,7 @@ export function DashboardLayout() {
           </button>
           <div className="flex items-center gap-2 text-sm text-gray-500">
             <ChevronRight className="h-4 w-4" />
-            <span className="capitalize">{location.pathname.split('/').pop() || 'Dashboard'}</span>
+            <span className="capitalize">{location.pathname.split('/').pop() || t('dashboard')}</span>
           </div>
           <div className="flex items-center gap-3">
             <Link to="/dashboard/notifications" className="relative p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">

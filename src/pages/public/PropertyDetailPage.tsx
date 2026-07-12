@@ -14,7 +14,7 @@ import { sendBookingNotification } from '@/lib/email'
 import toast from 'react-hot-toast'
 
 const amenityIcons: Record<string, typeof Wifi> = {
-  wifi: Wifi, security: Shield, parking: Car, garden: TreePine, swimming_pool: Waves, electricity: Zap, water: Droplets, balcony: Sun,
+  internet: Wifi, security: Shield, parking: Car, garden: TreePine, swimming_pool: Waves, electricity: Zap, water: Droplets, balcony: Sun,
 }
 
 export function PropertyDetailPage() {
@@ -53,7 +53,7 @@ export function PropertyDetailPage() {
   if (!property) {
     return (
       <div className="py-20 text-center">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Property not found</h2>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('property_not_found')}</h2>
         <Button className="mt-4" onClick={() => navigate('/properties')}>{t('back')}</Button>
       </div>
     )
@@ -61,14 +61,14 @@ export function PropertyDetailPage() {
 
   const images = property.images || []
   const amenities = [
-    { key: 'wifi', label: 'Internet', value: property.internet },
-    { key: 'security', label: 'Security', value: property.security },
-    { key: 'parking', label: 'Parking', value: property.parking },
-    { key: 'garden', label: 'Garden', value: property.garden },
-    { key: 'swimming_pool', label: 'Swimming Pool', value: property.swimming_pool },
-    { key: 'electricity', label: 'Electricity', value: property.electricity },
-    { key: 'water', label: 'Water', value: property.water },
-    { key: 'balcony', label: 'Balcony', value: property.balcony },
+    { key: 'internet', value: property.internet },
+    { key: 'security', value: property.security },
+    { key: 'parking', value: property.garden },
+    { key: 'garden', value: property.garden },
+    { key: 'swimming_pool', value: property.swimming_pool },
+    { key: 'electricity', value: property.electricity },
+    { key: 'water', value: property.water },
+    { key: 'balcony', value: property.balcony },
   ].filter((a) => a.value)
 
   const handleBooking = async () => {
@@ -77,7 +77,7 @@ export function PropertyDetailPage() {
       return
     }
     if (!bookingMessage.trim()) {
-      toast.error('Please add a message to the owner')
+      toast.error(t('please_add_message'))
       return
     }
     setBookingLoading(true)
@@ -90,9 +90,9 @@ export function PropertyDetailPage() {
         .maybeSingle() as unknown as { data: { id: string; status: string } | null })
       if (existing) {
         if (existing.status === 'pending' || existing.status === 'approved') {
-          toast.error('You already have a pending booking request for this property')
+          toast.error(t('pending_booking_exists'))
         } else {
-          toast.error('You have already sent a booking request for this property')
+          toast.error(t('duplicate_booking'))
         }
         setBookingLoading(false)
         return
@@ -106,14 +106,14 @@ export function PropertyDetailPage() {
         message: bookingMessage,
       } as never).select().single()
       if (error) throw error
-      toast.success('Booking request sent! The owner will be in touch.')
+      toast.success(t('booking_sent'))
       setBookingMessage('')
       setVisitDate('')
       if (newBooking) sendBookingNotification((newBooking as { id: string }).id, 'created')
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to send booking request'
       if (msg.toLowerCase().includes('duplicate') || msg.toLowerCase().includes('unique') || msg.includes('409')) {
-        toast.error('You have already sent a booking request for this property')
+        toast.error(t('duplicate_booking'))
       } else {
         toast.error(msg)
       }
@@ -132,14 +132,14 @@ export function PropertyDetailPage() {
       if (isFavorited) {
         await supabase.from('favorites').delete().eq('user_id', user.id).eq('property_id', property.id)
         setIsFavorited(false)
-        toast.success('Removed from favorites')
+        toast.success(t('removed_from_favorites'))
       } else {
         await supabase.from('favorites').insert({ user_id: user.id, property_id: property.id } as never)
         setIsFavorited(true)
-        toast.success('Added to favorites!')
+        toast.success(t('added_to_favorites'))
       }
     } catch {
-      toast.error('Failed to update favorites')
+      toast.error(t('failed_update_favorites'))
     } finally {
       setFavoriteLoading(false)
     }
@@ -147,7 +147,7 @@ export function PropertyDetailPage() {
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href)
-    toast.success('Link copied to clipboard!')
+    toast.success(t('link_copied'))
   }
 
   const avgRating = property.reviews?.length
@@ -227,24 +227,24 @@ export function PropertyDetailPage() {
                     {[...Array(5)].map((_, i) => (
                       <Star key={i} className={`h-4 w-4 ${i < Math.round(Number(avgRating)) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
                     ))}
-                    <span className="ml-1 text-sm text-gray-500">{avgRating} ({property.reviews?.length} reviews)</span>
+                    <span className="ml-1 text-sm text-gray-500">{avgRating} ({property.reviews?.length} {t('reviews')})</span>
                   </div>
                 )}
               </div>
               <div className="text-right">
-                <p className="text-2xl font-bold text-primary-600">{formatPrice(property.price)}<span className="text-sm font-normal text-gray-500">/mo</span></p>
+                <p className="text-2xl font-bold text-primary-600">{formatPrice(property.price)}<span className="text-sm font-normal text-gray-500">/{t('mo')}</span></p>
                 {property.deposit && <p className="text-sm text-gray-500">{t('deposit')}: {formatPrice(property.deposit)}</p>}
-                <p className="mt-1 flex items-center justify-end gap-1 text-xs text-gray-400"><Eye className="h-3 w-3" /> {property.views_count} views</p>
+                <p className="mt-1 flex items-center justify-end gap-1 text-xs text-gray-400"><Eye className="h-3 w-3" /> {property.views_count} {t('views')}</p>
               </div>
             </div>
 
             <div className="mt-4 flex flex-wrap gap-4 border-y py-4 dark:border-gray-700">
               <div className="flex items-center gap-2 text-sm"><Bed className="h-4 w-4 text-gray-400" /> {property.bedrooms} {t('bedrooms')}</div>
               <div className="flex items-center gap-2 text-sm"><Bath className="h-4 w-4 text-gray-400" /> {property.bathrooms} {t('bathrooms')}</div>
-              {property.kitchen > 0 && <div className="flex items-center gap-2 text-sm"><CookingPot className="h-4 w-4 text-gray-400" /> {property.kitchen} Kitchen</div>}
+              {property.kitchen > 0 && <div className="flex items-center gap-2 text-sm"><CookingPot className="h-4 w-4 text-gray-400" /> {property.kitchen} {t('kitchen')}</div>}
               <Badge>{property.category}</Badge>
               <Badge variant="secondary">{property.property_type}</Badge>
-              {property.furnished && <Badge variant="secondary">Furnished</Badge>}
+              {property.furnished && <Badge variant="secondary">{t('furnished')}</Badge>}
             </div>
 
             <div className="mt-6">
@@ -261,7 +261,7 @@ export function PropertyDetailPage() {
                     return (
                       <div key={amenity.key} className="flex items-center gap-2 rounded-lg border border-gray-100 p-3 text-sm text-gray-600 dark:border-gray-700 dark:text-gray-400">
                         {Icon && <Icon className="h-4 w-4 text-primary-600" />}
-                        {amenity.label}
+                        {t(amenity.key)}
                       </div>
                     )
                   })}
@@ -280,7 +280,7 @@ export function PropertyDetailPage() {
                           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-xs font-bold text-primary-600">
                             {review.user?.full_name?.charAt(0) || 'U'}
                           </div>
-                          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{review.user?.full_name || 'Anonymous'}</span>
+                          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{review.user?.full_name || t('anonymous')}</span>
                         </div>
                         <div className="flex gap-0.5">
                           {[...Array(5)].map((_, i) => (
@@ -303,7 +303,7 @@ export function PropertyDetailPage() {
             <CardContent className="p-6 space-y-4">
               <h3 className="font-semibold text-gray-900 dark:text-gray-100">{t('book_now')}</h3>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Preferred Visit Date</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('preferred_visit_date')}</label>
                 <input
                   type="date"
                   value={visitDate}
@@ -317,13 +317,13 @@ export function PropertyDetailPage() {
                 <textarea
                   value={bookingMessage}
                   onChange={(e) => setBookingMessage(e.target.value)}
-                  placeholder="Tell the owner about yourself and your interest..."
+                  placeholder={t('tell_owner_about_you')}
                   rows={4}
                   className="w-full rounded-lg border border-gray-300 bg-white p-3 text-sm dark:border-gray-600 dark:bg-gray-800"
                 />
               </div>
               <Button className="w-full" onClick={handleBooking} disabled={bookingLoading}>
-                <Calendar className="h-4 w-4" /> {bookingLoading ? 'Sending...' : t('book_now')}
+                <Calendar className="h-4 w-4" /> {bookingLoading ? t('sending') : t('book_now')}
               </Button>
               <Button
                 variant={isFavorited ? 'default' : 'ghost'}
@@ -332,7 +332,7 @@ export function PropertyDetailPage() {
                 disabled={favoriteLoading}
               >
                 <Heart className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
-                {isFavorited ? 'Saved to Favorites' : t('save_favorite')}
+                {isFavorited ? t('saved_to_favorites') : t('save_favorite')}
               </Button>
             </CardContent>
           </Card>
@@ -349,7 +349,7 @@ export function PropertyDetailPage() {
                     <p className="font-medium text-gray-900 dark:text-gray-100">{property.owner.full_name}</p>
                     {property.owner.is_verified && (
                       <p className="flex items-center gap-1 text-xs text-green-600">
-                        <Shield className="h-3 w-3" /> Verified Owner
+                        <Shield className="h-3 w-3" /> {t('verified_owner')}
                       </p>
                     )}
                   </div>
@@ -376,7 +376,7 @@ export function PropertyDetailPage() {
                       window.open(`https://wa.me/${n.startsWith('0') ? '250' + n.slice(1) : n}?text=${encodeURIComponent(msg)}`, '_blank')
                     }}
                   >
-                    <MessageCircle className="h-4 w-4" /> WhatsApp
+                    <MessageCircle className="h-4 w-4" /> {t('whatsapp')}
                   </Button>
                 )}
               </CardContent>

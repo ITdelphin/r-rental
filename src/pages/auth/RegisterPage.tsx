@@ -44,13 +44,13 @@ export function RegisterPage() {
       const { error: profileError } = await supabase.from('profiles').update({
         phone: form.phone,
       } as never).eq('user_id', data.user.id)
-      if (profileError) toast.error('Profile update failed')
+      if (profileError) toast.error(t('profile_update_failed'))
     }
     // Send welcome email
     if (data.user) {
       sendWelcomeEmail(data.user.id)
     }
-    toast.success('Account created! Check your email to verify.')
+    toast.success(t('account_created'))
     navigate('/auth/login')
   }
 
@@ -62,7 +62,7 @@ export function RegisterPage() {
             <Home className="h-6 w-6" /> {t('app_name')}
           </Link>
           <CardTitle className="mt-4">{t('sign_up')}</CardTitle>
-          <CardDescription>{t('create_account') || 'Create your account to get started.'}</CardDescription>
+          <CardDescription>{t('create_account')}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleRegister} className="space-y-4">
