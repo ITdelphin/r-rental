@@ -11,6 +11,7 @@ const languages = [
   { code: 'en', label: 'English' },
   { code: 'rw', label: 'Kinyarwanda' },
   { code: 'fr', label: 'Français' },
+  { code: 'sw', label: 'Kiswahili' },
 ]
 
 export function Header() {
