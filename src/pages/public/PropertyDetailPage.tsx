@@ -11,6 +11,7 @@ import { propertyApi } from '@/lib/api'
 import { formatPrice } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { sendBookingNotification } from '@/lib/email'
+import { notifyBookingCreated } from '@/lib/notifications'
 import toast from 'react-hot-toast'
 
 const amenityIcons: Record<string, typeof Wifi> = {
@@ -109,7 +110,12 @@ export function PropertyDetailPage() {
       toast.success(t('booking_sent'))
       setBookingMessage('')
       setVisitDate('')
-      if (newBooking) sendBookingNotification((newBooking as { id: string }).id, 'created')
+      if (newBooking) {
+        sendBookingNotification((newBooking as { id: string }).id, 'created')
+        const bookingId = (newBooking as { id: string }).id
+        const sellerId = property?.owner_id || ''
+        notifyBookingCreated(bookingId, user.id, sellerId, property?.title || 'Property')
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : t('booking_failed')
       if (msg.toLowerCase().includes('duplicate') || msg.toLowerCase().includes('unique') || msg.includes('409')) {

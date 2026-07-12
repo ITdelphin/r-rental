@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { LocationSelect } from '@/components/ui/LocationSelect'
+import { notifyPropertyAdded } from '@/lib/notifications'
 import {
   ChevronLeft, Building2, Save, Upload, Check, X, AlertCircle, ImageIcon,
   MapPin, DollarSign, Home, Sparkles, Loader2, Trash2
@@ -128,7 +129,7 @@ function FormSection({ icon: Icon, title, subtitle, step, children }: {
 export function AddPropertyPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const createProperty = useCreateProperty()
   const [submitting, setSubmitting] = useState(false)
   const [uploadingImages, setUploadingImages] = useState(false)
@@ -263,6 +264,9 @@ export function AddPropertyPage() {
       }
 
       toast.success(t('property_published_successfully'))
+      if (created?.id && user) {
+        notifyPropertyAdded(created.id, profile?.full_name || 'Owner', created.title || 'Property')
+      }
       navigate('/dashboard/properties')
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : t('failed_to_submit_property')
