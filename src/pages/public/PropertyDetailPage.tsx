@@ -111,7 +111,7 @@ export function PropertyDetailPage() {
       setVisitDate('')
       if (newBooking) sendBookingNotification((newBooking as { id: string }).id, 'created')
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to send booking request'
+      const msg = err instanceof Error ? err.message : t('booking_failed')
       if (msg.toLowerCase().includes('duplicate') || msg.toLowerCase().includes('unique') || msg.includes('409')) {
         toast.error(t('duplicate_booking'))
       } else {

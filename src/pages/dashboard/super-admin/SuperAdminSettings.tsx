@@ -300,7 +300,7 @@ export function SuperAdminSettings() {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('site_logo')}</label>
                     {logoUrl && (
                       <div className="flex items-center gap-4 rounded-lg border p-3 dark:border-gray-700">
-                        <img src={logoUrl} alt="Logo" className="h-10 object-contain" />
+                        <img src={logoUrl} alt={t('logo_alt')} className="h-10 object-contain" />
                         <button onClick={async () => { setLogoUrl(''); try { await upsertSetting('logo_url', '') } catch { toast.error(t('failed_to_save')) } }} className="ml-auto p-1 text-red-500 hover:bg-red-50 rounded cursor-pointer"><X className="h-4 w-4" /></button>
                       </div>
                     )}
@@ -311,7 +311,7 @@ export function SuperAdminSettings() {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('favicon')}</label>
                     {faviconUrl && (
                       <div className="flex items-center gap-4 rounded-lg border p-3 dark:border-gray-700">
-                        <img src={faviconUrl} alt="Favicon" className="h-8 w-8 object-contain" />
+                        <img src={faviconUrl} alt={t('favicon_alt')} className="h-8 w-8 object-contain" />
                         <button onClick={async () => { setFaviconUrl(''); try { await upsertSetting('favicon_url', '') } catch { toast.error(t('failed_to_save')) } }} className="ml-auto p-1 text-red-500 hover:bg-red-50 rounded cursor-pointer"><X className="h-4 w-4" /></button>
                       </div>
                     )}
@@ -327,7 +327,7 @@ export function SuperAdminSettings() {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('hero_background')}</label>
                     {heroBgUrl && (
                       <div className="relative aspect-[21/9] overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
-                        <img src={heroBgUrl} alt="Hero" className="h-full w-full object-cover" />
+                        <img src={heroBgUrl} alt={t('hero_alt')} className="h-full w-full object-cover" />
                         <button onClick={async () => { setHeroBgUrl(''); try { await upsertSetting('hero_background', '') } catch { toast.error(t('failed_to_save')) } }} className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-red-500 text-white hover:bg-red-600 cursor-pointer"><X className="h-4 w-4" /></button>
                       </div>
                     )}

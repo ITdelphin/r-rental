@@ -71,7 +71,7 @@ export function AdminReports() {
         { icon: Users, label: t('total_users'), value: stats.totalUsers.toLocaleString(), color: 'bg-blue-100 text-blue-600 dark:bg-blue-900/50', sub: `${t('new_this_period')}: +${stats.newUsersThisMonth}` },
         { icon: Building2, label: t('total_properties'), value: stats.totalProperties.toLocaleString(), color: 'bg-purple-100 text-purple-600 dark:bg-purple-900/50', sub: `${t('new_this_period')}: +${stats.newPropertiesThisMonth}` },
         { icon: Calendar, label: t('total_bookings'), value: stats.totalBookings.toLocaleString(), color: 'bg-green-100 text-green-600 dark:bg-green-900/50' },
-        { icon: DollarSign, label: t('total_revenue'), value: `${(stats.totalRevenue / 1000).toFixed(1)}K RWF`, color: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/50' },
+        { icon: DollarSign, label: t('total_revenue'), value: `${(stats.totalRevenue / 1000).toFixed(1)}K ${t('rwf')}`, color: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/50' },
     ] : []
 
     return (

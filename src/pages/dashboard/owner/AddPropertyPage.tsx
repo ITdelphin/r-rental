@@ -372,7 +372,7 @@ export function AddPropertyPage() {
                 {t('price_rwf_month')} <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">RWF</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">{t('rwf')}</span>
                 <input
                   type="number"
                   min={0}
@@ -386,7 +386,7 @@ export function AddPropertyPage() {
             <div>
               <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{t('deposit_rwf')}</label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">RWF</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">{t('rwf')}</span>
                 <input
                   type="number"
                   min={0}

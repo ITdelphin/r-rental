@@ -154,7 +154,7 @@ export function OwnerProperties() {
                           <MapPin className="h-3 w-3 shrink-0" /> {prop.district}, {prop.province}
                         </p>
                         <div className="mt-1 flex items-center gap-3 text-sm">
-                          <span className="font-medium text-primary-600">RWF {prop.price.toLocaleString()}/{t('mo')}</span>
+                          <span className="font-medium text-primary-600">{t('rwf')} {prop.price.toLocaleString()}/{t('mo')}</span>
                           <span className="text-gray-400 flex items-center gap-1"><Eye className="h-3 w-3" /> {prop.views_count}</span>
                         </div>
                       </div>
@@ -258,7 +258,7 @@ function EditPropertyModal({ property, isOpen, onClose, onSave, saving }: {
               <Input value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} required />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('price')}, RWF</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('price')}, {t('rwf')}</label>
               <Input type="number" value={form.price} onChange={e => setForm(p => ({ ...p, price: e.target.value }))} required />
             </div>
           </div>

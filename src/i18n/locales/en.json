@@ -649,5 +649,9 @@
   "faq6_q": "Is my data safe?",
   "faq6_a": "Yes, we use industry-standard encryption and security practices. Your personal information is never shared without your consent.",
   "faq7_q": "Can I switch between languages?",
-  "faq7_a": "Yes! Click the language button in the header to switch between English, Kinyarwanda, and French at any time."
+  "faq7_a": "Yes! Click the language button in the header to switch between English, Kinyarwanda, and French at any time.",
+  "booking_failed": "Failed to send booking request",
+  "logo_alt": "Logo",
+  "favicon_alt": "Favicon",
+  "hero_alt": "Hero"
 }

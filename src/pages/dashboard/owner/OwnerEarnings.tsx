@@ -76,7 +76,7 @@ export function OwnerEarnings() {
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">{t('total_earnings')}</p>
-                    <p className="text-xl font-bold text-gray-900 dark:text-gray-100">RWF {stats.total.toLocaleString()}</p>
+                    <p className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('rwf')} {stats.total.toLocaleString()}</p>
                   </div>
                 </div>
               </CardContent>
@@ -89,7 +89,7 @@ export function OwnerEarnings() {
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">{t('this_month')}</p>
-                    <p className="text-xl font-bold text-gray-900 dark:text-gray-100">RWF {stats.thisMonth.toLocaleString()}</p>
+                    <p className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('rwf')} {stats.thisMonth.toLocaleString()}</p>
                   </div>
                 </div>
               </CardContent>
@@ -102,7 +102,7 @@ export function OwnerEarnings() {
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">{t('pending_payments')}</p>
-                    <p className="text-xl font-bold text-gray-900 dark:text-gray-100">RWF {stats.pending.toLocaleString()}</p>
+                    <p className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('rwf')} {stats.pending.toLocaleString()}</p>
                     <p className="flex items-center gap-1 text-xs text-amber-600 mt-1">
                       <ArrowDownRight className="h-3 w-3" /> {stats.pendingCount} {t('pending_transactions')}
                     </p>
@@ -130,7 +130,7 @@ export function OwnerEarnings() {
                       <span className="text-gray-500">{new Date(p.date).toLocaleDateString()}</span>
                       <span className="text-gray-900 dark:text-gray-100">{t('payment_from_tenant')}</span>
                       <span className="text-gray-500 truncate">{p.property}</span>
-                      <span className="text-right font-semibold text-green-600">+RWF {p.amount.toLocaleString()}</span>
+                      <span className="text-right font-semibold text-green-600">+{t('rwf')} {p.amount.toLocaleString()}</span>
                     </div>
                   ))}
                 </div>

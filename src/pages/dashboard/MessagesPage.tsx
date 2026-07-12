@@ -27,7 +27,7 @@ interface Conversation {
 }
 
 export function MessagesPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { user, profile } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const [loading, setLoading] = useState(true)
@@ -161,7 +161,7 @@ export function MessagesPage() {
           name: otherProfile?.full_name || t('unknown'),
           avatarUrl: otherProfile?.avatar_url || null,
           lastMessage: msg.content,
-          lastMessageTime: formatMessageTime(msg.created_at, t),
+          lastMessageTime: formatMessageTime(msg.created_at, t, i18n),
           lastMessageTimestamp: msgTimestamp,
           unreadCount: isUnread ? 1 : 0,
           lastSenderId: msg.sender_id,
@@ -348,7 +348,7 @@ export function MessagesPage() {
                     disabled={contactingSupport}
                     title={t('contact_support')}
                   >
-                    <MessageSquare className="h-3.5 w-3.5 mr-1" /> Support
+                    <MessageSquare className="h-3.5 w-3.5 mr-1" /> {t('contact_support')}
                   </Button>
                   <Button
                     size="sm"
@@ -487,14 +487,14 @@ export function MessagesPage() {
                   {/* Date separator helper */}
                   {chatMessages.map((msg, index) => {
                     const isMine = msg.sender_id === user?.id
-                    const showDate = index === 0 || formatDateSeparator(msg.created_at, t) !== formatDateSeparator(chatMessages[index - 1].created_at, t)
+                    const showDate = index === 0 || formatDateSeparator(msg.created_at, t, i18n) !== formatDateSeparator(chatMessages[index - 1].created_at, t, i18n)
                     return (
                       <div key={msg.id}>
                         {showDate && (
                           <div className="flex items-center justify-center my-4">
                             <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
                             <span className="px-3 text-xs text-gray-400 font-medium">
-                              {formatDateSeparator(msg.created_at, t)}
+                              {formatDateSeparator(msg.created_at, t, i18n)}
                             </span>
                             <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
                           </div>
@@ -530,7 +530,7 @@ export function MessagesPage() {
                               >
                                 <p className="whitespace-pre-wrap break-words">{msg.content}</p>
                                 <div className={`mt-1 flex items-center gap-1 text-xs ${isMine ? 'text-primary-200 justify-end' : 'text-gray-400'}`}>
-                                  <span>{formatChatTime(msg.created_at)}</span>
+                                  <span>{formatChatTime(msg.created_at, i18n)}</span>
                                   {isMine && (
                                     msg.is_read
                                       ? <CheckCheck className="h-3 w-3 text-primary-200" />
@@ -747,7 +747,7 @@ export function MessagesPage() {
   )
 }
 
-function formatMessageTime(dateStr: string, t: (key: string, options?: Record<string, unknown>) => string) {
+function formatMessageTime(dateStr: string, t: (key: string, options?: Record<string, unknown>) => string, i18n?: { language: string }) {
   const date = new Date(dateStr)
   const now = new Date()
   const diffMs = now.getTime() - date.getTime()
@@ -758,22 +758,25 @@ function formatMessageTime(dateStr: string, t: (key: string, options?: Record<st
   if (diffHrs < 24) return `${diffHrs}${t('h_ago')}`
   const diffDays = Math.floor(diffHrs / 24)
   if (diffDays < 7) return `${diffDays}${t('d_ago')}`
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  const locale = i18n?.language || 'en-US'
+  return date.toLocaleDateString(locale, { month: 'short', day: 'numeric' })
 }
 
-function formatChatTime(dateStr: string) {
-  return new Date(dateStr).toLocaleTimeString('en-US', {
+function formatChatTime(dateStr: string, i18n?: { language: string }) {
+  const locale = i18n?.language || 'en-US'
+  return new Date(dateStr).toLocaleTimeString(locale, {
     hour: '2-digit',
     minute: '2-digit',
     hour12: true,
   })
 }
 
-function formatDateSeparator(dateStr: string, t: (key: string, options?: Record<string, unknown>) => string) {
+function formatDateSeparator(dateStr: string, t: (key: string, options?: Record<string, unknown>) => string, i18n?: { language: string }) {
   const date = new Date(dateStr)
   const now = new Date()
   const diffDays = Math.floor((now.getTime() - date.getTime()) / 86400000)
   if (diffDays === 0) return t('today')
   if (diffDays === 1) return t('yesterday')
-  return date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
+  const locale = i18n?.language || 'en-US'
+  return date.toLocaleDateString(locale, { weekday: 'long', month: 'short', day: 'numeric' })
 }

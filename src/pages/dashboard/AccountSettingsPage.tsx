@@ -208,7 +208,7 @@ export function AccountSettingsPage() {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('current_password')}</label>
                     <input type="password" value={passwordForm.current_password} onChange={(e) => setPasswordForm({ ...passwordForm, current_password: e.target.value })} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
                     <button type="button" onClick={handleForgotPassword} disabled={sendingReset} className="mt-1 text-xs text-primary-600 hover:text-primary-700 dark:text-primary-400 cursor-pointer">
-                      {sendingReset ? t('sending') || 'Sending...' : t('forgot_password')}
+                      {sendingReset ? t('sending') : t('forgot_password')}
                     </button>
                   </div>
                 <div>
