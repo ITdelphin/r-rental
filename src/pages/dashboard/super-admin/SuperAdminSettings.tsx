@@ -1,25 +1,20 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useAuth } from '@/hooks/useAuth'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { CardSkeleton } from '@/components/ui/loading'
-import { Save, RefreshCw, FileText, Image, Upload, X, Plus, Edit, Trash2, Building, Eye, AlertCircle, Globe, Loader2, Key, Camera, User } from 'lucide-react'
+import { Save, RefreshCw, FileText, Image, Upload, X, Plus, Edit, Trash2, Building, Eye, AlertCircle, Globe, Loader2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { sendAccountNotification } from '@/lib/email'
-import { profileApi } from '@/lib/api'
 import toast from 'react-hot-toast'
 import type { CmsPage } from '@/types'
 
-type Section = 'general' | 'branding' | 'pages' | 'account'
+type Section = 'general' | 'branding' | 'pages'
 
 const TABS: { key: Section; labelKey: string; icon: typeof Building }[] = [
   { key: 'general', labelKey: 'general_settings', icon: Building },
   { key: 'branding', labelKey: 'branding', icon: Image },
   { key: 'pages', labelKey: 'cms_pages', icon: FileText },
-  { key: 'account', labelKey: 'account_settings', icon: User },
 ]
 
 function SectionCard({ title, description, icon: Icon, children }: { title: string; description?: string; icon: typeof Building; children: React.ReactNode }) {
@@ -156,27 +151,6 @@ export function SuperAdminSettings() {
   const [pageForm, setPageForm] = useState({ title: '', slug: '', content: '', meta_title: '', meta_description: '', is_published: true })
   const [pageErrors, setPageErrors] = useState<Record<string, string>>({})
 
-  // Account
-  const { profile: accountProfile, user: accountUser } = useAuth()
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const [localAvatar, setLocalAvatar] = useState<string | undefined>(undefined)
-  const [accountForm, setAccountForm] = useState({
-    full_name: accountProfile?.full_name || '',
-    phone: accountProfile?.phone || '',
-    national_id: accountProfile?.national_id || '',
-    province: accountProfile?.province || '',
-    district: accountProfile?.district || '',
-    sector: accountProfile?.sector || '',
-    cell: accountProfile?.cell || '',
-    village: accountProfile?.village || '',
-    address: accountProfile?.address || '',
-    bio: accountProfile?.bio || '',
-  })
-  const [passwordForm, setPasswordForm] = useState({ current_password: '', new_password: '', confirm_password: '' })
-  const [savingAccount, setSavingAccount] = useState(false)
-  const [uploadingAvatar, setUploadingAvatar] = useState(false)
-  const [sendingReset, setSendingReset] = useState(false)
-
   const fetchAll = useCallback(async () => {
     setLoading(true)
     try {
@@ -304,59 +278,6 @@ export function SuperAdminSettings() {
       fetchPages()
     } catch (err: unknown) { toast.error(err instanceof Error ? err.message : t('failed')) }
     setSaving(null)
-  }
-
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file || !accountUser) return
-    setUploadingAvatar(true)
-    try {
-      const ext = file.name.split('.').pop()
-      const filePath = `avatars/${accountUser.id}-${Date.now()}.${ext}`
-      const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, file, { upsert: true })
-      if (uploadError) throw uploadError
-      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filePath)
-      await profileApi.update(accountUser.id, { avatar_url: publicUrl } as never)
-      setLocalAvatar(publicUrl ?? undefined)
-      toast.success(t('profile_updated'))
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : t('upload_failed'))
-    } finally { setUploadingAvatar(false) }
-  }
-
-  const handleProfileUpdate = async () => {
-    if (!accountUser) return
-    setSavingAccount(true)
-    try {
-      await profileApi.update(accountUser.id, accountForm as never)
-      toast.success(t('profile_updated'))
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : t('update_failed'))
-    } finally { setSavingAccount(false) }
-  }
-
-  const handlePasswordChange = async () => {
-    if (passwordForm.new_password !== passwordForm.confirm_password) { toast.error(t('passwords_do_not_match')); return }
-    if (passwordForm.new_password.length < 6) { toast.error(t('password_too_short')); return }
-    try {
-      const { error } = await supabase.auth.updateUser({ password: passwordForm.new_password })
-      if (error) throw error
-      toast.success(t('password_updated'))
-      if (accountUser) sendAccountNotification(accountUser.id, 'password_changed')
-      setPasswordForm({ current_password: '', new_password: '', confirm_password: '' })
-    } catch (err: unknown) { toast.error(err instanceof Error ? err.message : t('password_update_failed')) }
-  }
-
-  const handleDeleteAccount = async () => {
-    if (!window.confirm(t('delete_account_confirm'))) return
-    try {
-      if (accountUser) {
-        sendAccountNotification(accountUser.id, 'account_deleted')
-        await supabase.from('profiles').delete().eq('user_id', accountUser.id)
-        await supabase.auth.signOut()
-        window.location.href = '/'
-      }
-    } catch { toast.error(t('delete_failed')) }
   }
 
   const deletePage = async () => {
@@ -602,145 +523,6 @@ export function SuperAdminSettings() {
               </div>
             )}
           </SectionCard>
-        )}
-
-        {section === 'account' && accountProfile && (
-          <div className="grid gap-6 lg:grid-cols-3">
-            <div className="lg:col-span-2 space-y-6">
-              <SectionCard title={t('profile_information')} description={t('profile_info_description')} icon={User}>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{t('full_name')}</label>
-                    <input type="text" value={accountForm.full_name} onChange={e => setAccountForm(f => ({ ...f, full_name: e.target.value }))} className="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-white px-4 py-2.5 text-sm shadow-sm dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 outline-none hover:border-gray-400" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{t('email')}</label>
-                    <input type="email" value={accountProfile.email} disabled className="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-4 py-2.5 text-sm text-gray-500 dark:text-gray-400 cursor-not-allowed" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{t('phone')}</label>
-                    <input type="tel" value={accountForm.phone} onChange={e => setAccountForm(f => ({ ...f, phone: e.target.value }))} className="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-white px-4 py-2.5 text-sm shadow-sm dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 outline-none hover:border-gray-400" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{t('national_id')}</label>
-                    <input type="text" value={accountForm.national_id} onChange={e => setAccountForm(f => ({ ...f, national_id: e.target.value }))} className="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-white px-4 py-2.5 text-sm shadow-sm dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 outline-none hover:border-gray-400" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{t('province')}</label>
-                    <input type="text" value={accountForm.province} onChange={e => setAccountForm(f => ({ ...f, province: e.target.value }))} className="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-white px-4 py-2.5 text-sm shadow-sm dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 outline-none hover:border-gray-400" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{t('district')}</label>
-                    <input type="text" value={accountForm.district} onChange={e => setAccountForm(f => ({ ...f, district: e.target.value }))} className="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-white px-4 py-2.5 text-sm shadow-sm dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 outline-none hover:border-gray-400" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{t('sector')}</label>
-                    <input type="text" value={accountForm.sector} onChange={e => setAccountForm(f => ({ ...f, sector: e.target.value }))} className="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-white px-4 py-2.5 text-sm shadow-sm dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 outline-none hover:border-gray-400" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{t('cell')}</label>
-                    <input type="text" value={accountForm.cell} onChange={e => setAccountForm(f => ({ ...f, cell: e.target.value }))} className="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-white px-4 py-2.5 text-sm shadow-sm dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 outline-none hover:border-gray-400" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{t('village')}</label>
-                    <input type="text" value={accountForm.village} onChange={e => setAccountForm(f => ({ ...f, village: e.target.value }))} className="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-white px-4 py-2.5 text-sm shadow-sm dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 outline-none hover:border-gray-400" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{t('address')}</label>
-                    <input type="text" value={accountForm.village} onChange={e => setAccountForm(f => ({ ...f, village: e.target.value }))} className="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-white px-4 py-2.5 text-sm shadow-sm dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 outline-none hover:border-gray-400" />
-                  </div>
-                </div>
-                <div className="mt-4">
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{t('bio')}</label>
-                  <textarea rows={3} value={accountForm.bio} onChange={e => setAccountForm(f => ({ ...f, bio: e.target.value }))} className="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-white px-4 py-2.5 text-sm shadow-sm dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 outline-none hover:border-gray-400" />
-                </div>
-                <div className="mt-6 flex justify-end border-t border-gray-100 dark:border-gray-800 pt-5">
-                  <Button onClick={handleProfileUpdate} disabled={savingAccount}>
-                    {savingAccount ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> {t('saving')}...</> : <><Save className="h-4 w-4 mr-2" /> {t('save_changes')}</>}
-                  </Button>
-                </div>
-              </SectionCard>
-
-              <SectionCard title={t('change_password')} description={t('password_description')} icon={Key}>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{t('current_password')}</label>
-                    <input type="password" value={passwordForm.current_password} onChange={e => setPasswordForm(f => ({ ...f, current_password: e.target.value }))} className="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-white px-4 py-2.5 text-sm shadow-sm dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 outline-none hover:border-gray-400" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{t('new_password')}</label>
-                    <input type="password" value={passwordForm.new_password} onChange={e => setPasswordForm(f => ({ ...f, new_password: e.target.value }))} className="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-white px-4 py-2.5 text-sm shadow-sm dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 outline-none hover:border-gray-400" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{t('confirm_password')}</label>
-                    <input type="password" value={passwordForm.confirm_password} onChange={e => setPasswordForm(f => ({ ...f, confirm_password: e.target.value }))} className="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-white px-4 py-2.5 text-sm shadow-sm dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 outline-none hover:border-gray-400" />
-                  </div>
-                </div>
-                <div className="mt-6 flex items-center justify-between border-t border-gray-100 dark:border-gray-800 pt-5">
-                  <button type="button" onClick={async () => {
-                    if (!accountProfile?.email) return
-                    setSendingReset(true)
-                    try {
-                      await supabase.auth.resetPasswordForEmail(accountProfile.email, { redirectTo: window.location.origin + '/auth/forgot-password' })
-                      toast.success(t('reset_link_sent'))
-                    } catch { toast.error(t('password_update_failed')) }
-                    setSendingReset(false)
-                  }} disabled={sendingReset} className="text-xs text-primary-600 hover:text-primary-700 dark:text-primary-400 cursor-pointer disabled:opacity-50">
-                    {sendingReset ? t('sending') : t('forgot_password')}
-                  </button>
-                  <Button variant="outline" onClick={handlePasswordChange}>
-                    <Key className="h-4 w-4 mr-2" /> {t('update_password')}
-                  </Button>
-                </div>
-              </SectionCard>
-            </div>
-
-            <div className="space-y-6">
-              <SectionCard title={t('profile_photo')} description={t('profile_photo_description')} icon={Camera}>
-                <div className="flex flex-col items-center gap-4">
-                  <div className="relative">
-                    <Avatar className="h-24 w-24">
-                      {(localAvatar ?? accountProfile.avatar_url) ? <AvatarImage src={localAvatar ?? accountProfile.avatar_url ?? undefined} /> : null}
-                      <AvatarFallback className="text-2xl">{accountProfile.full_name?.charAt(0) || 'U'}</AvatarFallback>
-                    </Avatar>
-                    <button onClick={() => fileInputRef.current?.click()} disabled={uploadingAvatar} className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-primary-600 text-white shadow hover:bg-primary-700 disabled:opacity-50 cursor-pointer">
-                      {uploadingAvatar ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
-                    </button>
-                    <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
-                  </div>
-                  <p className="text-xs text-gray-500">{t('click_to_change_photo')}</p>
-                  <div className="w-full border-t pt-4 dark:border-gray-700 space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">{t('account_type')}</span>
-                      <span className="font-medium capitalize text-gray-900 dark:text-gray-100">{accountProfile.role}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">{t('member_since')}</span>
-                      <span className="font-medium text-gray-900 dark:text-gray-100">{new Date(accountProfile.created_at).toLocaleDateString()}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">{t('verified')}</span>
-                      <span className={`font-medium ${accountProfile.is_verified ? 'text-emerald-600' : 'text-gray-400'}`}>{accountProfile.is_verified ? t('yes') : t('no')}</span>
-                    </div>
-                  </div>
-                </div>
-              </SectionCard>
-
-              <Card className="border-0 shadow-sm ring-1 ring-red-200 dark:ring-red-900 overflow-hidden">
-                <CardHeader className="pb-3 border-b border-red-100 dark:border-red-900">
-                  <CardTitle className="flex items-center gap-2 text-base text-red-600">
-                    <AlertCircle className="h-4 w-4" /> {t('danger_zone')}
-                  </CardTitle>
-                  <CardDescription className="text-red-500 text-sm">{t('danger_zone_description')}</CardDescription>
-                </CardHeader>
-                <CardContent className="pt-4">
-                  <Button variant="outline" className="w-full text-red-600 border-red-300 hover:bg-red-50 dark:hover:bg-red-900/20" onClick={handleDeleteAccount}>
-                    <Trash2 className="h-4 w-4 mr-2" /> {t('delete_account')}
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
         )}
       </div>
 

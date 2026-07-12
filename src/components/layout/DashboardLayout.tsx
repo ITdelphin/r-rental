@@ -55,7 +55,7 @@ const superAdminNav: NavItem[] = [
   { to: '/dashboard/settings', key: 'settings', icon: Settings },
   { to: '/dashboard/activity-logs', key: 'activity_logs', icon: Activity },
   { to: '/dashboard/messages', key: 'messages', icon: MessageSquare },
-  { to: '/dashboard/settings', key: 'account_settings', icon: Settings },
+  { to: '/dashboard/account', key: 'account_settings', icon: Settings },
 ]
 
 export function DashboardLayout() {
