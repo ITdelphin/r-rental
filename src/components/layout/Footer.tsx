@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Home, Mail, Phone, MapPin, Loader2 } from 'lucide-react'
+import { Mail, Phone, MapPin, Loader2 } from 'lucide-react'
 import { useSettings } from '@/hooks/useSettings'
 import { sendNewsletterSubscribe } from '@/lib/email'
+import { BrandLogo } from '@/components/ui/brand-logo'
 import toast from 'react-hot-toast'
 
 export function Footer() {
@@ -40,10 +41,7 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <Link to="/" className="flex items-center gap-2 text-lg font-bold text-primary-600">
-              <Home className="h-5 w-5" />
-              {platformName}
-            </Link>
+            <BrandLogo variant="footer" />
             <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">{t('footer_description')}</p>
           </div>
 

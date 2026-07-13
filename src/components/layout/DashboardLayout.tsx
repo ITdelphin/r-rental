@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/lib/supabase'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { BrandLogo } from '@/components/ui/brand-logo'
 
 interface NavItem {
   to: string
@@ -99,10 +100,7 @@ export function DashboardLayout() {
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       )}>
         <div className="flex h-16 items-center justify-between border-b px-4 dark:border-gray-700">
-          <Link to="/" className="flex items-center gap-2 font-bold text-primary-600">
-            <Home className="h-5 w-5" />
-            {t('app_name')}
-          </Link>
+          <BrandLogo variant="sidebar" />
           <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-1 cursor-pointer"><X className="h-5 w-5" /></button>
         </div>
 

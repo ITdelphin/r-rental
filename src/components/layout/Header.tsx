@@ -1,10 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Home, Menu, X, User, LogOut, Globe, Sun, Moon } from 'lucide-react'
+import { Menu, X, LogOut, Globe, Sun, Moon } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
-import { useSettings } from '@/hooks/useSettings'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { BrandLogo } from '@/components/ui/brand-logo'
 import { supabase } from '@/lib/supabase'
 
 const languages = [
@@ -17,7 +18,6 @@ const languages = [
 export function Header() {
   const { t, i18n } = useTranslation()
   const { user, profile } = useAuth()
-  const { settings } = useSettings()
   const navigate = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [langOpen, setLangOpen] = useState(false)
@@ -30,9 +30,6 @@ export function Header() {
     { to: '/contact', label: t('contact') },
   ]
 
-  const platformName = settings.platform_name || t('app_name')
-  const logoUrl = settings.logo_url || ''
-
   const handleLogout = async () => {
     await supabase.auth.signOut()
     navigate('/')
@@ -41,16 +38,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md dark:bg-gray-900/80">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
-        <Link to="/" className="flex items-center gap-2">
-          {logoUrl ? (
-            <img src={logoUrl} alt={platformName} className="h-8 w-auto" />
-          ) : (
-            <>
-              <Home className="h-6 w-6 text-primary-600" />
-              <span className="text-xl font-bold text-primary-600">{platformName}</span>
-            </>
-          )}
-        </Link>
+        <BrandLogo variant="header" />
 
         <nav className="hidden md:flex items-center gap-6">
           {navLinks.map((link) => (
@@ -82,10 +70,13 @@ export function Header() {
 
           {user ? (
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
-                <User className="h-4 w-4" />
-                {profile?.full_name || t('dashboard')}
-              </Button>
+              <button onClick={() => navigate('/dashboard')} className="flex items-center gap-2 rounded-lg p-1 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer">
+                <Avatar className="h-8 w-8">
+                  {profile?.avatar_url ? <AvatarImage src={profile.avatar_url} /> : null}
+                  <AvatarFallback className="text-xs">{profile?.full_name?.charAt(0) || 'U'}</AvatarFallback>
+                </Avatar>
+                <span className="hidden sm:inline text-sm font-medium text-gray-700 dark:text-gray-300">{profile?.full_name || t('dashboard')}</span>
+              </button>
               <Button variant="ghost" size="icon" onClick={handleLogout}>
                 <LogOut className="h-4 w-4" />
               </Button>

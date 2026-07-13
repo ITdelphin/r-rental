@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Home, Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { BrandLogo } from '@/components/ui/brand-logo'
 import { authApi } from '@/lib/api'
 import toast from 'react-hot-toast'
 
@@ -33,9 +34,7 @@ export function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 dark:bg-gray-950">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <Link to="/" className="mx-auto flex items-center justify-center gap-2 text-2xl font-bold text-primary-600">
-            <Home className="h-6 w-6" /> {t('app_name')}
-          </Link>
+          <BrandLogo variant="auth" />
           <CardTitle className="mt-4">{t('sign_in')}</CardTitle>
           <CardDescription>{t('welcome_back')}</CardDescription>
         </CardHeader>

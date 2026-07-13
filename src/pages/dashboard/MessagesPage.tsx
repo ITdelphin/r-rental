@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button'
 import { LoadingSpinner } from '@/components/ui/loading'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
-import { Search, Send, MessageSquare, ChevronLeft, Trash2, Edit2, Check, X, Plus, Paperclip, Smile, CheckCheck, Clock, Image as ImageIcon } from 'lucide-react'
+import { Search, Send, MessageSquare, ChevronLeft, Trash2, Edit2, Check, X, Plus, CheckCheck, Clock } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { messageApi } from '@/lib/api'
 import { sendMessageNotification } from '@/lib/email'
 import { supabase } from '@/lib/supabase'
@@ -406,13 +407,10 @@ export function MessagesPage() {
                   }`}
                 >
                   <div className="relative">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-bold text-primary-600">
-                      {conv.avatarUrl ? (
-                        <img src={conv.avatarUrl} alt="" className="h-full w-full rounded-full object-cover" />
-                      ) : (
-                        conv.name.charAt(0).toUpperCase()
-                      )}
-                    </div>
+                    <Avatar>
+                      {conv.avatarUrl ? <AvatarImage src={conv.avatarUrl} /> : null}
+                      <AvatarFallback>{conv.name.charAt(0).toUpperCase()}</AvatarFallback>
+                    </Avatar>
                     {conv.isOnline && (
                       <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white bg-green-500 dark:border-gray-900" />
                     )}
@@ -456,13 +454,10 @@ export function MessagesPage() {
                   <ChevronLeft className="h-5 w-5" />
                 </button>
                 <div className="relative">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-bold text-primary-600">
-                    {activeConversation?.avatarUrl ? (
-                      <img src={activeConversation.avatarUrl} alt="" className="h-full w-full rounded-full object-cover" />
-                    ) : (
-                      (activeConversation?.name || activeChatName).charAt(0).toUpperCase()
-                    )}
-                  </div>
+                  <Avatar>
+                    {activeConversation?.avatarUrl ? <AvatarImage src={activeConversation.avatarUrl} /> : null}
+                    <AvatarFallback>{(activeConversation?.name || activeChatName).charAt(0).toUpperCase()}</AvatarFallback>
+                  </Avatar>
                 </div>
                 <div>
                   <h3 className="font-medium text-gray-900 dark:text-gray-100">{activeConversation?.name || activeChatName}</h3>
@@ -680,13 +675,10 @@ export function MessagesPage() {
                         }}
                         className="flex w-full items-center gap-3 p-3 text-left hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-lg transition-colors cursor-pointer"
                       >
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-bold text-primary-600">
-                          {u.avatar_url ? (
-                            <img src={u.avatar_url} alt="" className="h-full w-full rounded-full object-cover" />
-                          ) : (
-                            u.full_name?.charAt(0)?.toUpperCase() || 'U'
-                          )}
-                        </div>
+                        <Avatar>
+                          {u.avatar_url ? <AvatarImage src={u.avatar_url} /> : null}
+                          <AvatarFallback>{u.full_name?.charAt(0)?.toUpperCase() || 'U'}</AvatarFallback>
+                        </Avatar>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{u.full_name}</p>
                           <p className="text-xs text-gray-500 truncate">{u.email} • <span className="capitalize">{u.role}</span></p>
@@ -705,13 +697,10 @@ export function MessagesPage() {
           ) : (
             <div className="space-y-4">
               <div className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-bold text-primary-600">
-                  {selectedNewUser.avatar_url ? (
-                    <img src={selectedNewUser.avatar_url} alt="" className="h-full w-full rounded-full object-cover" />
-                  ) : (
-                    selectedNewUser.full_name?.charAt(0)?.toUpperCase() || 'U'
-                  )}
-                </div>
+                <Avatar>
+                  {selectedNewUser.avatar_url ? <AvatarImage src={selectedNewUser.avatar_url} /> : null}
+                  <AvatarFallback>{selectedNewUser.full_name?.charAt(0)?.toUpperCase() || 'U'}</AvatarFallback>
+                </Avatar>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{selectedNewUser.full_name}</p>
                   <p className="text-xs text-gray-500">{selectedNewUser.email}</p>

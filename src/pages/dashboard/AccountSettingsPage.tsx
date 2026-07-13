@@ -1,14 +1,14 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/useAuth'
 import { profileApi } from '@/lib/api'
 import { sendAccountNotification } from '@/lib/email'
 import { supabase } from '@/lib/supabase'
-import { Link } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
-import { Camera, Save, Key, Trash2, Loader2, AlertTriangle } from 'lucide-react'
+import { Camera, Save, Key, Trash2, Loader2, AlertTriangle, Upload } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
 
 export function AccountSettingsPage() {
@@ -19,6 +19,7 @@ export function AccountSettingsPage() {
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [localAvatar, setLocalAvatar] = useState<string | undefined>(undefined)
+  const [dragOver, setDragOver] = useState(false)
 
   const [form, setForm] = useState({
     full_name: profile?.full_name || '',
@@ -40,10 +41,8 @@ export function AccountSettingsPage() {
   })
   const [sendingReset, setSendingReset] = useState(false)
 
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file || !user) return
-
+  const uploadAvatar = useCallback(async (file: File) => {
+    if (!user) return
     setUploading(true)
     try {
       const ext = file.name.split('.').pop()
@@ -62,7 +61,34 @@ export function AccountSettingsPage() {
     } finally {
       setUploading(false)
     }
+  }, [user, t])
+
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+
+    setAvatarPreview(URL.createObjectURL(file))
+    await uploadAvatar(file)
+    setAvatarPreview(null)
   }
+
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault()
+    setDragOver(false)
+    const file = e.dataTransfer.files?.[0]
+    if (!file || !file.type.startsWith('image/')) {
+      toast.error(t('upload_failed'))
+      return
+    }
+    setAvatarPreview(URL.createObjectURL(file))
+    await uploadAvatar(file)
+    setAvatarPreview(null)
+  }, [uploadAvatar, t])
+
+  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setDragOver(true) }
+  const handleDragLeave = (e: React.DragEvent) => { e.preventDefault(); setDragOver(false) }
 
   const handleProfileUpdate = async () => {
     if (!user) return
@@ -234,11 +260,21 @@ export function AccountSettingsPage() {
               <CardDescription>{t('profile_photo_description')}</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col items-center gap-4">
-              <div className="relative">
-                <Avatar className="h-24 w-24">
-                  {(localAvatar ?? profile.avatar_url) ? <AvatarImage src={localAvatar ?? profile.avatar_url ?? undefined} /> : null}
+              <div
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                className="relative"
+              >
+                <Avatar className={cn('h-24 w-24 ring-2 transition-shadow', dragOver ? 'ring-primary-500 shadow-lg shadow-primary-200 dark:shadow-primary-900' : 'ring-transparent')}>
+                  {(avatarPreview ?? localAvatar ?? profile.avatar_url) ? <AvatarImage src={avatarPreview ?? localAvatar ?? profile.avatar_url ?? undefined} /> : null}
                   <AvatarFallback className="text-2xl">{profile.full_name?.charAt(0) || 'U'}</AvatarFallback>
                 </Avatar>
+                {uploading && (
+                  <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50">
+                    <Loader2 className="h-8 w-8 animate-spin text-white" />
+                  </div>
+                )}
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
@@ -249,6 +285,10 @@ export function AccountSettingsPage() {
                 <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
               </div>
               <p className="text-xs text-gray-500">{t('click_to_change_photo')}</p>
+              <div className="flex items-center gap-1 text-xs text-gray-400">
+                <Upload className="h-3 w-3" />
+                <span>{t('or_drag_drop') || 'or drag & drop'}</span>
+              </div>
               <div className="w-full border-t pt-4 dark:border-gray-700">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-500">{t('account_type')}</span>
