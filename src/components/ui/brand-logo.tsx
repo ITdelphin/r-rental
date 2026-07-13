@@ -10,10 +10,10 @@ interface BrandLogoProps {
 }
 
 const variantStyles = {
-  header: { img: 'h-8 w-auto', icon: 'h-6 w-6', text: 'text-xl', wrapper: '' },
-  sidebar: { img: 'h-8 w-auto', icon: 'h-5 w-5', text: '', wrapper: '' },
-  footer: { img: 'h-8 w-auto', icon: 'h-5 w-5', text: 'text-lg', wrapper: '' },
-  auth: { img: 'h-14 w-auto', icon: 'h-8 w-8', text: 'text-2xl', wrapper: 'justify-center' },
+  header: { img: 'h-10 w-auto', icon: 'h-7 w-7', text: 'text-xl', wrapper: '' },
+  sidebar: { img: 'h-10 w-auto', icon: 'h-6 w-6', text: '', wrapper: '' },
+  footer: { img: 'h-10 w-auto', icon: 'h-6 w-6', text: 'text-lg', wrapper: '' },
+  auth: { img: 'h-24 w-auto', icon: 'h-10 w-10', text: 'text-3xl', wrapper: 'justify-center' },
 }
 
 export function BrandLogo({ variant = 'header', className }: BrandLogoProps) {
