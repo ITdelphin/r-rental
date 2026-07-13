@@ -525,6 +525,8 @@
   "link_copied": "Link copied to clipboard!",
   "login_failed": "Login failed",
   "m_ago": "m ago",
+  "oauth_failed": "OAuth sign in failed",
+  "or_continue_with": "Or continue with",
   "manage_images": "Manage images",
   "musanze": "Musanze",
   "name": "Name",

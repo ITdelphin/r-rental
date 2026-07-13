@@ -12,6 +12,14 @@ export const authApi = {
     if (error) throw error
     return data
   },
+  signInWithOAuth: async (provider: 'google' | 'github') => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: window.location.origin },
+    })
+    if (error) throw error
+    return data
+  },
   logout: async () => {
     const { error } = await supabase.auth.signOut()
     if (error) throw error
