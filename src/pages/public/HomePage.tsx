@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Search, Home, MessageCircle, Key, Star, Shield, MapPin, ChevronRight, Building, Users, Award, MapPinned } from 'lucide-react'
+import { Search, Home, MessageCircle, Key, Heart, Star, Shield, MapPin, ChevronRight, Building, Users, Award, MapPinned } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -13,6 +13,7 @@ const steps = [
   { icon: Search, titleKey: 'step_1_title', descKey: 'step_1_desc' },
   { icon: MessageCircle, titleKey: 'step_2_title', descKey: 'step_2_desc' },
   { icon: Key, titleKey: 'step_3_title', descKey: 'step_3_desc' },
+  { icon: Heart, titleKey: 'step_4_title', descKey: 'step_4_desc' },
 ]
 
 const features = [
@@ -74,7 +75,7 @@ export function HomePage() {
             <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 sm:text-4xl">{t('how_it_works')}</h2>
             <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">{t('how_it_works_subtitle')}</p>
           </div>
-          <div className="mt-16 grid gap-8 sm:grid-cols-3">
+          <div className="mt-16 grid gap-8 grid-cols-2">
             {steps.map((step, i) => (
               <div key={i} className="group relative text-center">
                 <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-primary-50 text-primary-600 transition-colors group-hover:bg-primary-100 dark:bg-primary-900/30 dark:group-hover:bg-primary-900/50">
@@ -105,38 +106,60 @@ export function HomePage() {
               </Link>
             </div>
             <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-              {properties.slice(0, 6).map((property) => (
-                <Link key={property.id} to={`/properties/${property.id}`} className="group">
-                  <Card className="overflow-hidden border-0 shadow-sm transition-all duration-300 group-hover:shadow-xl group-hover:-translate-y-1">
-                    <div className="aspect-[16/10] bg-gray-200 dark:bg-gray-700 relative overflow-hidden">
+              {properties.slice(0, 6).map((property) => {
+                const rating = property.reviews?.length
+                  ? (property.reviews.reduce((sum: number, r: any) => sum + (r.rating || 0), 0) / property.reviews.length).toFixed(1)
+                  : null
+                return (
+                <Link key={property.id} to={`/properties/${property.id}`} className="group block">
+                  <Card className="overflow-hidden border-0 shadow-sm transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-2 rounded-2xl">
+                    <div className="aspect-[4/3] bg-gray-200 dark:bg-gray-700 relative overflow-hidden">
                       {property.images?.[0] ? (
-                        <img src={property.images[0].url} alt={property.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                        <img src={property.images[0].url} alt={property.title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
                       ) : (
                         <div className="flex h-full items-center justify-center text-gray-400"><Home className="h-12 w-12" /></div>
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                      <Badge className="absolute left-3 top-3">{property.category}</Badge>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+                      <Badge className="absolute left-3 top-3 bg-white/90 text-gray-800 backdrop-blur-sm border-0 shadow-sm">
+                        {property.category}
+                      </Badge>
                       {property.is_featured && (
-                        <Badge variant="secondary" className="absolute right-3 top-3 bg-amber-500 text-white hover:bg-amber-600">{t('featured')}</Badge>
+                        <Badge className="absolute right-3 top-3 bg-amber-500 text-white border-0 shadow-lg">
+                          {t('featured')}
+                        </Badge>
                       )}
+                      <div className="absolute bottom-3 left-3 right-3">
+                        <span className="text-xl font-bold text-white drop-shadow-lg">
+                          {formatPrice(property.price)}
+                          <span className="text-sm font-normal text-white/80">/{t('mo')}</span>
+                        </span>
+                      </div>
                     </div>
                     <CardContent className="p-5">
-                      <h3 className="font-semibold text-gray-900 dark:text-gray-100 group-hover:text-primary-600 transition-colors">{property.title}</h3>
+                      <h3 className="font-semibold text-gray-900 dark:text-gray-100 group-hover:text-primary-600 transition-colors text-base leading-snug">
+                        {property.title}
+                      </h3>
                       <p className="mt-1.5 flex items-center gap-1.5 text-sm text-gray-500">
                         <MapPin className="h-3.5 w-3.5 shrink-0" /> {property.district}, {property.province}
                       </p>
-                      <div className="mt-4 flex items-center justify-between border-t pt-4 dark:border-gray-700">
-                        <span className="text-lg font-bold text-primary-600">{formatPrice(property.price)}<span className="text-sm font-normal text-gray-400">/{t('mo')}</span></span>
-                        <div className="flex items-center gap-3 text-sm text-gray-500">
-                          <span>{property.bedrooms} {t('beds')}</span>
-                          <span className="text-gray-300 dark:text-gray-600">|</span>
-                          <span>{property.bathrooms} {t('baths')}</span>
-                        </div>
+                      <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-gray-500">
+                        <span className="flex items-center gap-1"><Home className="h-3.5 w-3.5" /> {property.bedrooms} {t('beds')}</span>
+                        <span className="text-gray-300 dark:text-gray-600">|</span>
+                        <span className="flex items-center gap-1">{/* bath icon */} {property.bathrooms} {t('baths')}</span>
+                        {rating && (
+                          <>
+                            <span className="text-gray-300 dark:text-gray-600">|</span>
+                            <span className="flex items-center gap-1 text-amber-500">
+                              <Star className="h-3.5 w-3.5 fill-current" /> {rating}
+                            </span>
+                          </>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
                 </Link>
-              ))}
+                )}
+              )}
             </div>
           </div>
         </section>

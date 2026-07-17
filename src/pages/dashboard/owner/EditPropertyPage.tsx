@@ -26,6 +26,15 @@ const ACCEPTED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/jp
 const propertyTypes = ['House', 'Apartment', 'Villa', 'Studio', 'Commercial', 'Cottage'] as const
 const categories = ['Rent', 'Sale', 'Short-term'] as const
 
+const countryCodes = [
+  { code: '+250', label: 'RW +250' },
+  { code: '+254', label: 'KE +254' },
+  { code: '+255', label: 'TZ +255' },
+  { code: '+256', label: 'UG +256' },
+  { code: '+257', label: 'BI +257' },
+  { code: '+243', label: 'CD +243' },
+]
+
 const amenityFields = [
   { key: 'parking', label: 'Parking' },
   { key: 'balcony', label: 'Balcony' },
@@ -105,6 +114,7 @@ export function EditPropertyPage() {
   const [imageErrors, setImageErrors] = useState<string[]>([])
   const [uploadProgress, setUploadProgress] = useState<string | null>(null)
   const [initialized, setInitialized] = useState(false)
+  const [whatsappCode, setWhatsappCode] = useState('+250')
 
   const {
     register,
@@ -151,7 +161,15 @@ export function EditPropertyPage() {
         sector: property.sector || '',
         cell: property.cell || '',
         village: property.village || '',
-        whatsapp_number: property.whatsapp_number || '',
+        whatsapp_number: (() => {
+          const full = property.whatsapp_number || ''
+          const matched = countryCodes.find((cc) => full.startsWith(cc.code))
+          if (matched) {
+            setWhatsappCode(matched.code)
+            return full.slice(matched.code.length)
+          }
+          return full
+        })(),
         parking: property.parking || false,
         balcony: property.balcony || false,
         garden: property.garden || false,
@@ -251,7 +269,7 @@ export function EditPropertyPage() {
         sector: formData.sector || '',
         cell: formData.cell || '',
         village: formData.village || '',
-        whatsapp_number: formData.whatsapp_number || null,
+        whatsapp_number: formData.whatsapp_number ? `${whatsappCode}${formData.whatsapp_number}` : null,
         parking: formData.parking,
         balcony: formData.balcony,
         garden: formData.garden,
@@ -435,7 +453,20 @@ export function EditPropertyPage() {
             />
             <div>
               <label className="mb-1.5 block text-sm font-medium">{t('whatsapp_number_optional')}</label>
-              <Input {...register('whatsapp_number')} placeholder={t('whatsapp_placeholder')} />
+              <div className="flex gap-2">
+                <select
+                  value={whatsappCode}
+                  onChange={(e) => setWhatsappCode(e.target.value)}
+                  className="w-28 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                >
+                  {countryCodes.map((cc) => (
+                    <option key={cc.code} value={cc.code}>{cc.label}</option>
+                  ))}
+                </select>
+                <div className="flex-1">
+                  <Input {...register('whatsapp_number')} placeholder={t('whatsapp_placeholder')} />
+                </div>
+              </div>
             </div>
           </div>
         </FormSection>
