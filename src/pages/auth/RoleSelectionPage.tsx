@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { BrandLogo } from '@/components/ui/brand-logo'
 import { useAuth } from '@/hooks/useAuth'
@@ -19,13 +20,14 @@ export function RoleSelectionPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const [selectedRole, setSelectedRole] = useState<string | null>(null)
+  const [phone, setPhone] = useState('')
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async () => {
     if (!selectedRole || !user) return
     setLoading(true)
     try {
-      await profileApi.update(user.id, { role: selectedRole as any })
+      await profileApi.update(user.id, { role: selectedRole as any, phone: phone || null })
       toast.success(t('role_set_success'))
       navigate('/dashboard', { replace: true })
     } catch {
@@ -48,6 +50,7 @@ export function RoleSelectionPage() {
           <CardDescription>{t('choose_role_description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          <Input label={t('phone_number')} type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+250..." />
           <div className="grid gap-3">
             {roleOptions.map((opt) => (
               <button
