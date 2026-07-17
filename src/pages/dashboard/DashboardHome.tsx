@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatsSkeleton } from '@/components/ui/loading'
-import { Building2, Calendar, Heart, MessageSquare, Star, DollarSign, Users, TrendingUp, Activity, UserCheck, Settings, FileText, AlertTriangle, Globe, Eye, Zap } from 'lucide-react'
+import { Building2, Calendar, Heart, MessageSquare, Star, DollarSign, Users, TrendingUp, Activity, UserCheck, Settings, FileText, AlertTriangle, Globe, Eye, Zap, Plus } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 interface DashboardStats {
@@ -142,41 +142,57 @@ export function DashboardHome() {
         ))}
       </div>
 
-      {/* Admin Only: Quick Actions + Overview */}
-      {isAdmin && (
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* Quick Actions */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Zap className="h-4 w-4 text-amber-500" />
-                {t('quick_actions')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-2">
+      {/* Quick Actions for all roles */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Zap className="h-4 w-4 text-amber-500" />
+              {t('quick_actions')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-2">
+              {isAdmin && (
                 <Link to="/dashboard/users" className="flex flex-col items-center gap-2 rounded-lg bg-blue-50 p-4 text-sm font-medium text-blue-600 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40">
                   <Users className="h-6 w-6" /> {t('users')}
                 </Link>
+              )}
+              {(isAdmin || isOwner) && (
                 <Link to="/dashboard/properties" className="flex flex-col items-center gap-2 rounded-lg bg-purple-50 p-4 text-sm font-medium text-purple-600 hover:bg-purple-100 dark:bg-purple-900/20 dark:text-purple-400 dark:hover:bg-purple-900/40">
-                  <Building2 className="h-6 w-6" /> {t('properties')}
+                  <Building2 className="h-6 w-6" /> {(isAdmin ? t('properties') : t('my_properties'))}
                 </Link>
-                <Link to="/dashboard/settings" className="flex flex-col items-center gap-2 rounded-lg bg-green-50 p-4 text-sm font-medium text-green-600 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/40">
-                  <Globe className="h-6 w-6" /> {t('cms')}
+              )}
+              {isOwner && (
+                <Link to="/dashboard/properties/add" className="flex flex-col items-center gap-2 rounded-lg bg-green-50 p-4 text-sm font-medium text-green-600 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/40">
+                  <Plus className="h-6 w-6" /> {t('add_property')}
                 </Link>
-                <Link to="/dashboard/settings" className="flex flex-col items-center gap-2 rounded-lg bg-orange-50 p-4 text-sm font-medium text-orange-600 hover:bg-orange-100 dark:bg-orange-900/20 dark:text-orange-400 dark:hover:bg-orange-900/40">
-                  <Settings className="h-6 w-6" /> {t('settings')}
-                </Link>
-                <Link to="/dashboard/reports" className="flex flex-col items-center gap-2 rounded-lg bg-yellow-50 p-4 text-sm font-medium text-yellow-600 hover:bg-yellow-100 dark:bg-yellow-900/20 dark:text-yellow-400 dark:hover:bg-yellow-900/40">
-                  <FileText className="h-6 w-6" /> {t('reports')}
-                </Link>
-                <Link to="/dashboard/complaints" className="flex flex-col items-center gap-2 rounded-lg bg-red-50 p-4 text-sm font-medium text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40">
-                  <AlertTriangle className="h-6 w-6" /> {t('complaints')}
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
+              )}
+              <Link to="/dashboard/bookings" className="flex flex-col items-center gap-2 rounded-lg bg-emerald-50 p-4 text-sm font-medium text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:hover:bg-emerald-900/40">
+                <Calendar className="h-6 w-6" /> {t('my_bookings')}
+              </Link>
+              {isAdmin && (
+                <>
+                  <Link to="/dashboard/settings" className="flex flex-col items-center gap-2 rounded-lg bg-green-50 p-4 text-sm font-medium text-green-600 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/40">
+                    <Globe className="h-6 w-6" /> {t('cms')}
+                  </Link>
+                  <Link to="/dashboard/settings" className="flex flex-col items-center gap-2 rounded-lg bg-orange-50 p-4 text-sm font-medium text-orange-600 hover:bg-orange-100 dark:bg-orange-900/20 dark:text-orange-400 dark:hover:bg-orange-900/40">
+                    <Settings className="h-6 w-6" /> {t('settings')}
+                  </Link>
+                  <Link to="/dashboard/reports" className="flex flex-col items-center gap-2 rounded-lg bg-yellow-50 p-4 text-sm font-medium text-yellow-600 hover:bg-yellow-100 dark:bg-yellow-900/20 dark:text-yellow-400 dark:hover:bg-yellow-900/40">
+                    <FileText className="h-6 w-6" /> {t('reports')}
+                  </Link>
+                  <Link to="/dashboard/complaints" className="flex flex-col items-center gap-2 rounded-lg bg-red-50 p-4 text-sm font-medium text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40">
+                    <AlertTriangle className="h-6 w-6" /> {t('complaints')}
+                  </Link>
+                </>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
+        {isAdmin && (
+          <>
           {/* Platform Overview */}
           <Card className="lg:col-span-2">
             <CardHeader className="pb-3">
@@ -204,8 +220,9 @@ export function DashboardHome() {
               </div>
             </CardContent>
           </Card>
-        </div>
-      )}
+          </>
+        )}
+      </div>
     </div>
   )
 }
