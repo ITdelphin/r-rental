@@ -57,10 +57,11 @@ export function RegisterPage() {
 
   const handleOAuth = async (provider: 'google' | 'github') => {
     setOauthLoading(provider)
+    sessionStorage.setItem('oauth_role_pending', 'true')
     try {
       await supabase.auth.signInWithOAuth({
         provider,
-        options: { redirectTo: window.location.origin },
+        options: { redirectTo: `${window.location.origin}/auth/callback` },
       })
     } catch {
       toast.error(t('oauth_failed'))

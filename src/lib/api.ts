@@ -12,10 +12,10 @@ export const authApi = {
     if (error) throw error
     return data
   },
-  signInWithOAuth: async (provider: 'google' | 'github') => {
+  signInWithOAuth: async (provider: 'google' | 'github', redirectTo?: string) => {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: redirectTo || `${window.location.origin}/auth/callback` },
     })
     if (error) throw error
     return data

@@ -655,5 +655,13 @@
   "booking_failed": "Failed to send booking request",
   "logo_alt": "Logo",
   "favicon_alt": "Favicon",
-  "hero_alt": "Hero"
+  "hero_alt": "Hero",
+  "choose_role": "Choose Your Role",
+  "choose_role_description": "Select how you want to use Rwanda EasyRent",
+  "tenant_description": "I want to rent a property",
+  "owner_description": "I want to list my properties",
+  "agent_description": "I help clients find and rent properties",
+  "continue": "Continue",
+  "role_set_success": "Role set successfully",
+  "role_set_failed": "Failed to set role"
 }

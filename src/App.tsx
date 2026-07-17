@@ -16,6 +16,8 @@ import { PropertiesPage } from '@/pages/public/PropertiesPage'
 import { PropertyDetailPage } from '@/pages/public/PropertyDetailPage'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { RegisterPage } from '@/pages/auth/RegisterPage'
+import { AuthCallbackPage } from '@/pages/auth/AuthCallbackPage'
+import { RoleSelectionPage } from '@/pages/auth/RoleSelectionPage'
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
 import { DashboardHome } from '@/pages/dashboard/DashboardHome'
 import { TenantBookings } from '@/pages/dashboard/tenant/TenantBookings'
@@ -76,6 +78,8 @@ function AppRoutes() {
         <Route path="/auth/login" element={<LoginPage />} />
         <Route path="/auth/register" element={<RegisterPage />} />
         <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/auth/callback" element={<AuthCallbackPage />} />
+        <Route path="/auth/choose-role" element={<RoleSelectionPage />} />
 
         {/* Protected dashboard routes */}
         <Route element={<ProtectedRoute />}>
