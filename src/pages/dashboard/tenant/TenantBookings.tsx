@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { ListSkeleton } from '@/components/ui/loading'
 import { EmptyState } from '@/components/ui/empty-state'
-import { Calendar, Home, CheckCircle, XCircle, Clock, Eye, User, Phone, Mail, MessageSquare, Send } from 'lucide-react'
+import { Calendar, Home, CheckCircle, XCircle, Clock, Eye, User, Phone, Mail, MessageSquare, Send, Sparkles } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
@@ -28,6 +28,13 @@ const statusConfig: Record<string, { label: string; variant: 'warning' | 'succes
 interface BookingWithTenant extends Booking {
   tenant?: Profile
   reply_message?: string
+}
+
+const NEW_BOOKING_HOURS = 48
+
+function isNewBooking(createdAt: string): boolean {
+  const diff = Date.now() - new Date(createdAt).getTime()
+  return diff < NEW_BOOKING_HOURS * 60 * 60 * 1000
 }
 
 export function TenantBookings() {
@@ -122,6 +129,33 @@ export function TenantBookings() {
         )}
       </div>
 
+      {/* Summary cards for owners */}
+      {!loading && bookings.length > 0 && isOwner && (
+        <div className="grid grid-cols-3 gap-4">
+          {[
+            { label: t('pending'), count: bookings.filter(b => b.status === 'pending').length, variant: 'warning' as const, icon: Clock },
+            { label: t('approved'), count: bookings.filter(b => b.status === 'approved').length, variant: 'success' as const, icon: CheckCircle },
+            { label: t('new_requests'), count: bookings.filter(b => isNewBooking(b.created_at)).length, variant: 'default' as const, icon: Sparkles },
+          ].map((item) => (
+            <Card key={item.label}>
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${
+                  item.variant === 'warning' ? 'bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400' :
+                  item.variant === 'success' ? 'bg-green-50 text-green-600 dark:bg-green-900/30 dark:text-green-400' :
+                  'bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400'
+                }`}>
+                  <item.icon className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{item.count}</p>
+                  <p className="text-xs text-gray-500">{item.label}</p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
       {loading ? (
         <ListSkeleton items={3} />
       ) : bookings.length === 0 ? (
@@ -198,9 +232,16 @@ export function TenantBookings() {
 
                     {/* Right: Actions */}
                     <div className="flex flex-row lg:flex-col items-center lg:items-end gap-3 shrink-0">
-                      <Badge variant={config.variant} className="flex items-center gap-1 capitalize whitespace-nowrap">
-                        <StatusIcon className="h-3 w-3" /> {t(config.label)}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={config.variant} className="flex items-center gap-1 capitalize whitespace-nowrap">
+                          <StatusIcon className="h-3 w-3" /> {t(config.label)}
+                        </Badge>
+                        {isNewBooking(booking.created_at) && (
+                          <Badge variant="default" className="bg-primary-500 text-white border-0 animate-pulse">
+                            <Sparkles className="h-3 w-3 mr-0.5" /> {t('new_request')}
+                          </Badge>
+                        )}
+                      </div>
                       <div className="flex items-center gap-2">
                         {isOwner && booking.status === 'pending' && (
                           <>

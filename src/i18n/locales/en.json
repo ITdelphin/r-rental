@@ -666,5 +666,7 @@
   "agent_description": "I help clients find and rent properties",
   "continue": "Continue",
   "role_set_success": "Role set successfully",
-  "role_set_failed": "Failed to set role"
+  "role_set_failed": "Failed to set role",
+  "new_request": "New",
+  "new_requests": "New Requests"
 }
