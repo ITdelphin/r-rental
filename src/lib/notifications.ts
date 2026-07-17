@@ -47,13 +47,13 @@ export async function notifyBookingResponded(bookingId: string, tenantId: string
 export async function notifyPropertyAdded(propertyId: string, ownerName: string, propertyTitle: string) {
   const { data: admins } = await supabase
     .from('profiles')
-    .select('id')
+    .select('user_id')
     .in('role', ['admin', 'super_admin'])
   if (admins) {
     for (const admin of admins) {
-      const a = admin as unknown as { id: string }
+      const a = admin as unknown as { user_id: string }
       await createNotification(
-        a.id,
+        a.user_id,
         'New Property Added',
         `${ownerName} added "${propertyTitle}"`,
         'info',
