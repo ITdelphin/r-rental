@@ -97,8 +97,11 @@ export interface Booking {
   tenant_id: string
   owner_id: string
   status: BookingStatus
+  check_in: string | null
+  check_out: string | null
   visit_date: string | null
   message: string | null
+  reply_message: string | null
   created_at: string
   updated_at: string
   property?: Property

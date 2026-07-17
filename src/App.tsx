@@ -20,7 +20,7 @@ import { AuthCallbackPage } from '@/pages/auth/AuthCallbackPage'
 import { RoleSelectionPage } from '@/pages/auth/RoleSelectionPage'
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
 import { DashboardHome } from '@/pages/dashboard/DashboardHome'
-import { TenantBookings } from '@/pages/dashboard/tenant/TenantBookings'
+import { BookingsPage } from '@/pages/dashboard/BookingsPage'
 import { TenantFavorites } from '@/pages/dashboard/tenant/TenantFavorites'
 import { OwnerProperties } from '@/pages/dashboard/owner/OwnerProperties'
 import { OwnerEarnings } from '@/pages/dashboard/owner/OwnerEarnings'
@@ -91,8 +91,7 @@ function AppRoutes() {
             <Route path="/dashboard/notifications" element={<NotificationsPage />} />
             <Route path="/dashboard/reviews" element={<ReviewsPage />} />
 
-            {/* Tenant */}
-            <Route path="/dashboard/bookings" element={<TenantBookings />} />
+            <Route path="/dashboard/bookings" element={<BookingsPage />} />
             <Route path="/dashboard/favorites" element={<TenantFavorites />} />
 
             {/* Owner / Agent */}

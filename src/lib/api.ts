@@ -97,7 +97,7 @@ export const propertyApi = {
 export const bookingApi = {
   list: async (userId: string, role: string) => {
     const column = role === 'owner' ? 'owner_id' : 'tenant_id'
-    const { data, error } = await supabase.from('bookings').select('*, property:properties(*)').eq(column, userId).order('created_at', { ascending: false })
+    const { data, error } = await supabase.from('bookings').select('*, property:properties(*), tenant:profiles!tenant_id(*)').eq(column, userId).order('created_at', { ascending: false })
     if (error) throw error
     return (data || []) as unknown as Booking[]
   },

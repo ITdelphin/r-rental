@@ -50,6 +50,7 @@ const superAdminNav: NavItem[] = [
   { to: '/dashboard', key: 'dashboard', icon: LayoutDashboard },
   { to: '/dashboard/users', key: 'users', icon: Users },
   { to: '/dashboard/properties', key: 'properties', icon: Building2 },
+  { to: '/dashboard/bookings', key: 'all_bookings', icon: Calendar },
   { to: '/dashboard/reports', key: 'reports', icon: BarChart3 },
   { to: '/dashboard/complaints', key: 'complaints', icon: Shield },
   { to: '/dashboard/settings', key: 'settings', icon: Settings },

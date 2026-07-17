@@ -26,10 +26,12 @@ export function PropertyDetailPage() {
   const { data: property, isLoading } = useProperty(id!)
   const [currentImage, setCurrentImage] = useState(0)
   const [bookingMessage, setBookingMessage] = useState('')
-  const [visitDate, setVisitDate] = useState('')
+  const [checkIn, setCheckIn] = useState('')
+  const [checkOut, setCheckOut] = useState('')
   const [bookingLoading, setBookingLoading] = useState(false)
   const [favoriteLoading, setFavoriteLoading] = useState(false)
   const [isFavorited, setIsFavorited] = useState(false)
+  const [dateError, setDateError] = useState('')
   const whatsappNumber = property?.whatsapp_number
 
   useEffect(() => {
@@ -81,20 +83,26 @@ export function PropertyDetailPage() {
       toast.error(t('please_add_message'))
       return
     }
+    if (!checkIn || !checkOut) {
+      toast.error(t('please_select_dates'))
+      return
+    }
+    if (new Date(checkOut) <= new Date(checkIn)) {
+      toast.error(t('check_out_after_check_in'))
+      return
+    }
     setBookingLoading(true)
+    setDateError('')
     try {
-      const { data: existing } = await (supabase
+      const { data: overlapping } = await supabase
         .from('bookings')
-        .select('id, status')
-        .eq('tenant_id', user.id)
+        .select('id')
         .eq('property_id', property.id)
-        .maybeSingle() as unknown as { data: { id: string; status: string } | null })
-      if (existing) {
-        if (existing.status === 'pending' || existing.status === 'approved') {
-          toast.error(t('pending_booking_exists'))
-        } else {
-          toast.error(t('duplicate_booking'))
-        }
+        .in('status', ['pending', 'approved'])
+        .or(`check_in.lte.${checkOut},check_out.gte.${checkIn}`)
+        .limit(1)
+      if (overlapping && overlapping.length > 0) {
+        toast.error(t('property_unavailable_dates'))
         setBookingLoading(false)
         return
       }
@@ -103,13 +111,15 @@ export function PropertyDetailPage() {
         tenant_id: user.id,
         owner_id: property.owner_id,
         status: 'pending',
-        visit_date: visitDate || null,
+        check_in: checkIn || null,
+        check_out: checkOut || null,
         message: bookingMessage,
       } as never).select().single()
       if (error) throw error
       toast.success(t('booking_sent'))
       setBookingMessage('')
-      setVisitDate('')
+      setCheckIn('')
+      setCheckOut('')
       if (newBooking) {
         sendBookingNotification((newBooking as { id: string }).id, 'created')
         const bookingId = (newBooking as { id: string }).id
@@ -118,11 +128,7 @@ export function PropertyDetailPage() {
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : t('booking_failed')
-      if (msg.toLowerCase().includes('duplicate') || msg.toLowerCase().includes('unique') || msg.includes('409')) {
-        toast.error(t('duplicate_booking'))
-      } else {
-        toast.error(msg)
-      }
+      toast.error(msg)
     } finally {
       setBookingLoading(false)
     }
@@ -308,15 +314,28 @@ export function PropertyDetailPage() {
           <Card className="sticky top-4">
             <CardContent className="p-6 space-y-4">
               <h3 className="font-semibold text-gray-900 dark:text-gray-100">{t('book_now')}</h3>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('preferred_visit_date')}</label>
-                <input
-                  type="date"
-                  value={visitDate}
-                  onChange={e => setVisitDate(e.target.value)}
-                  min={new Date().toISOString().split('T')[0]}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-                />
+              <div className="space-y-3">
+                <div>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('check_in')}</label>
+                  <input
+                    type="date"
+                    value={checkIn}
+                    onChange={e => { setCheckIn(e.target.value); setDateError('') }}
+                    min={new Date().toISOString().split('T')[0]}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('check_out')}</label>
+                  <input
+                    type="date"
+                    value={checkOut}
+                    onChange={e => { setCheckOut(e.target.value); setDateError('') }}
+                    min={checkIn || new Date().toISOString().split('T')[0]}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                  />
+                </div>
+                {dateError && <p className="text-sm text-red-500">{dateError}</p>}
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('message')}</label>
