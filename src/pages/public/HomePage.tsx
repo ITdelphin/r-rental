@@ -105,8 +105,8 @@ export function HomePage() {
                 {t('view_all')} <ChevronRight className="h-4 w-4" />
               </Link>
             </div>
-            <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-              {properties.slice(0, 6).map((property) => {
+            <div className="mt-10 grid gap-8 sm:grid-cols-2">
+              {properties.slice(0, 4).map((property) => {
                 const rating = property.reviews?.length
                   ? (property.reviews.reduce((sum: number, r: any) => sum + (r.rating || 0), 0) / property.reviews.length).toFixed(1)
                   : null
