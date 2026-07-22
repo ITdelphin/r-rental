@@ -243,6 +243,12 @@ export function AdminBookings() {
                           {tenant?.phone && <span>{tenant.phone}</span>}
                           {property?.price && <span className="font-medium text-primary-600">{formatPrice(property.price)}/mo</span>}
                         </div>
+                        {booking.message && (
+                          <div className="mt-2 rounded-lg bg-primary-50 dark:bg-primary-900/10 p-2.5 text-xs">
+                            <span className="text-xs font-semibold uppercase tracking-wider text-primary-600 dark:text-primary-400 block mb-0.5">{t('message_from_tenant')}</span>
+                            <p className="text-gray-700 dark:text-gray-300 italic">"{booking.message}"</p>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0 flex-wrap">

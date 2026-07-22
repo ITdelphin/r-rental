@@ -34,7 +34,7 @@ export async function markAllNotificationsRead(userId: string) {
   }
 }
 
-export async function notifyBookingCreated(bookingId: string, tenantId: string, ownerId: string, propertyTitle: string) {
+export async function notifyBookingCreated(bookingId: string, tenantId: string, ownerId: string, propertyTitle: string, message?: string) {
   const { data: tenant } = await supabase
     .from('profiles')
     .select('full_name, email, phone')
@@ -42,21 +42,23 @@ export async function notifyBookingCreated(bookingId: string, tenantId: string, 
     .single()
   if (tenant) {
     const t = tenant as unknown as { full_name: string; email: string | null; phone: string | null }
+    const msgText = message ? ` Message: "${message}"` : ''
     await createNotification(
       ownerId,
       'New Booking Request',
-      `${t.full_name} booked "${propertyTitle}". Contact: ${t.email || t.phone || 'N/A'}`,
+      `${t.full_name} booked "${propertyTitle}". Contact: ${t.email || t.phone || 'N/A'}.${msgText}`,
       'info',
       { booking_id: bookingId, tenant_id: tenantId }
     )
   }
 }
 
-export async function notifyBookingResponded(bookingId: string, tenantId: string, status: 'approved' | 'rejected', propertyTitle: string) {
+export async function notifyBookingResponded(bookingId: string, tenantId: string, status: 'approved' | 'rejected', propertyTitle: string, replyMessage?: string) {
+  const msgText = replyMessage ? ` Owner says: "${replyMessage}"` : ''
   await createNotification(
     tenantId,
     `Booking ${status}`,
-    `Your booking for "${propertyTitle}" has been ${status}.`,
+    `Your booking for "${propertyTitle}" has been ${status}.${msgText}`,
     status === 'approved' ? 'success' : 'error',
     { booking_id: bookingId }
   )
