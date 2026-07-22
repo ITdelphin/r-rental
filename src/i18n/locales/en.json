@@ -778,5 +778,16 @@
   "dark_mode": "Dark",
   "system_mode": "System",
   "system_settings": "System Settings",
-  "system_settings_description": "Configure platform-wide settings (super admin only)"
+  "system_settings_description": "Configure platform-wide settings (super admin only)",
+  "delete_user": "Delete User",
+  "user_deleted": "User deleted successfully",
+  "failed_to_delete_user": "Failed to delete user",
+  "delete_user_confirmation": "Are you sure you want to delete {{name}}?",
+  "delete_user_warning": "This will permanently delete the user and all associated data (properties, bookings, messages, etc.). This action cannot be undone.",
+  "property_updated": "Property Updated",
+  "user_reinstated_label": "User Reinstated",
+  "role_changed_label": "Role Changed",
+  "user_verified_label": "User Verified",
+  "user_deleted_label": "User Deleted",
+  "review_created": "Review Created"
 }

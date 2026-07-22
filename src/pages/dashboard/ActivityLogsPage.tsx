@@ -4,8 +4,9 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { TableSkeleton } from '@/components/ui/loading'
 import { EmptyState } from '@/components/ui/empty-state'
-import { Activity, UserPlus, Building2, LogIn, Settings, Trash2, Shield, RefreshCw, Filter, ChevronLeft, ChevronRight, Clock } from 'lucide-react'
+import { Activity, UserPlus, Building2, LogIn, Settings, Trash2, Shield, RefreshCw, Filter, ChevronLeft, ChevronRight, Clock, UserCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { supabase } from '@/lib/supabase'
 
 interface ActivityLog {
@@ -13,18 +14,24 @@ interface ActivityLog {
     user_id: string
     action: string
     entity_type: string
-    details: string | null
+    details: Record<string, unknown> | string | null
     created_at: string
-    user?: { full_name: string; email: string }
+    user?: { full_name: string; email: string; avatar_url?: string | null } | null
 }
 
 const ACTION_CONFIG: Record<string, { icon: typeof Activity; color: string; label: string }> = {
     login: { icon: LogIn, color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 ring-1 ring-green-200 dark:ring-green-800', label: 'login' },
     register: { icon: UserPlus, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 ring-1 ring-blue-200 dark:ring-blue-800', label: 'register' },
     property_created: { icon: Building2, color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 ring-1 ring-purple-200 dark:ring-purple-800', label: 'property_created' },
+    property_updated: { icon: Building2, color: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 ring-1 ring-indigo-200 dark:ring-indigo-800', label: 'property_updated' },
     property_deleted: { icon: Trash2, color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 ring-1 ring-red-200 dark:ring-red-800', label: 'property_deleted' },
     settings_changed: { icon: Settings, color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 ring-1 ring-yellow-200 dark:ring-yellow-800', label: 'settings_changed' },
     user_suspended: { icon: Shield, color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 ring-1 ring-orange-200 dark:ring-orange-800', label: 'user_suspended' },
+    user_reinstated: { icon: UserCheck, color: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400 ring-1 ring-teal-200 dark:ring-teal-800', label: 'user_reinstated_label' },
+    user_verified: { icon: Shield, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 ring-1 ring-blue-200 dark:ring-blue-800', label: 'user_verified_label' },
+    role_changed: { icon: RefreshCw, color: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400 ring-1 ring-cyan-200 dark:ring-cyan-800', label: 'role_changed_label' },
+    user_deleted: { icon: Trash2, color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 ring-1 ring-red-200 dark:ring-red-800', label: 'user_deleted_label' },
+    review_created: { icon: Activity, color: 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400 ring-1 ring-pink-200 dark:ring-pink-800', label: 'review_created' },
 }
 
 const ALL_ACTIONS = Object.keys(ACTION_CONFIG)
@@ -64,7 +71,7 @@ export function ActivityLogsPage() {
         try {
             let query = supabase
                 .from('audit_logs')
-                .select('*, user:profiles!user_id(full_name, email)')
+                .select('*, user:profiles!user_id(full_name, email, avatar_url)')
                 .order('created_at', { ascending: false })
                 .range(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE)
 
@@ -160,8 +167,13 @@ export function ActivityLogsPage() {
                                     return (
                                         <div key={log.id} className="relative flex items-start gap-5 px-4 py-5 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
                                             {/* Timeline dot */}
-                                            <div className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${config.color} shadow-sm`}>
-                                                <IconComp className="h-4 w-4" />
+                                            <div className="relative z-10 shrink-0">
+                                                <Avatar className="h-10 w-10 rounded-xl">
+                                                    <AvatarImage src={log.user?.avatar_url || undefined} alt={log.user?.full_name || ''} />
+                                                    <AvatarFallback className={`rounded-xl ${config.color}`}>
+                                                        <IconComp className="h-4 w-4" />
+                                                    </AvatarFallback>
+                                                </Avatar>
                                             </div>
 
                                             <div className="flex-1 min-w-0 pt-0.5">
@@ -179,7 +191,7 @@ export function ActivityLogsPage() {
                                                 </div>
                                                 {log.details && (
                                                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-lg px-3 py-2 inline-block">
-                                                        {log.details}
+                                                        {typeof log.details === 'string' ? log.details : JSON.stringify(log.details)}
                                                     </p>
                                                 )}
                                                 <p className="mt-1 text-xs text-gray-400">{log.user?.email} &middot; {formatDate(log.created_at)}</p>

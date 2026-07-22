@@ -3,12 +3,14 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { TableSkeleton } from '@/components/ui/loading'
-import { Search, Shield, UserX, RefreshCw, UserCheck } from 'lucide-react'
+import { Search, Shield, UserX, RefreshCw, UserCheck, Trash2 } from 'lucide-react'
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { sendAccountNotification } from '@/lib/email'
 import { createAuditLog } from '@/lib/audit'
 import { useAuth } from '@/hooks/useAuth'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import toast from 'react-hot-toast'
 import type { Profile } from '@/types'
 
@@ -65,6 +67,27 @@ export function AdminUsers() {
       createAuditLog('user_verified', 'user', user.user_id, { verified: !user.is_verified, email: user.email })
     } catch { toast.error(t('failed')) }
   }, [t])
+
+  const [deleteUser, setDeleteUser] = useState<Profile | null>(null)
+  const [deleting, setDeleting] = useState(false)
+
+  const handleDelete = async (user: Profile) => {
+    setDeleting(true)
+    try {
+      const { error } = await supabase.functions.invoke('delete-user', {
+        body: { user_id: user.user_id },
+      })
+      if (error) throw error
+      toast.success(t('user_deleted'))
+      createAuditLog('user_deleted', 'user', user.user_id, { email: user.email })
+      setUsers(prev => prev.filter(u => u.user_id !== user.user_id))
+      setDeleteUser(null)
+    } catch {
+      toast.error(t('failed_to_delete_user'))
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   const changeRole = async (user: Profile, role: string) => {
     try {
@@ -135,9 +158,12 @@ export function AdminUsers() {
                     <tr key={user.user_id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-sm font-bold text-primary-600 dark:bg-primary-900/50">
-                            {user.full_name?.charAt(0) || '?'}
-                          </div>
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={user.avatar_url || undefined} alt={user.full_name || ''} />
+                            <AvatarFallback className="bg-primary-100 text-sm font-bold text-primary-600 dark:bg-primary-900/50">
+                              {user.full_name?.charAt(0) || '?'}
+                            </AvatarFallback>
+                          </Avatar>
                           <div>
                             <span className="font-medium text-gray-900 dark:text-gray-100">{user.full_name || t('unknown')}</span>
                             {user.is_verified && <span className="ml-2 text-xs text-green-600">✓ {t('verified')}</span>}
@@ -184,6 +210,13 @@ export function AdminUsers() {
                           >
                             <Shield className="h-4 w-4" />
                           </Button>
+                          {currentUser?.role === 'super_admin' && (
+                            <Button variant="ghost" size="icon" className="text-red-500" title={t('delete_user')}
+                              onClick={() => setDeleteUser(user)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -194,6 +227,28 @@ export function AdminUsers() {
           </CardContent>
         </Card>
       )}
+
+      <Dialog open={!!deleteUser} onOpenChange={() => setDeleteUser(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('delete_user')}</DialogTitle>
+            <DialogDescription>
+              {t('delete_user_confirmation', { name: deleteUser?.full_name || '' })}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
+            {t('delete_user_warning')}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteUser(null)} disabled={deleting}>
+              {t('cancel')}
+            </Button>
+            <Button variant="destructive" onClick={() => deleteUser && handleDelete(deleteUser)} loading={deleting}>
+              {t('delete')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
