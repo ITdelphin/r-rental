@@ -22,7 +22,7 @@ export function PropertyDetailPage() {
   const { id } = useParams()
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const { data: property, isLoading } = useProperty(id!)
   const [currentImage, setCurrentImage] = useState(0)
   const [bookingMessage, setBookingMessage] = useState('')
@@ -315,6 +315,16 @@ export function PropertyDetailPage() {
           <Card className="sticky top-4">
             <CardContent className="p-6 space-y-4">
               <h3 className="font-semibold text-gray-900 dark:text-gray-100">{t('book_now')}</h3>
+
+              {user && profile && (
+                <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-3 space-y-1.5">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">{t('your_information') || 'Your Information'}</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{profile.full_name}</p>
+                  {profile.email && <p className="text-xs text-gray-500">{profile.email}</p>}
+                  {profile.phone && <p className="text-xs text-gray-500">{profile.phone}</p>}
+                </div>
+              )}
+
               <div className="space-y-3">
                 <div>
                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('check_in')}</label>
