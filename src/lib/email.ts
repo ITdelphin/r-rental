@@ -19,9 +19,10 @@ export async function sendWelcomeEmail(userId: string) {
   return triggerEmail('welcome-email', { user_id: userId })
 }
 
-export async function sendBookingNotification(bookingId: string, event: 'created' | 'approved' | 'cancelled' | 'rejected') {
+export async function sendBookingNotification(bookingId: string, event: 'created' | 'approved' | 'cancelled' | 'rejected' | 'completed') {
   return triggerEmail('booking-notification', { booking_id: bookingId, event })
 }
+
 
 export async function sendMessageNotification(messageId: string) {
   return triggerEmail('message-notification', { message_id: messageId })

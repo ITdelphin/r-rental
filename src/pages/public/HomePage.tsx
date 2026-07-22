@@ -50,8 +50,8 @@ export function HomePage() {
   return (
     <div>
       <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-gradient-to-br from-primary-700 via-primary-800 to-primary-950">
-        <div className="absolute inset-0 bg-cover bg-center opacity-20" style={{ backgroundImage: `url('${heroBg}')` }} />
-        <div className="absolute inset-0 bg-gradient-to-r from-gray-950/90 via-gray-950/70 to-gray-950/50" />
+        <div className="absolute inset-0 bg-cover bg-center opacity-40" style={{ backgroundImage: `url('${heroBg}')` }} />
+        <div className="absolute inset-0 bg-gradient-to-r from-gray-950/70 via-gray-950/50 to-gray-950/30" />
         <div className="relative mx-auto w-full max-w-7xl px-4 sm:px-6 text-center">
           <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">{t('hero_title')}</h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-primary-100">{t('hero_subtitle')}</p>

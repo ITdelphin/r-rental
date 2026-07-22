@@ -66,7 +66,7 @@ export function PropertyDetailPage() {
   const amenities = [
     { key: 'internet', value: property.internet },
     { key: 'security', value: property.security },
-    { key: 'parking', value: property.garden },
+    { key: 'parking', value: property.parking },
     { key: 'garden', value: property.garden },
     { key: 'swimming_pool', value: property.swimming_pool },
     { key: 'electricity', value: property.electricity },
@@ -99,7 +99,8 @@ export function PropertyDetailPage() {
         .select('id')
         .eq('property_id', property.id)
         .in('status', ['pending', 'approved'])
-        .or(`check_in.lte.${checkOut},check_out.gte.${checkIn}`)
+        .lte('check_in', checkOut)
+        .gte('check_out', checkIn)
         .limit(1)
       if (overlapping && overlapping.length > 0) {
         toast.error(t('property_unavailable_dates'))
@@ -124,7 +125,7 @@ export function PropertyDetailPage() {
         sendBookingNotification((newBooking as { id: string }).id, 'created')
         const bookingId = (newBooking as { id: string }).id
         const sellerId = property?.owner_id || ''
-        notifyBookingCreated(bookingId, user.id, sellerId, property?.title || 'Property')
+        notifyBookingCreated(bookingId, user.id, sellerId, property?.title || t('property'))
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : t('booking_failed')
@@ -383,7 +384,7 @@ export function PropertyDetailPage() {
                   if (!user) { navigate('/auth/login'); return }
                   const params = new URLSearchParams({
                     to: property.owner_id,
-                    name: property.owner?.full_name || 'Owner',
+                    name: property.owner?.full_name || t('owner'),
                     property: property.title,
                   })
                   navigate(`/dashboard/messages?${params.toString()}`)
@@ -397,7 +398,16 @@ export function PropertyDetailPage() {
                     onClick={() => {
                       const n = whatsappNumber.replace(/[^0-9]/g, '')
                       const p = property
-                      const msg = `*${p.title}*\n💰 ${formatPrice(p.price)}${p.deposit ? ` (Deposit: ${formatPrice(p.deposit)})` : ''}\n📍 ${p.village || ''} ${p.cell || ''} ${p.sector || ''} ${p.district}, ${p.province}\n🛏 ${p.bedrooms} bed • 🛁 ${p.bathrooms} bath • 🍳 ${p.kitchen} kitchen\n${p.description ? `\n${p.description.substring(0, 200)}${p.description.length > 200 ? '...' : ''}` : ''}\n\nView property: https://rwanda-easyrent.vercel.app/properties/${p.id}`
+                      const loc = [p.village, p.cell, p.sector, p.district, p.province].filter(Boolean).join(', ')
+                      const desc = p.description ? p.description.substring(0, 200) + (p.description.length > 200 ? '...' : '') : ''
+                      const msg = [
+                        `*${p.title}*`,
+                        `💰 *${t('price')}:* ${formatPrice(p.price)}${p.deposit ? '  |  💳 *' + t('deposit') + ':* ' + formatPrice(p.deposit) : ''}`,
+                        `📍 *${t('location')}:* ${loc}`,
+                        `🛏 *${t('bedrooms')}:* ${p.bedrooms}  |  🛁 *${t('bathrooms')}:* ${p.bathrooms}  |  🍳 *${t('kitchen')}:* ${p.kitchen}`,
+                        desc ? `📝 *${t('description')}:* ${desc}` : '',
+                        `🔗 ${t('view_property')}: https://rwanda-easyrent.vercel.app/properties/${p.id}`,
+                      ].filter(Boolean).join('\n')
                       window.open(`https://wa.me/${n.startsWith('0') ? '250' + n.slice(1) : n}?text=${encodeURIComponent(msg)}`, '_blank')
                     }}
                   >

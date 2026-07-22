@@ -12,6 +12,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { sendBookingNotification } from '@/lib/email'
 import { createNotification } from '@/lib/notifications'
+import { createAuditLog } from '@/lib/audit'
 import { useAuth } from '@/hooks/useAuth'
 import { formatPrice } from '@/lib/utils'
 import type { Profile } from '@/types'
@@ -73,10 +74,31 @@ export function AdminBookings() {
     try {
       const { data, error } = await supabase
         .from('bookings')
-        .select('*, property:properties(title, district, province, price, images:property_images(url)), tenant:profiles!tenant_id(full_name, email, phone, avatar_url), owner:profiles!owner_id(full_name, email)')
+        .select('*, property:properties(title, district, province, price, images:property_images(url))')
         .order('created_at', { ascending: false })
       if (error) throw error
-      setBookings((data || []) as unknown as BookingWithAll[])
+      const raw = (data || []) as unknown as BookingWithAll[]
+
+      const profileIds = [...new Set(raw.flatMap(b => [b.tenant_id, b.owner_id]).filter(Boolean))]
+      let profileMap: Record<string, Profile> = {}
+      if (profileIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('*')
+          .in('id', profileIds)
+        if (profiles) {
+          for (const p of profiles as unknown as Profile[]) {
+            profileMap[p.id] = p
+          }
+        }
+      }
+
+      for (const b of raw) {
+        b.tenant = profileMap[b.tenant_id] || null
+        b.owner = profileMap[b.owner_id] || null
+      }
+
+      setBookings(raw)
     } catch {
       setBookings([])
     } finally {
@@ -91,7 +113,8 @@ export function AdminBookings() {
       if (error) throw error
       const msgKey = newStatus === 'approved' ? 'booking_approved' : newStatus === 'rejected' ? 'booking_rejected' : 'status_updated'
       toast.success(t(msgKey))
-      if (newStatus === 'approved' || newStatus === 'rejected') {
+      createAuditLog(`booking_${newStatus}`, 'booking', id, { property_title: propertyTitle })
+      if (newStatus === 'approved' || newStatus === 'rejected' || newStatus === 'completed') {
         sendBookingNotification(id, newStatus)
       }
       if (tenantId) {

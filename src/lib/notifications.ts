@@ -44,21 +44,22 @@ export async function notifyBookingResponded(bookingId: string, tenantId: string
   )
 }
 
-export async function notifyPropertyAdded(propertyId: string, ownerName: string, propertyTitle: string) {
-  const { data: admins } = await supabase
+export async function notifyPropertyAdded(propertyId: string, ownerName: string, propertyTitle: string, ownerId?: string) {
+  const { data: users } = await supabase
     .from('profiles')
     .select('user_id')
-    .in('role', ['admin', 'super_admin'])
-  if (admins) {
-    for (const admin of admins) {
-      const a = admin as unknown as { user_id: string }
-      await createNotification(
-        a.user_id,
-        'New Property Added',
-        `${ownerName} added "${propertyTitle}"`,
-        'info',
-        { property_id: propertyId }
-      )
-    }
-  }
+  if (!users || users.length === 0) return
+  const notifications = users
+    .filter(u => u.user_id !== ownerId)
+    .map(u => ({
+      user_id: u.user_id,
+      title: 'New Property Added',
+      body: `${ownerName} added "${propertyTitle}"`,
+      type: 'info' as const,
+      data: { property_id: propertyId },
+      is_read: false,
+    }))
+  if (notifications.length === 0) return
+  const { error } = await supabase.from('notifications').insert(notifications as never)
+  if (error) console.error('Failed to notify users about new property:', error)
 }

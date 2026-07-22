@@ -24,6 +24,11 @@ export function RegisterPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(form.email)) {
+      toast.error(t('invalid_email_format'))
+      return
+    }
     setLoading(true)
     const { data, error } = await supabase.auth.signUp({
       email: form.email,

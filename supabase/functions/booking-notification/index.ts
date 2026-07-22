@@ -113,6 +113,85 @@ Deno.serve(async (req: Request) => {
         subject,
         status: 'sent',
       }) } catch { /* non-critical */ }
+    } else if (event === 'rejected') {
+      const subject = `Booking Rejected - ${propertyTitle}`
+      const htmlBody = buildEmailHtml({
+        title: 'Booking Rejected ❌',
+        greeting: `Hi ${booking.tenant?.full_name},`,
+        paragraphs: [
+          `Your booking request for "${propertyTitle}" was not approved by the owner.`,
+          booking.reply_message ? `Owner's message: ${booking.reply_message}` : 'We encourage you to browse other available properties.',
+        ],
+        cta: { text: 'Browse Properties', url: 'https://rwanda-easyrent.vercel.app/properties' },
+      })
+
+      await transporter.sendMail({
+        from: `"EasyRent" <${fromEmail}>`,
+        to: booking.tenant?.email,
+        subject,
+        html: htmlBody,
+      })
+
+      try { await supabase.from('email_logs').insert({
+        user_id: booking.tenant_id,
+        recipient: booking.tenant?.email,
+        email_type: 'booking_rejected',
+        subject,
+        status: 'sent',
+      }) } catch { /* non-critical */ }
+    } else if (event === 'completed') {
+      const subject = `Booking Completed - ${propertyTitle}`
+      const htmlBody = buildEmailHtml({
+        title: 'Booking Completed ✅',
+        greeting: `Hi ${booking.tenant?.full_name},`,
+        paragraphs: [
+          `Your booking for "${propertyTitle}" has been marked as completed. Your payment has been processed successfully.`,
+          'Thank you for using EasyRent!',
+        ],
+        cta: { text: 'View Booking', url: 'https://rwanda-easyrent.vercel.app/dashboard/bookings' },
+      })
+
+      await transporter.sendMail({
+        from: `"EasyRent" <${fromEmail}>`,
+        to: booking.tenant?.email,
+        subject,
+        html: htmlBody,
+      })
+
+      try { await supabase.from('email_logs').insert({
+        user_id: booking.tenant_id,
+        recipient: booking.tenant?.email,
+        email_type: 'booking_completed',
+        subject,
+        status: 'sent',
+      }) } catch { /* non-critical */ }
+
+      // Also notify the owner about the completed booking
+      const ownerSubject = `Payment Received - ${propertyTitle}`
+      const ownerHtmlBody = buildEmailHtml({
+        title: 'Payment Received 💰',
+        greeting: `Hi ${booking.owner?.full_name},`,
+        paragraphs: [
+          `${booking.tenant?.full_name} has completed their booking and payment for "${propertyTitle}".`,
+          'The funds will be available in your account.',
+        ],
+        cta: { text: 'View Booking', url: 'https://rwanda-easyrent.vercel.app/dashboard/bookings' },
+      })
+
+      await transporter.sendMail({
+        from: `"EasyRent" <${fromEmail}>`,
+        to: booking.owner?.email,
+        subject: ownerSubject,
+        html: ownerHtmlBody,
+      })
+
+      try { await supabase.from('email_logs').insert({
+        user_id: booking.owner_id,
+        recipient: booking.owner?.email,
+        email_type: 'booking_completed_owner',
+        subject: ownerSubject,
+        status: 'sent',
+      }) } catch { /* non-critical */ }
     }
 
     return new Response(JSON.stringify({ success: true }), {

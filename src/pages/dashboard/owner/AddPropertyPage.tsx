@@ -275,7 +275,7 @@ export function AddPropertyPage() {
 
       toast.success(t('property_published_successfully'))
       if (created?.id && user) {
-        notifyPropertyAdded(created.id, profile?.full_name || 'Owner', created.title || 'Property')
+        notifyPropertyAdded(created.id, profile?.full_name || 'Owner', created.title || 'Property', user.id)
       }
       navigate('/dashboard/properties')
     } catch (err: unknown) {

@@ -45,6 +45,15 @@ export function NotificationsPage() {
     fetchNotifications()
   }, [fetchNotifications])
 
+  useEffect(() => {
+    if (!user || notifications.length === 0) return
+    const unreadIds = notifications.filter(n => !n.is_read)
+    if (unreadIds.length === 0) return
+    supabase.from('notifications').update({ is_read: true } as never).eq('user_id', user.id).is('is_read', false).then(({ error }) => {
+      if (!error) setNotifications(prev => prev.map(n => ({ ...n, is_read: true })))
+    })
+  }, [user, notifications.length > 0])
+
   const unreadCount = notifications.filter((n) => !n.is_read).length
 
   const markAllRead = async () => {

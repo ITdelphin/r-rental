@@ -11,6 +11,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { sendBookingNotification } from '@/lib/email'
 import { createNotification } from '@/lib/notifications'
+import { createAuditLog } from '@/lib/audit'
 import { useAuth } from '@/hooks/useAuth'
 import { formatPrice } from '@/lib/utils'
 import type { Profile } from '@/types'
@@ -74,11 +75,29 @@ export function OwnerBookings() {
     try {
       const { data, error } = await supabase
         .from('bookings')
-        .select('*, property:properties(title, district, province, price, images:property_images(url)), tenant:profiles!tenant_id(full_name, email, phone, avatar_url)')
+        .select('*, property:properties(title, district, province, price, images:property_images(url)), tenant_id')
         .eq('owner_id', user.id)
         .order('created_at', { ascending: false })
       if (error) throw error
       const raw = (data || []) as unknown as BookingWithRelations[]
+
+      const tenantIds = [...new Set(raw.map(b => b.tenant_id).filter(Boolean))]
+      let tenantMap: Record<string, Profile> = {}
+      if (tenantIds.length > 0) {
+        const { data: tenants } = await supabase
+          .from('profiles')
+          .select('*')
+          .in('id', tenantIds)
+        if (tenants) {
+          for (const t of tenants as unknown as Profile[]) {
+            tenantMap[t.id] = t
+          }
+        }
+      }
+
+      for (const b of raw) {
+        b.tenant = tenantMap[b.tenant_id] || null
+      }
 
       const grouped: Record<string, PropertyGroup> = {}
       for (const b of raw) {
@@ -98,13 +117,15 @@ export function OwnerBookings() {
     }
   }
 
-  const handleRespond = async (id: string, status: 'approved' | 'rejected') => {
+  const handleRespond = async (id: string, status: 'approved' | 'rejected', message?: string) => {
     setProcessingId(id)
     try {
-      const { error } = await supabase.from('bookings').update({ status, reply_message: replyMessage || null } as never).eq('id', id)
+      const msg = message !== undefined ? message : replyMessage
+      const { error } = await supabase.from('bookings').update({ status, reply_message: msg || null } as never).eq('id', id)
       if (error) throw error
       toast.success(status === 'approved' ? t('booking_approved') : t('booking_rejected'))
       sendBookingNotification(id, status)
+      createAuditLog(`booking_${status}`, 'booking', id, { property_title: groups.flatMap(g => g.bookings).find(b => b.id === id)?.property?.title })
       const allBookings = groups.flatMap(g => g.bookings)
       const booking = allBookings.find(b => b.id === id)
       if (booking?.tenant_id) {
@@ -256,8 +277,9 @@ export function OwnerBookings() {
                             )}
 
                             {booking.message && (
-                              <div className="text-sm text-gray-600 dark:text-gray-400 italic border-l-2 border-primary-300 pl-3">
-                                "{booking.message}"
+                              <div className="rounded-lg bg-primary-50 dark:bg-primary-900/10 p-3 text-sm">
+                                <span className="text-xs font-semibold uppercase tracking-wider text-primary-600 dark:text-primary-400 block mb-1">{t('message_from_tenant')}</span>
+                                <p className="text-gray-700 dark:text-gray-300 italic">"{booking.message}"</p>
                               </div>
                             )}
 
@@ -270,7 +292,7 @@ export function OwnerBookings() {
                                 <Button size="sm" onClick={() => setRespondTarget(booking)}>
                                   <CheckCircle className="h-4 w-4 mr-1" /> {t('respond')}
                                 </Button>
-                                <Button size="sm" variant="outline" className="text-red-600" onClick={() => handleRespond(booking.id, 'rejected')} disabled={processingId === booking.id}>
+                                <Button size="sm" variant="outline" className="text-red-600" onClick={() => handleRespond(booking.id, 'rejected', '')} disabled={processingId === booking.id}>
                                   <XCircle className="h-4 w-4" />
                                 </Button>
                               </>

@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
-import type { Profile, Property, Booking, Review, Favorite, Message, Notification } from '@/types'
+import { createAuditLog } from './audit'
+import type { Profile, Property, Booking, Review, Favorite, Message, Notification, Payment } from '@/types'
 
 export const authApi = {
   login: async (email: string, password: string) => {
@@ -73,16 +74,20 @@ export const propertyApi = {
   create: async (property: Partial<Property>) => {
     const { data, error } = await supabase.from('properties').insert(property as never).select().single()
     if (error) throw error
-    return data as unknown as Property
+    const created = data as unknown as Property
+    createAuditLog('property_created', 'property', created.id, { title: created.title })
+    return created
   },
   update: async (id: string, updates: Partial<Property>) => {
     const { data, error } = await supabase.from('properties').update(updates as never).eq('id', id).select().single()
     if (error) throw error
+    createAuditLog('property_updated', 'property', id, { updates: Object.keys(updates) })
     return data as unknown as Property
   },
   delete: async (id: string) => {
     const { error } = await supabase.from('properties').delete().eq('id', id)
     if (error) throw error
+    createAuditLog('property_deleted', 'property', id)
   },
   incrementViews: async (id: string) => {
     try {
@@ -97,9 +102,19 @@ export const propertyApi = {
 export const bookingApi = {
   list: async (userId: string, role: string) => {
     const column = role === 'owner' ? 'owner_id' : 'tenant_id'
-    const { data, error } = await supabase.from('bookings').select('*, property:properties(*), tenant:profiles!tenant_id(*)').eq(column, userId).order('created_at', { ascending: false })
+    const { data, error } = await supabase.from('bookings').select('*, property:properties(*)').eq(column, userId).order('created_at', { ascending: false })
     if (error) throw error
-    return (data || []) as unknown as Booking[]
+    const raw = (data || []) as unknown as Booking[]
+    const tenantIds = [...new Set(raw.map(b => b.tenant_id).filter(Boolean))]
+    if (tenantIds.length > 0) {
+      const { data: tenants } = await supabase.from('profiles').select('*').in('id', tenantIds)
+      if (tenants) {
+        const tenantMap: Record<string, Profile> = {}
+        for (const t of tenants as unknown as Profile[]) tenantMap[t.id] = t
+        for (const b of raw) b.tenant = tenantMap[b.tenant_id] || null
+      }
+    }
+    return raw
   },
   create: async (booking: Partial<Booking>) => {
     const { data, error } = await supabase.from('bookings').insert(booking as never).select().single()
@@ -122,7 +137,9 @@ export const reviewApi = {
   create: async (review: Partial<Review>) => {
     const { data, error } = await supabase.from('reviews').insert(review as never).select().single()
     if (error) throw error
-    return data as unknown as Review
+    const created = data as unknown as Review
+    createAuditLog('review_created', 'review', created.id, { property_id: created.property_id, rating: created.rating })
+    return created
   },
 }
 
@@ -188,5 +205,28 @@ export const notificationApi = {
   markAsRead: async (id: string) => {
     const { error } = await supabase.from('notifications').update({ is_read: true } as never).eq('id', id)
     if (error) throw error
+  },
+}
+
+export const paymentApi = {
+  list: async (userId: string, role: string) => {
+    const column = role === 'owner' || role === 'agent' ? 'payee_id' : 'payer_id'
+    const { data, error } = await supabase
+      .from('payments')
+      .select('*, booking:bookings(id, status, property:properties(title, district, province))')
+      .eq(column, userId)
+      .order('created_at', { ascending: false })
+    if (error) throw error
+    return (data || []) as unknown as (Payment & { booking?: { id: string; status: string; property?: { title: string; district: string; province: string } } })[]
+  },
+  create: async (payment: Partial<Payment>) => {
+    const { data, error } = await supabase.from('payments').insert(payment as never).select().single()
+    if (error) throw error
+    return data as unknown as Payment
+  },
+  update: async (id: string, updates: Partial<Payment>) => {
+    const { data, error } = await supabase.from('payments').update(updates as never).eq('id', id).select().single()
+    if (error) throw error
+    return data as unknown as Payment
   },
 }
