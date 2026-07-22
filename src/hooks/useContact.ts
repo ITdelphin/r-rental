@@ -1,6 +1,4 @@
-import { useSettings } from './useSettings'
-
-export const DEFAULT_CONTACT = {
+export const CONTACT = {
   email: 'delphinngarambe@gmail.com',
   phone: '0782680268',
   address: 'Gisenyi, Rwanda',
@@ -8,11 +6,5 @@ export const DEFAULT_CONTACT = {
 } as const
 
 export function useContact() {
-  const { settings } = useSettings()
-  return {
-    email: settings.support_email || DEFAULT_CONTACT.email,
-    phone: settings.phone_number || DEFAULT_CONTACT.phone,
-    address: settings.address || DEFAULT_CONTACT.address,
-    workingHours: DEFAULT_CONTACT.workingHours,
-  }
+  return CONTACT
 }
