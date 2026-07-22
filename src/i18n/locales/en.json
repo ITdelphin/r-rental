@@ -789,5 +789,6 @@
   "role_changed_label": "Role Changed",
   "user_verified_label": "User Verified",
   "user_deleted_label": "User Deleted",
-  "review_created": "Review Created"
+  "review_created": "Review Created",
+  "failed_to_load_logs": "Failed to load activity logs"
 }

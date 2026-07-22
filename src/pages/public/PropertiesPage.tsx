@@ -134,14 +134,14 @@ export function PropertiesPage() {
                     ) : (
                       <div className="flex h-full items-center justify-center text-gray-400"><Home className="h-12 w-12" /></div>
                     )}
-                    <Badge className="absolute left-3 top-3">{property.category}</Badge>
-                    {property.is_featured && <Badge variant="success" className="absolute right-3 top-3">{t('featured')}</Badge>}
+                    <Badge className="absolute left-3 top-3 bg-black/60 text-white border-0">{property.category}</Badge>
+                    {property.is_featured && <Badge className="absolute right-3 top-3 bg-amber-500 text-white border-0">{t('featured')}</Badge>}
                   </div>
                   <CardContent className="p-4">
                     <h3 className="font-semibold text-gray-900 dark:text-gray-100">{property.title}</h3>
                     <p className="mt-1 flex items-center gap-1 text-sm text-gray-500"><MapPin className="h-3 w-3" /> {property.district}, {property.province}</p>
                     <div className="mt-3 flex items-center justify-between">
-                      <span className="text-lg font-bold text-primary-600">{formatPrice(property.price)}/{t('mo')}</span>
+                      <span className="text-lg font-bold text-gray-900 dark:text-gray-100">{formatPrice(property.price)}/{t('mo')}</span>
                       <div className="flex items-center gap-3 text-sm text-gray-500">
                         <span>{property.bedrooms} {t('bed')}</span>
                         <span>{property.bathrooms} {t('bath')}</span>

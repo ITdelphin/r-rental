@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { TableSkeleton } from '@/components/ui/loading'
 import { EmptyState } from '@/components/ui/empty-state'
-import { Activity, UserPlus, Building2, LogIn, Settings, Trash2, Shield, RefreshCw, Filter, ChevronLeft, ChevronRight, Clock, UserCheck } from 'lucide-react'
+import { Activity, UserPlus, Building2, LogIn, Settings, Trash2, Shield, RefreshCw, Filter, Clock, UserCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { supabase } from '@/lib/supabase'
+import toast from 'react-hot-toast'
 
 interface ActivityLog {
     id: string
@@ -56,24 +57,19 @@ export function ActivityLogsPage() {
     const [loading, setLoading] = useState(true)
     const [logs, setLogs] = useState<ActivityLog[]>([])
     const [actionFilter, setActionFilter] = useState<string | null>(null)
-    const [page, setPage] = useState(0)
+    const pageRef = useRef(0)
     const [hasMore, setHasMore] = useState(true)
     const PAGE_SIZE = 20
 
-    useEffect(() => {
-        setPage(0)
-        fetchLogs(true)
-    }, [actionFilter])
-
-    const fetchLogs = async (reset = false) => {
+    const fetchLogs = useCallback(async (reset = false) => {
         setLoading(true)
-        const currentPage = reset ? 0 : page
+        const currentPage = reset ? 0 : pageRef.current
         try {
             let query = supabase
                 .from('audit_logs')
-                .select('*, user:profiles!user_id(full_name, email, avatar_url)')
+                .select('*, user:profiles(full_name, email, avatar_url)')
                 .order('created_at', { ascending: false })
-                .range(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE)
+                .range(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE - 1)
 
             if (actionFilter) {
                 query = query.eq('action', actionFilter)
@@ -84,20 +80,23 @@ export function ActivityLogsPage() {
             const result = (data || []) as unknown as ActivityLog[]
             setLogs(reset ? result : prev => [...prev, ...result])
             setHasMore(result.length === PAGE_SIZE)
-        } catch {
+        } catch (err) {
+            toast.error(t('failed_to_load_logs'))
             if (reset) setLogs([])
         } finally {
             setLoading(false)
         }
-    }
+    }, [actionFilter, t])
+
+    useEffect(() => {
+        pageRef.current = 0
+        fetchLogs(true)
+    }, [fetchLogs])
 
     const loadMore = () => {
-        const nextPage = page + 1
-        setPage(nextPage)
+        pageRef.current += 1
         fetchLogs(false)
     }
-
-    const filteredActions = actionFilter ? [actionFilter] : ALL_ACTIONS
 
     return (
         <div className="space-y-8">
