@@ -4,11 +4,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { useState } from 'react'
+import { useContact } from '@/hooks/useContact'
 import { sendContactForm } from '@/lib/email'
 import toast from 'react-hot-toast'
 
 export function ContactPage() {
   const { t } = useTranslation()
+  const contact = useContact()
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' })
   const [sending, setSending] = useState(false)
 
@@ -55,19 +57,19 @@ export function ContactPage() {
         <div className="space-y-6">
           <div className="flex items-start gap-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100 text-primary-600"><Mail className="h-5 w-5" /></div>
-            <div><h3 className="font-medium text-gray-900 dark:text-gray-100">{t('email')}</h3><p className="text-sm text-gray-500">delphinngarambe@gmail.com</p></div>
+            <div><h3 className="font-medium text-gray-900 dark:text-gray-100">{t('email')}</h3><p className="text-sm text-gray-500">{contact.email}</p></div>
           </div>
           <div className="flex items-start gap-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100 text-primary-600"><Phone className="h-5 w-5" /></div>
-            <div><h3 className="font-medium text-gray-900 dark:text-gray-100">{t('phone')}</h3><p className="text-sm text-gray-500">0782680268</p></div>
+            <div><h3 className="font-medium text-gray-900 dark:text-gray-100">{t('phone')}</h3><p className="text-sm text-gray-500">{contact.phone}</p></div>
           </div>
           <div className="flex items-start gap-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100 text-primary-600"><MapPin className="h-5 w-5" /></div>
-            <div><h3 className="font-medium text-gray-900 dark:text-gray-100">{t('address')}</h3><p className="text-sm text-gray-500">Gisenyi, Rwanda</p></div>
+            <div><h3 className="font-medium text-gray-900 dark:text-gray-100">{t('address')}</h3><p className="text-sm text-gray-500">{contact.address}</p></div>
           </div>
           <div className="flex items-start gap-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100 text-primary-600"><Clock className="h-5 w-5" /></div>
-            <div><h3 className="font-medium text-gray-900 dark:text-gray-100">{t('working_hours')}</h3><p className="text-sm text-gray-500">Mon - Fri: 8:00 AM - 6:00 PM</p></div>
+            <div><h3 className="font-medium text-gray-900 dark:text-gray-100">{t('working_hours')}</h3><p className="text-sm text-gray-500">{contact.workingHours}</p></div>
           </div>
         </div>
       </div>

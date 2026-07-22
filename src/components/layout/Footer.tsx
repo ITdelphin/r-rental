@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Mail, Phone, MapPin, Loader2 } from 'lucide-react'
 import { useSettings } from '@/hooks/useSettings'
+import { useContact } from '@/hooks/useContact'
 import { sendNewsletterSubscribe } from '@/lib/email'
 import { BrandLogo } from '@/components/ui/brand-logo'
 import toast from 'react-hot-toast'
@@ -10,13 +11,11 @@ import toast from 'react-hot-toast'
 export function Footer() {
   const { t } = useTranslation()
   const { settings } = useSettings()
+  const contact = useContact()
   const [newsletterEmail, setNewsletterEmail] = useState('')
   const [subscribing, setSubscribing] = useState(false)
 
   const platformName = settings.platform_name || t('app_name')
-  const address = settings.address || 'Gisenyi, Rwanda'
-  const phone = settings.phone_number || '0782680268'
-  const email = settings.support_email || 'delphinngarambe@gmail.com'
 
   const handleSubscribe = async () => {
     if (!newsletterEmail.trim()) return
@@ -58,11 +57,11 @@ export function Footer() {
 
           <div>
             <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t('contact')}</h3>
-            <ul className="mt-3 space-y-2 text-sm text-gray-600 dark:text-gray-400">
-              <li className="flex items-center gap-2"><MapPin className="h-4 w-4" /> {address}</li>
-              <li className="flex items-center gap-2"><Phone className="h-4 w-4" /> {phone}</li>
-              <li className="flex items-center gap-2"><Mail className="h-4 w-4" /> {email}</li>
-            </ul>
+              <ul className="mt-3 space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                <li className="flex items-center gap-2"><MapPin className="h-4 w-4" /> {contact.address}</li>
+                <li className="flex items-center gap-2"><Phone className="h-4 w-4" /> {contact.phone}</li>
+                <li className="flex items-center gap-2"><Mail className="h-4 w-4" /> {contact.email}</li>
+              </ul>
           </div>
 
           <div>
