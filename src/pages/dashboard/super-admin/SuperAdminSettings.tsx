@@ -122,9 +122,9 @@ export function SuperAdminSettings() {
 
   // General
   const [platformName, setPlatformName] = useState('Rwanda EasyRent')
-  const [supportEmail, setSupportEmail] = useState('support@rwanda-easyrent.com')
-  const [phoneNumber, setPhoneNumber] = useState('+250 788 000 000')
-  const [address, setAddress] = useState('Kigali, Rwanda')
+  const [supportEmail, setSupportEmail] = useState('delphinngarambe@gmail.com')
+  const [phoneNumber, setPhoneNumber] = useState('0782680268')
+  const [address, setAddress] = useState('Gisenyi, Rwanda')
   const [generalDirty, setGeneralDirty] = useState(false)
   const [generalErrors, setGeneralErrors] = useState<Record<string, string>>({})
 
@@ -336,9 +336,9 @@ export function SuperAdminSettings() {
           <SectionCard title={t('general_settings')} description={t('general_settings_description')} icon={Building}>
             <div className="grid gap-4 sm:grid-cols-2">
               <InputField label={t('platform_name')} value={platformName} onChange={v => { setPlatformName(v); setGeneralDirty(true); setGeneralErrors(p => ({ ...p, platformName: '' })) }} placeholder="Rwanda EasyRent" error={generalErrors.platformName} />
-              <InputField label={t('support_email')} value={supportEmail} onChange={v => { setSupportEmail(v); setGeneralDirty(true); setGeneralErrors(p => ({ ...p, supportEmail: '' })) }} type="email" placeholder="support@example.com" error={generalErrors.supportEmail} />
-              <InputField label={t('phone_number')} value={phoneNumber} onChange={v => { setPhoneNumber(v); setGeneralDirty(true) }} type="tel" placeholder="+250 788 000 000" />
-              <InputField label={t('address')} value={address} onChange={v => { setAddress(v); setGeneralDirty(true) }} placeholder="Kigali, Rwanda" />
+              <InputField label={t('support_email')} value={supportEmail} onChange={v => { setSupportEmail(v); setGeneralDirty(true); setGeneralErrors(p => ({ ...p, supportEmail: '' })) }} type="email" placeholder="delphinngarambe@gmail.com" error={generalErrors.supportEmail} />
+              <InputField label={t('phone_number')} value={phoneNumber} onChange={v => { setPhoneNumber(v); setGeneralDirty(true) }} type="tel" placeholder="0782680268" />
+              <InputField label={t('address')} value={address} onChange={v => { setAddress(v); setGeneralDirty(true) }} placeholder="Gisenyi, Rwanda" />
             </div>
             <div className="mt-6 flex items-center justify-between border-t border-gray-100 dark:border-gray-800 pt-4">
               <span className="text-xs text-gray-400">{generalDirty ? t('unsaved_changes') : t('all_changes_saved')}</span>

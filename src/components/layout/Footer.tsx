@@ -14,9 +14,9 @@ export function Footer() {
   const [subscribing, setSubscribing] = useState(false)
 
   const platformName = settings.platform_name || t('app_name')
-  const address = settings.address || 'Kigali, Rwanda'
-  const phone = settings.phone_number || '+250 788 000 000'
-  const email = settings.support_email || 'info@rwanda-easyrent.com'
+  const address = settings.address || 'Gisenyi, Rwanda'
+  const phone = settings.phone_number || '0782680268'
+  const email = settings.support_email || 'delphinngarambe@gmail.com'
 
   const handleSubscribe = async () => {
     if (!newsletterEmail.trim()) return

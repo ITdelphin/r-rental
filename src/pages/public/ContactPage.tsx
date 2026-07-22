@@ -55,15 +55,15 @@ export function ContactPage() {
         <div className="space-y-6">
           <div className="flex items-start gap-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100 text-primary-600"><Mail className="h-5 w-5" /></div>
-            <div><h3 className="font-medium text-gray-900 dark:text-gray-100">{t('email')}</h3><p className="text-sm text-gray-500">info@rwanda-easyrent.com</p></div>
+            <div><h3 className="font-medium text-gray-900 dark:text-gray-100">{t('email')}</h3><p className="text-sm text-gray-500">delphinngarambe@gmail.com</p></div>
           </div>
           <div className="flex items-start gap-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100 text-primary-600"><Phone className="h-5 w-5" /></div>
-            <div><h3 className="font-medium text-gray-900 dark:text-gray-100">{t('phone')}</h3><p className="text-sm text-gray-500">+250 788 000 000</p></div>
+            <div><h3 className="font-medium text-gray-900 dark:text-gray-100">{t('phone')}</h3><p className="text-sm text-gray-500">0782680268</p></div>
           </div>
           <div className="flex items-start gap-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100 text-primary-600"><MapPin className="h-5 w-5" /></div>
-            <div><h3 className="font-medium text-gray-900 dark:text-gray-100">{t('address')}</h3><p className="text-sm text-gray-500">Kigali, Rwanda</p></div>
+            <div><h3 className="font-medium text-gray-900 dark:text-gray-100">{t('address')}</h3><p className="text-sm text-gray-500">Gisenyi, Rwanda</p></div>
           </div>
           <div className="flex items-start gap-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100 text-primary-600"><Clock className="h-5 w-5" /></div>
