@@ -12,8 +12,8 @@ insert into cms_pages (slug, title, content, is_published) values
 insert into settings (key, value) values
   ('platform_name', 'Rwanda EasyRent'),
   ('support_email', 'support@rwanda-easyrent.com'),
-  ('support_phone', '+250 788 000 000'),
-  ('address', 'Kigali, Rwanda'),
+  ('phone_number', '0782680268'),
+  ('address', 'Gisenyi, Rwanda'),
   ('primary_color', '#2563eb'),
   ('user_registration', 'open'),
   ('property_auto_approval', 'false'),

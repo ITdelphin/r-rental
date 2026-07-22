@@ -681,7 +681,7 @@ export function MessagesPage() {
                         </Avatar>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{u.full_name}</p>
-                          <p className="text-xs text-gray-500 truncate">{u.email} • <span className="capitalize">{u.role}</span></p>
+                          <p className="text-xs text-gray-500 truncate">{u.email} • <span className="capitalize">{t(u.role)}</span></p>
                         </div>
                         {conversations.find(c => c.userId === u.user_id) && (
                           <span className="text-xs text-primary-600 bg-primary-50 dark:bg-primary-900/30 px-2 py-0.5 rounded-full">

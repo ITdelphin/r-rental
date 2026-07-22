@@ -7,6 +7,7 @@ import { Search, Shield, UserX, RefreshCw, UserCheck } from 'lucide-react'
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { sendAccountNotification } from '@/lib/email'
+import { createAuditLog } from '@/lib/audit'
 import { useAuth } from '@/hooks/useAuth'
 import toast from 'react-hot-toast'
 import type { Profile } from '@/types'
@@ -48,6 +49,7 @@ export function AdminUsers() {
       if (error) throw error
       toast.success(newSuspended ? t('user_suspended') : t('user_reinstated'))
       sendAccountNotification(user.user_id, newSuspended ? 'suspended' : 'reinstated')
+      createAuditLog(newSuspended ? 'user_suspended' : 'user_reinstated', 'user', user.user_id, { email: user.email })
       setUsers(prev => prev.map(u => u.user_id === user.user_id ? { ...u, is_suspended: newSuspended } : u))
     } catch {
       toast.error(t('failed_to_update_user'))
@@ -60,6 +62,7 @@ export function AdminUsers() {
       setUsers(prev => prev.map(u => u.user_id === user.user_id ? { ...u, is_verified: !user.is_verified } : u))
       toast.success(t('verification_updated'))
       sendAccountNotification(user.user_id, !user.is_verified ? 'verified' : 'unverified')
+      createAuditLog('user_verified', 'user', user.user_id, { verified: !user.is_verified, email: user.email })
     } catch { toast.error(t('failed')) }
   }, [t])
 
@@ -69,6 +72,7 @@ export function AdminUsers() {
       if (error) throw error
       toast.success(`${t('role_changed')} ${t(role)}`)
       sendAccountNotification(user.user_id, 'role_changed', { new_role: role })
+      createAuditLog('role_changed', 'user', user.user_id, { new_role: role, email: user.email })
       setUsers(prev => prev.map(u => u.user_id === user.user_id ? { ...u, role: role as Profile['role'] } : u))
     } catch {
       toast.error(t('failed_to_change_role'))

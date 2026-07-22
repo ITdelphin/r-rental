@@ -65,7 +65,7 @@ export function buildEmailHtml(opts: {
 <tr>
 <td style="background:#18181b;padding:24px 40px;border-radius:0 0 16px 16px;text-align:center;">
   <p style="color:#71717a;font-size:12px;margin:0 0 6px;">&copy; ${new Date().getFullYear()} EasyRent. All rights reserved.</p>
-  <p style="color:#52525b;font-size:12px;margin:0;">Kigali, Rwanda &mdash; info@easyrent.com</p>
+  <p style="color:#52525b;font-size:12px;margin:0;">Gisenyi, Rwanda &mdash; delphinngarambe@gmail.com</p>
 </td>
 </tr>
 

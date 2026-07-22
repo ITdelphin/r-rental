@@ -334,7 +334,7 @@ export function TenantBookings() {
                     <input
                       type="text"
                       required
-                      placeholder="e.g. +250 788 000 000"
+                      placeholder="e.g. 0782 680 268"
                       value={paymentPhone}
                       onChange={e => setPaymentPhone(e.target.value)}
                       className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white p-2.5 text-sm dark:bg-gray-800 dark:text-gray-100"

@@ -35,6 +35,10 @@ import { NotificationsPage } from '@/pages/dashboard/NotificationsPage'
 import { ReviewsPage } from '@/pages/dashboard/ReviewsPage'
 import { ComplaintsPage } from '@/pages/dashboard/ComplaintsPage'
 import { ActivityLogsPage } from '@/pages/dashboard/ActivityLogsPage'
+import { MaintenanceRequestsPage } from '@/pages/dashboard/MaintenanceRequestsPage'
+import { ContractsPage } from '@/pages/dashboard/ContractsPage'
+import { PaymentPage } from '@/pages/dashboard/PaymentPage'
+
 
 const queryClient = new QueryClient()
 const isAdminDomain = typeof window !== 'undefined' && window.location.hostname.includes('admin')
@@ -93,6 +97,10 @@ function AppRoutes() {
 
             <Route path="/dashboard/bookings" element={<BookingsPage />} />
             <Route path="/dashboard/favorites" element={<TenantFavorites />} />
+            <Route path="/dashboard/maintenance" element={<MaintenanceRequestsPage />} />
+            <Route path="/dashboard/contracts" element={<ContractsPage />} />
+            <Route path="/dashboard/payments" element={<PaymentPage />} />
+
 
             {/* Owner / Agent */}
             <Route path="/dashboard/properties" element={<OwnerProperties />} />

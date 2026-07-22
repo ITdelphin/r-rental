@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { LayoutDashboard, Building2, Calendar, Heart, MessageSquare, Bell, Settings, LogOut, Menu, X, ChevronRight, Home, Users, BarChart3, FileText, Shield, Star, Plus, Activity } from 'lucide-react'
+import { LayoutDashboard, Building2, Calendar, Heart, MessageSquare, Bell, Settings, LogOut, Menu, X, ChevronRight, Home, Users, BarChart3, FileText, Shield, Star, Plus, Activity, Wrench, CreditCard } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
@@ -19,6 +19,9 @@ const tenantNav: NavItem[] = [
   { to: '/dashboard', key: 'dashboard', icon: LayoutDashboard },
   { to: '/dashboard/bookings', key: 'my_bookings', icon: Calendar },
   { to: '/dashboard/favorites', key: 'my_favorites', icon: Heart },
+  { to: '/dashboard/contracts', key: 'contracts', icon: FileText },
+  { to: '/dashboard/payments', key: 'payments', icon: CreditCard },
+  { to: '/dashboard/maintenance', key: 'maintenance', icon: Wrench },
   { to: '/dashboard/messages', key: 'messages', icon: MessageSquare },
   { to: '/dashboard/reviews', key: 'reviews', icon: FileText },
   { to: '/dashboard/account', key: 'account_settings', icon: Settings },
@@ -29,6 +32,9 @@ const ownerNav: NavItem[] = [
   { to: '/dashboard/properties', key: 'my_properties', icon: Building2 },
   { to: '/dashboard/properties/add', key: 'add_property', icon: Plus },
   { to: '/dashboard/bookings', key: 'my_bookings', icon: Calendar },
+  { to: '/dashboard/contracts', key: 'contracts', icon: FileText },
+  { to: '/dashboard/payments', key: 'payments', icon: CreditCard },
+  { to: '/dashboard/maintenance', key: 'maintenance', icon: Wrench },
   { to: '/dashboard/earnings', key: 'earnings', icon: BarChart3 },
   { to: '/dashboard/messages', key: 'messages', icon: MessageSquare },
   { to: '/dashboard/reviews', key: 'reviews', icon: Star },
@@ -40,6 +46,9 @@ const adminNav: NavItem[] = [
   { to: '/dashboard/users', key: 'users', icon: Users },
   { to: '/dashboard/properties', key: 'properties', icon: Building2 },
   { to: '/dashboard/bookings', key: 'my_bookings', icon: Calendar },
+  { to: '/dashboard/contracts', key: 'contracts', icon: FileText },
+  { to: '/dashboard/payments', key: 'payments', icon: CreditCard },
+  { to: '/dashboard/maintenance', key: 'maintenance', icon: Wrench },
   { to: '/dashboard/reports', key: 'reports', icon: BarChart3 },
   { to: '/dashboard/complaints', key: 'complaints', icon: Shield },
   { to: '/dashboard/messages', key: 'messages', icon: MessageSquare },
@@ -51,6 +60,9 @@ const superAdminNav: NavItem[] = [
   { to: '/dashboard/users', key: 'users', icon: Users },
   { to: '/dashboard/properties', key: 'properties', icon: Building2 },
   { to: '/dashboard/bookings', key: 'all_bookings', icon: Calendar },
+  { to: '/dashboard/contracts', key: 'contracts', icon: FileText },
+  { to: '/dashboard/payments', key: 'payments', icon: CreditCard },
+  { to: '/dashboard/maintenance', key: 'maintenance', icon: Wrench },
   { to: '/dashboard/reports', key: 'reports', icon: BarChart3 },
   { to: '/dashboard/complaints', key: 'complaints', icon: Shield },
   { to: '/dashboard/settings', key: 'settings', icon: Settings },
@@ -58,6 +70,7 @@ const superAdminNav: NavItem[] = [
   { to: '/dashboard/messages', key: 'messages', icon: MessageSquare },
   { to: '/dashboard/account', key: 'account_settings', icon: Settings },
 ]
+
 
 export function DashboardLayout() {
   const { t } = useTranslation()
