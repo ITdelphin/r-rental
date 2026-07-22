@@ -765,5 +765,18 @@
   "maintenance": "Maintenance",
   "invalid_email_format": "Please enter a valid email address",
   "message_from_tenant": "Message from Tenant",
-  "message_from_owner": "Message from Owner"
+  "message_from_owner": "Message from Owner",
+  "appearance": "Appearance",
+  "system": "System",
+  "security": "Security",
+  "notification_preferences": "Notification Preferences",
+  "notification_preferences_description": "Manage how you receive notifications",
+  "appearance_settings": "Appearance Settings",
+  "appearance_description": "Customize your visual experience",
+  "theme_mode": "Theme Mode",
+  "light_mode": "Light",
+  "dark_mode": "Dark",
+  "system_mode": "System",
+  "system_settings": "System Settings",
+  "system_settings_description": "Configure platform-wide settings (super admin only)"
 }

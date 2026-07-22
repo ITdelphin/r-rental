@@ -28,8 +28,7 @@ import { AddPropertyPage } from '@/pages/dashboard/owner/AddPropertyPage'
 import { EditPropertyPage } from '@/pages/dashboard/owner/EditPropertyPage'
 import { AdminUsers } from '@/pages/dashboard/admin/AdminUsers'
 import { AdminReports } from '@/pages/dashboard/admin/AdminReports'
-import { SuperAdminSettings } from '@/pages/dashboard/super-admin/SuperAdminSettings'
-import { AccountSettingsPage } from '@/pages/dashboard/AccountSettingsPage'
+import { SettingsPage } from '@/pages/dashboard/SettingsPage'
 import { MessagesPage } from '@/pages/dashboard/MessagesPage'
 import { NotificationsPage } from '@/pages/dashboard/NotificationsPage'
 import { ReviewsPage } from '@/pages/dashboard/ReviewsPage'
@@ -90,7 +89,8 @@ function AppRoutes() {
           <Route element={<DashboardLayout />}>
             {/* Common */}
             <Route path="/dashboard" element={<DashboardHome />} />
-            <Route path="/dashboard/account" element={<AccountSettingsPage />} />
+            <Route path="/dashboard/settings" element={<SettingsPage />} />
+            <Route path="/dashboard/account" element={<SettingsPage />} />
             <Route path="/dashboard/messages" element={<MessagesPage />} />
             <Route path="/dashboard/notifications" element={<NotificationsPage />} />
             <Route path="/dashboard/reviews" element={<ReviewsPage />} />
@@ -100,7 +100,6 @@ function AppRoutes() {
             <Route path="/dashboard/maintenance" element={<MaintenanceRequestsPage />} />
             <Route path="/dashboard/contracts" element={<ContractsPage />} />
             <Route path="/dashboard/payments" element={<PaymentPage />} />
-
 
             {/* Owner / Agent */}
             <Route path="/dashboard/properties" element={<OwnerProperties />} />
@@ -117,7 +116,6 @@ function AppRoutes() {
 
             {/* Super-Admin only */}
             <Route element={<ProtectedRoute allowedRoles={['super_admin']} />}>
-              <Route path="/dashboard/settings" element={<SuperAdminSettings />} />
               <Route path="/dashboard/activity-logs" element={<ActivityLogsPage />} />
             </Route>
           </Route>

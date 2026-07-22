@@ -1,7 +1,7 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { LayoutDashboard, Building2, Calendar, Heart, MessageSquare, Bell, Settings, LogOut, Menu, X, ChevronRight, Home, Users, BarChart3, FileText, Shield, Star, Plus, Activity, Wrench, CreditCard } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/lib/supabase'
@@ -24,7 +24,7 @@ const tenantNav: NavItem[] = [
   { to: '/dashboard/maintenance', key: 'maintenance', icon: Wrench },
   { to: '/dashboard/messages', key: 'messages', icon: MessageSquare },
   { to: '/dashboard/reviews', key: 'reviews', icon: FileText },
-  { to: '/dashboard/account', key: 'account_settings', icon: Settings },
+  { to: '/dashboard/settings', key: 'settings', icon: Settings },
 ]
 
 const ownerNav: NavItem[] = [
@@ -38,7 +38,7 @@ const ownerNav: NavItem[] = [
   { to: '/dashboard/earnings', key: 'earnings', icon: BarChart3 },
   { to: '/dashboard/messages', key: 'messages', icon: MessageSquare },
   { to: '/dashboard/reviews', key: 'reviews', icon: Star },
-  { to: '/dashboard/account', key: 'account_settings', icon: Settings },
+  { to: '/dashboard/settings', key: 'settings', icon: Settings },
 ]
 
 const adminNav: NavItem[] = [
@@ -52,7 +52,7 @@ const adminNav: NavItem[] = [
   { to: '/dashboard/reports', key: 'reports', icon: BarChart3 },
   { to: '/dashboard/complaints', key: 'complaints', icon: Shield },
   { to: '/dashboard/messages', key: 'messages', icon: MessageSquare },
-  { to: '/dashboard/account', key: 'account_settings', icon: Settings },
+  { to: '/dashboard/settings', key: 'settings', icon: Settings },
 ]
 
 const superAdminNav: NavItem[] = [
@@ -68,7 +68,6 @@ const superAdminNav: NavItem[] = [
   { to: '/dashboard/settings', key: 'settings', icon: Settings },
   { to: '/dashboard/activity-logs', key: 'activity_logs', icon: Activity },
   { to: '/dashboard/messages', key: 'messages', icon: MessageSquare },
-  { to: '/dashboard/account', key: 'account_settings', icon: Settings },
 ]
 
 
@@ -80,14 +79,24 @@ export function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [unreadNotifs, setUnreadNotifs] = useState(0)
 
-  useEffect(() => {
+  const fetchUnreadCount = useCallback(async () => {
     if (!user) return
-    supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', user.id).is('is_read', false).then(({ count }) => setUnreadNotifs(count ?? 0))
-    const sub = supabase.channel('notif-count').on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, () => {
-      supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', user.id).is('is_read', false).then(({ count }) => setUnreadNotifs(count ?? 0))
-    }).subscribe()
-    return () => { supabase.removeChannel(sub) }
+    const { count } = await supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', user.id).is('is_read', false)
+    setUnreadNotifs(count ?? 0)
   }, [user])
+
+  useEffect(() => {
+    fetchUnreadCount()
+    const sub = supabase.channel('notif-count').on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => {
+      fetchUnreadCount()
+    }).subscribe()
+    const handleNotifChange = () => fetchUnreadCount()
+    window.addEventListener('notification-changed', handleNotifChange)
+    return () => {
+      supabase.removeChannel(sub)
+      window.removeEventListener('notification-changed', handleNotifChange)
+    }
+  }, [user, fetchUnreadCount])
 
   const getNavItems = () => {
     switch (profile?.role) {

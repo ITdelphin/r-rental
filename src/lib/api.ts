@@ -206,6 +206,14 @@ export const notificationApi = {
     const { error } = await supabase.from('notifications').update({ is_read: true } as never).eq('id', id)
     if (error) throw error
   },
+  markAllAsRead: async (userId: string) => {
+    const { error } = await supabase.from('notifications').update({ is_read: true } as never).eq('user_id', userId).is('is_read', false)
+    if (error) throw error
+  },
+  delete: async (id: string) => {
+    const { error } = await supabase.from('notifications').delete().eq('id', id)
+    if (error) throw error
+  },
 }
 
 export const paymentApi = {

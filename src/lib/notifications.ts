@@ -16,6 +16,24 @@ export async function createNotification(userId: string, title: string, body: st
   }
 }
 
+export async function removeNotification(id: string) {
+  try {
+    const { error } = await supabase.from('notifications').delete().eq('id', id)
+    if (error) console.error('Failed to delete notification:', error)
+  } catch (err) {
+    console.error('Failed to delete notification:', err)
+  }
+}
+
+export async function markAllNotificationsRead(userId: string) {
+  try {
+    const { error } = await supabase.from('notifications').update({ is_read: true } as never).eq('user_id', userId).is('is_read', false)
+    if (error) console.error('Failed to mark notifications as read:', error)
+  } catch (err) {
+    console.error('Failed to mark notifications as read:', err)
+  }
+}
+
 export async function notifyBookingCreated(bookingId: string, tenantId: string, ownerId: string, propertyTitle: string) {
   const { data: tenant } = await supabase
     .from('profiles')

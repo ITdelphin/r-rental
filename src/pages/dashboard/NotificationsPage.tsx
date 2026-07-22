@@ -50,7 +50,7 @@ export function NotificationsPage() {
     const unreadIds = notifications.filter(n => !n.is_read)
     if (unreadIds.length === 0) return
     supabase.from('notifications').update({ is_read: true } as never).eq('user_id', user.id).is('is_read', false).then(({ error }) => {
-      if (!error) setNotifications(prev => prev.map(n => ({ ...n, is_read: true })))
+      if (!error) { setNotifications(prev => prev.map(n => ({ ...n, is_read: true }))); window.dispatchEvent(new CustomEvent('notification-changed')) }
     })
   }, [user, notifications.length > 0])
 
@@ -67,6 +67,7 @@ export function NotificationsPage() {
       if (error) throw error
       setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })))
       toast.success(t('all_marked_as_read'))
+      window.dispatchEvent(new CustomEvent('notification-changed'))
     } catch {
       toast.error(t('failed_to_mark_as_read'))
     }
@@ -77,6 +78,7 @@ export function NotificationsPage() {
       const { error } = await supabase.from('notifications').delete().eq('id', id)
       if (error) throw error
       setNotifications((prev) => prev.filter((n) => n.id !== id))
+      window.dispatchEvent(new CustomEvent('notification-changed'))
     } catch {
       toast.error(t('failed_to_delete_notification'))
     }
