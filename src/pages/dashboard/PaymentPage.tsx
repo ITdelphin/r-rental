@@ -5,11 +5,12 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { TableSkeleton } from '@/components/ui/loading'
 import { EmptyState } from '@/components/ui/empty-state'
-import { Search, CreditCard, CheckCircle, XCircle, Clock, ArrowUpRight } from 'lucide-react'
+import { Search, CreditCard, CheckCircle, XCircle, Clock, ArrowUpRight, Download, FileText } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { formatPrice } from '@/lib/utils'
 import { Link } from 'react-router-dom'
+import jsPDF from 'jspdf'
 
 const statusConfig: Record<string, { label: string; variant: 'warning' | 'success' | 'danger' | 'secondary' | 'default'; icon: typeof Clock }> = {
   pending: { label: 'pending', variant: 'warning', icon: Clock },
@@ -35,6 +36,72 @@ interface PaymentWithBooking {
     status: string
     property?: { title: string; district: string; province: string }
   }
+}
+
+function downloadReceipt(payment: PaymentWithBooking, profile: { full_name?: string; email?: string } | null) {
+  const doc = new jsPDF({ unit: 'mm', format: 'a5' })
+  const W = doc.internal.pageSize.getWidth()
+
+  // Header
+  doc.setFillColor(37, 99, 235)
+  doc.rect(0, 0, W, 28, 'F')
+  doc.setTextColor(255, 255, 255)
+  doc.setFontSize(16)
+  doc.setFont('helvetica', 'bold')
+  doc.text('Rwanda EasyRent', W / 2, 11, { align: 'center' })
+  doc.setFontSize(9)
+  doc.setFont('helvetica', 'normal')
+  doc.text('PAYMENT RECEIPT', W / 2, 19, { align: 'center' })
+  doc.text(`Ref: ${payment.transaction_id || payment.id.slice(0, 8).toUpperCase()}`, W / 2, 25, { align: 'center' })
+
+  // Body
+  doc.setTextColor(30, 30, 30)
+  const rows: [string, string][] = [
+    ['Property', payment.booking?.property?.title || 'N/A'],
+    ['Amount', `RWF ${Number(payment.amount).toLocaleString()}`],
+    ['Currency', payment.currency || 'RWF'],
+    ['Payment Method', payment.method.replace(/_/g, ' ').toUpperCase()],
+    ['Status', payment.status.toUpperCase()],
+    ['Date', new Date(payment.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })],
+    ['Payer', profile?.full_name || 'N/A'],
+    ['Email', profile?.email || 'N/A'],
+  ]
+
+  let y = 38
+  rows.forEach(([label, value]) => {
+    doc.setFontSize(8)
+    doc.setTextColor(120, 120, 120)
+    doc.text(label, 14, y)
+    doc.setFontSize(10)
+    doc.setTextColor(30, 30, 30)
+    doc.text(value, 14, y + 5)
+    y += 13
+  })
+
+  // Footer
+  doc.setDrawColor(220, 220, 220)
+  doc.line(14, y + 4, W - 14, y + 4)
+  doc.setFontSize(8)
+  doc.setTextColor(150, 150, 150)
+  doc.text('Thank you for using Rwanda EasyRent', W / 2, y + 10, { align: 'center' })
+  doc.text('support@rwanda-easyrent.rw', W / 2, y + 15, { align: 'center' })
+
+  doc.save(`receipt-${payment.transaction_id || payment.id.slice(0, 8)}.pdf`)
+}
+
+function exportAllCSV(payments: PaymentWithBooking[], filename: string) {
+  const rows = payments.map(p => ({
+    Date: new Date(p.created_at).toLocaleDateString(),
+    Property: p.booking?.property?.title || '',
+    Amount: p.amount,
+    Currency: p.currency,
+    Method: p.method,
+    Status: p.status,
+    TransactionID: p.transaction_id || '',
+  }))
+  const keys = Object.keys(rows[0])
+  const csv = [keys.join(','), ...rows.map(r => keys.map(k => `"${(r as any)[k]}"`).join(','))].join('\n')
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = filename; a.click()
 }
 
 export function PaymentPage() {
@@ -76,9 +143,16 @@ export function PaymentPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('payment_history')}</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400">{t('manage_your_payments')}</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('payment_history')}</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{t('manage_your_payments')}</p>
+        </div>
+        {payments.length > 0 && (
+          <Button variant="outline" size="sm" onClick={() => exportAllCSV(payments, `payments-${new Date().toISOString().slice(0, 10)}.csv`)}>
+            <Download className="h-4 w-4 mr-1.5" /> Export CSV
+          </Button>
+        )}
       </div>
 
       <div className="relative max-w-md">
@@ -144,8 +218,8 @@ export function PaymentPage() {
                     </div>
                   </div>
 
-                  {payment.booking && (
-                    <div className="border-t dark:border-gray-700 pt-3">
+                  <div className="border-t dark:border-gray-700 pt-3 flex items-center justify-between gap-2">
+                    {payment.booking && (
                       <Link
                         to={`/dashboard/bookings`}
                         className="flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700 font-medium"
@@ -153,8 +227,16 @@ export function PaymentPage() {
                         <ArrowUpRight className="h-3 w-3" />
                         {t('view_booking')}
                       </Link>
-                    </div>
-                  )}
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs text-gray-500 hover:text-gray-700 ml-auto"
+                      onClick={() => downloadReceipt(payment, profile)}
+                    >
+                      <FileText className="h-3.5 w-3.5 mr-1" /> Download Receipt
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             )

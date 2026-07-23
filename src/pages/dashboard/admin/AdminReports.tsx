@@ -1,10 +1,14 @@
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Users, Building2, Calendar, DollarSign, TrendingUp, RefreshCw } from 'lucide-react'
+import { Users, Building2, Calendar, DollarSign, TrendingUp, RefreshCw, Download } from 'lucide-react'
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { TableSkeleton } from '@/components/ui/loading'
+import {
+    AreaChart, Area, BarChart, Bar, LineChart, Line,
+    XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
+} from 'recharts'
 
 interface ReportStats {
     totalUsers: number
@@ -16,36 +20,37 @@ interface ReportStats {
 }
 
 type Period = '7d' | '30d' | '90d' | '1y'
-
 const PERIODS: Period[] = ['7d', '30d', '90d', '1y']
 
 const CARD_STYLES: Record<string, string> = {
-  users: 'bg-blue-50 text-blue-700 ring-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:ring-blue-800',
-  properties: 'bg-purple-50 text-purple-700 ring-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:ring-purple-800',
-  bookings: 'bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:ring-emerald-800',
-  revenue: 'bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:ring-amber-800',
+    users: 'bg-blue-50 text-blue-700 ring-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:ring-blue-800',
+    properties: 'bg-purple-50 text-purple-700 ring-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:ring-purple-800',
+    bookings: 'bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:ring-emerald-800',
+    revenue: 'bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:ring-amber-800',
 }
 
-function BarChart({ data }: { data: { label: string; value: number; color: string }[] }) {
-  const max = Math.max(...data.map(d => d.value), 1)
-  return (
-    <div className="space-y-3">
-      {data.map(item => {
-        const pct = (item.value / max) * 100
-        return (
-          <div key={item.label}>
-            <div className="flex items-center justify-between text-sm mb-1">
-              <span className="text-gray-600 dark:text-gray-400">{item.label}</span>
-              <span className="font-semibold text-gray-900 dark:text-gray-100">{item.value.toLocaleString()}</span>
-            </div>
-            <div className="h-2.5 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
-              <div className={`h-full rounded-full ${item.color} transition-all duration-500`} style={{ width: `${pct}%` }} />
-            </div>
-          </div>
-        )
-      })}
-    </div>
-  )
+function buildDailyBuckets(items: { created_at: string }[], days: number): { date: string; count: number }[] {
+    const buckets: Record<string, number> = {}
+    const now = Date.now()
+    for (let i = days - 1; i >= 0; i--) {
+        const d = new Date(now - i * 86400000)
+        const key = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
+        buckets[key] = 0
+    }
+    items.forEach(item => {
+        const d = new Date(item.created_at)
+        const key = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
+        if (key in buckets) buckets[key]++
+    })
+    return Object.entries(buckets).map(([date, count]) => ({ date, count }))
+}
+
+function exportCSV(data: Record<string, unknown>[], filename: string) {
+    if (!data.length) return
+    const keys = Object.keys(data[0])
+    const rows = [keys.join(','), ...data.map(r => keys.map(k => `"${r[k] ?? ''}"`).join(','))]
+    const blob = new Blob([rows.join('\n')], { type: 'text/csv' })
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click()
 }
 
 export function AdminReports() {
@@ -53,29 +58,33 @@ export function AdminReports() {
     const [stats, setStats] = useState<ReportStats | null>(null)
     const [loading, setLoading] = useState(true)
     const [period, setPeriod] = useState<Period>('30d')
+    const [userTrend, setUserTrend] = useState<{ date: string; count: number }[]>([])
+    const [bookingTrend, setBookingTrend] = useState<{ date: string; count: number }[]>([])
+    const [revenueTrend, setRevenueTrend] = useState<{ date: string; amount: number }[]>([])
+    const [roleBreakdown, setRoleBreakdown] = useState<{ role: string; count: number }[]>([])
+
+    const days = period === '7d' ? 7 : period === '30d' ? 30 : period === '90d' ? 90 : 365
 
     const fetchStats = useCallback(async () => {
         setLoading(true)
         try {
-            const now = new Date()
-            let startDate: Date
-            switch (period) {
-                case '7d': startDate = new Date(now.getTime() - 7 * 86400000); break
-                case '30d': startDate = new Date(now.getTime() - 30 * 86400000); break
-                case '90d': startDate = new Date(now.getTime() - 90 * 86400000); break
-                case '1y': startDate = new Date(now.getTime() - 365 * 86400000); break
-                default: startDate = new Date(now.getTime() - 30 * 86400000)
-            }
-            const [usersRes, propsRes, bookingsRes, revenueRes, newUsersRes, newPropsRes] = await Promise.all([
-                supabase.from('profiles').select('*', { count: 'exact', head: true }),
-                supabase.from('properties').select('*', { count: 'exact', head: true }),
-                supabase.from('bookings').select('*', { count: 'exact', head: true }),
-                supabase.from('bookings').select('property:properties(price)').not('status', 'eq', 'cancelled'),
-                supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', startDate.toISOString()),
-                supabase.from('properties').select('*', { count: 'exact', head: true }).gte('created_at', startDate.toISOString()),
-            ])
-            const revenueData = ((revenueRes as { data: { property: { price: number } | null }[] | null }).data || [])
-            const totalRevenue = revenueData.reduce((sum, b) => sum + (b.property?.price || 0), 0)
+            const startDate = new Date(Date.now() - days * 86400000).toISOString()
+
+            const [usersRes, propsRes, bookingsRes, paymentsRes, newUsersRes, newPropsRes,
+                allUsersRes, allBookingsRes, allPaymentsRes] = await Promise.all([
+                    supabase.from('profiles').select('*', { count: 'exact', head: true }),
+                    supabase.from('properties').select('*', { count: 'exact', head: true }),
+                    supabase.from('bookings').select('*', { count: 'exact', head: true }),
+                    supabase.from('payments').select('amount').eq('status', 'completed'),
+                    supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', startDate),
+                    supabase.from('properties').select('*', { count: 'exact', head: true }).gte('created_at', startDate),
+                    supabase.from('profiles').select('created_at, role').gte('created_at', startDate),
+                    supabase.from('bookings').select('created_at').gte('created_at', startDate),
+                    supabase.from('payments').select('created_at, amount').eq('status', 'completed').gte('created_at', startDate),
+                ])
+
+            const totalRevenue = ((paymentsRes.data || []) as { amount: number }[]).reduce((s, p) => s + Number(p.amount), 0)
+
             setStats({
                 totalUsers: usersRes.count ?? 0,
                 totalProperties: propsRes.count ?? 0,
@@ -84,30 +93,55 @@ export function AdminReports() {
                 newUsersThisMonth: newUsersRes.count ?? 0,
                 newPropertiesThisMonth: newPropsRes.count ?? 0,
             })
+
+            // Trend charts
+            const bucketDays = days > 30 ? Math.round(days / 12) : 1
+            const usersData = (allUsersRes.data || []) as { created_at: string }[]
+            const bookingsData = (allBookingsRes.data || []) as { created_at: string }[]
+            const paymentsData = (allPaymentsRes.data || []) as { created_at: string; amount: number }[]
+
+            setUserTrend(buildDailyBuckets(usersData, Math.min(days, 30)))
+            setBookingTrend(buildDailyBuckets(bookingsData, Math.min(days, 30)))
+
+            // Revenue trend
+            const revBuckets: Record<string, number> = {}
+            paymentsData.forEach(p => {
+                const key = new Date(p.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
+                revBuckets[key] = (revBuckets[key] || 0) + Number(p.amount)
+            })
+            setRevenueTrend(Object.entries(revBuckets).slice(-14).map(([date, amount]) => ({ date, amount })))
+
+            // Role breakdown
+            const roleCounts: Record<string, number> = {}
+            usersData.forEach((u: any) => { roleCounts[u.role] = (roleCounts[u.role] || 0) + 1 })
+            setRoleBreakdown(Object.entries(roleCounts).map(([role, count]) => ({ role, count })))
+
         } catch {
             setStats(null)
         } finally {
             setLoading(false)
         }
-    }, [period])
+    }, [days])
 
-    useEffect(() => {
-        fetchStats()
-    }, [fetchStats])
+    useEffect(() => { fetchStats() }, [fetchStats])
 
     const statCards = stats ? [
         { icon: Users, label: t('total_users'), value: stats.totalUsers.toLocaleString(), style: CARD_STYLES.users, change: `+${stats.newUsersThisMonth}` },
         { icon: Building2, label: t('total_properties'), value: stats.totalProperties.toLocaleString(), style: CARD_STYLES.properties, change: `+${stats.newPropertiesThisMonth}` },
         { icon: Calendar, label: t('total_bookings'), value: stats.totalBookings.toLocaleString(), style: CARD_STYLES.bookings },
-        { icon: DollarSign, label: t('total_revenue'), value: `${(stats.totalRevenue / 1000).toFixed(1)}K ${t('rwf')}`, style: CARD_STYLES.revenue },
+        { icon: DollarSign, label: t('total_revenue'), value: `${(stats.totalRevenue / 1000).toFixed(1)}K RWF`, style: CARD_STYLES.revenue },
     ] : []
 
-    const chartData = stats ? [
-        { label: t('total_users'), value: stats.totalUsers, color: 'bg-blue-500' },
-        { label: t('total_properties'), value: stats.totalProperties, color: 'bg-purple-500' },
-        { label: t('total_bookings'), value: stats.totalBookings, color: 'bg-emerald-500' },
-        { label: t('total_revenue'), value: Math.round(stats.totalRevenue / 1000), color: 'bg-amber-500' },
-    ] : []
+    const handleExport = () => {
+        exportCSV([
+            { metric: 'Total Users', value: stats?.totalUsers },
+            { metric: 'Total Properties', value: stats?.totalProperties },
+            { metric: 'Total Bookings', value: stats?.totalBookings },
+            { metric: 'Total Revenue (RWF)', value: stats?.totalRevenue },
+            { metric: `New Users (${period})`, value: stats?.newUsersThisMonth },
+            { metric: `New Properties (${period})`, value: stats?.newPropertiesThisMonth },
+        ] as any, `platform-report-${period}-${new Date().toISOString().slice(0, 10)}.csv`)
+    }
 
     return (
         <div className="space-y-6">
@@ -123,10 +157,11 @@ export function AdminReports() {
                             <button key={p} onClick={() => setPeriod(p)}
                                 className={`px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${period === p ? 'bg-primary-600 text-white' : 'bg-white text-gray-600 dark:bg-gray-800 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                             >
-                                {p === '7d' ? t('7_days') : p === '30d' ? t('30_days') : p === '90d' ? t('90_days') : t('1_year')}
+                                {p === '7d' ? '7d' : p === '30d' ? '30d' : p === '90d' ? '90d' : '1y'}
                             </button>
                         ))}
                     </div>
+                    <Button variant="outline" size="sm" onClick={handleExport}><Download className="h-4 w-4 mr-1" /> CSV</Button>
                     <Button variant="outline" size="sm" onClick={fetchStats}><RefreshCw className="h-4 w-4" /></Button>
                 </div>
             </div>
@@ -150,7 +185,7 @@ export function AdminReports() {
                                         </div>
                                         {card.change && (
                                             <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                                                {card.change}
+                                                {card.change} {t('new')}
                                             </span>
                                         )}
                                     </div>
@@ -161,23 +196,107 @@ export function AdminReports() {
                         ))}
                     </div>
 
-                    {/* Growth Chart */}
-                    <Card>
-                        <CardHeader className="pb-4">
-                            <div className="flex items-center gap-3">
-                                <div className="rounded-lg bg-primary-100 p-3 dark:bg-primary-900/30">
-                                    <TrendingUp className="h-6 w-6 text-primary-600" />
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold text-gray-900 dark:text-gray-100">{t('growth_trends')}</h3>
-                                    <p className="text-sm text-gray-500">{t('growth_trends_description')}</p>
-                                </div>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <BarChart data={chartData} />
-                        </CardContent>
-                    </Card>
+                    {/* User signups trend */}
+                    <div className="grid gap-6 lg:grid-cols-2">
+                        <Card>
+                            <CardHeader className="pb-2">
+                                <CardTitle className="flex items-center gap-2 text-base">
+                                    <Users className="h-4 w-4 text-blue-500" /> New User Signups
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <ResponsiveContainer width="100%" height={200}>
+                                    <AreaChart data={userTrend}>
+                                        <defs>
+                                            <linearGradient id="userGrad" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                                        <XAxis dataKey="date" tick={{ fontSize: 10 }} interval="preserveStartEnd" />
+                                        <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+                                        <Tooltip />
+                                        <Area type="monotone" dataKey="count" stroke="#3b82f6" fill="url(#userGrad)" name="Users" />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader className="pb-2">
+                                <CardTitle className="flex items-center gap-2 text-base">
+                                    <Calendar className="h-4 w-4 text-emerald-500" /> Bookings Over Time
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <ResponsiveContainer width="100%" height={200}>
+                                    <AreaChart data={bookingTrend}>
+                                        <defs>
+                                            <linearGradient id="bookGrad" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                                                <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                                        <XAxis dataKey="date" tick={{ fontSize: 10 }} interval="preserveStartEnd" />
+                                        <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+                                        <Tooltip />
+                                        <Area type="monotone" dataKey="count" stroke="#10b981" fill="url(#bookGrad)" name="Bookings" />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    {/* Revenue & Role breakdown */}
+                    <div className="grid gap-6 lg:grid-cols-2">
+                        <Card>
+                            <CardHeader className="pb-2">
+                                <CardTitle className="flex items-center gap-2 text-base">
+                                    <DollarSign className="h-4 w-4 text-amber-500" /> Revenue (RWF)
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                {revenueTrend.length === 0 ? (
+                                    <div className="flex h-48 items-center justify-center text-gray-400 text-sm">No revenue data for this period</div>
+                                ) : (
+                                    <ResponsiveContainer width="100%" height={200}>
+                                        <BarChart data={revenueTrend}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                                            <XAxis dataKey="date" tick={{ fontSize: 10 }} interval="preserveStartEnd" />
+                                            <YAxis tick={{ fontSize: 10 }} tickFormatter={v => `${(v / 1000).toFixed(0)}K`} />
+                                            <Tooltip formatter={(v) => [`${Number(v).toLocaleString()} RWF`, 'Revenue']} />
+                                            <Bar dataKey="amount" fill="#f59e0b" radius={[4, 4, 0, 0]} name="Revenue" />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader className="pb-2">
+                                <CardTitle className="flex items-center gap-2 text-base">
+                                    <TrendingUp className="h-4 w-4 text-purple-500" /> New Users by Role
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                {roleBreakdown.length === 0 ? (
+                                    <div className="flex h-48 items-center justify-center text-gray-400 text-sm">No data for this period</div>
+                                ) : (
+                                    <ResponsiveContainer width="100%" height={200}>
+                                        <BarChart data={roleBreakdown} layout="vertical">
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                                            <XAxis type="number" tick={{ fontSize: 10 }} allowDecimals={false} />
+                                            <YAxis type="category" dataKey="role" tick={{ fontSize: 11 }} width={80} />
+                                            <Tooltip />
+                                            <Bar dataKey="count" radius={[0, 4, 4, 0]} fill="#8b5cf6" name="Users" />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </div>
                 </>
             )}
         </div>
