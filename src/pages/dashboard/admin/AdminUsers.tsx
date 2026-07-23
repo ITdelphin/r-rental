@@ -267,13 +267,17 @@ export function AdminUsers() {
   const changeRole = async (user: Profile, role: string) => {
     try {
       const { error } = await supabase.from('profiles').update({ role } as never).eq('user_id', user.user_id)
-      if (error) throw error
-      toast.success(`${t('role_changed')} ${t(role)}`)
+      if (error) {
+        console.error('changeRole RLS error:', error)
+        throw error
+      }
+      toast.success(`${t('role_changed')} → ${role}`)
       sendAccountNotification(user.user_id, 'role_changed', { new_role: role })
       createAuditLog('role_changed', 'user', user.user_id, { new_role: role, email: user.email })
       setUsers(prev => prev.map(u => u.user_id === user.user_id ? { ...u, role: role as Profile['role'] } : u))
-    } catch {
-      toast.error(t('failed_to_change_role'))
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : (err as any)?.message || t('failed_to_change_role')
+      toast.error(msg)
     }
   }
 
