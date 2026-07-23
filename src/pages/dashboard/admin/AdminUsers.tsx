@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { TableSkeleton } from '@/components/ui/loading'
-import { Search, Shield, UserX, RefreshCw, UserCheck, Trash2 } from 'lucide-react'
+import { Search, Shield, UserX, RefreshCw, UserCheck, Trash2, Eye, Phone, MapPin, Calendar, Mail, IdCard, CheckCircle2, XCircle } from 'lucide-react'
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { sendAccountNotification } from '@/lib/email'
@@ -13,6 +13,180 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import toast from 'react-hot-toast'
 import type { Profile } from '@/types'
+
+const ROLE_COLORS: Record<string, string> = {
+  super_admin: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+  admin: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+  owner: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+  agent: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300',
+  tenant: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+}
+
+function UserProfileModal({ user, open, onClose, onSuspend, onVerify, onDelete, onRoleChange, currentUserRole }: {
+  user: Profile | null
+  open: boolean
+  onClose: () => void
+  onSuspend: (user: Profile) => void
+  onVerify: (user: Profile) => void
+  onDelete: (user: Profile) => void
+  onRoleChange: (user: Profile, role: string) => void
+  currentUserRole: string | undefined
+}) {
+  const { t } = useTranslation()
+  if (!user) return null
+  const initials = user.full_name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?'
+  const location = [user.sector, user.district, user.province].filter(Boolean).join(', ')
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-lg p-0 overflow-hidden">
+        {/* Header banner */}
+        <div className="relative h-24 bg-gradient-to-br from-primary-600 via-primary-500 to-indigo-600">
+          <div className="absolute inset-0 opacity-20"
+            style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize: '30px 30px' }}
+          />
+        </div>
+
+        {/* Avatar overlapping the banner */}
+        <div className="px-6 pb-6">
+          <div className="-mt-12 mb-4 flex items-end justify-between">
+            <div className="relative">
+              <Avatar className="h-24 w-24 ring-4 ring-white dark:ring-gray-900 shadow-xl rounded-2xl">
+                <AvatarImage src={user.avatar_url || undefined} alt={user.full_name || ''} className="object-cover rounded-2xl" />
+                <AvatarFallback className="rounded-2xl bg-gradient-to-br from-primary-500 to-indigo-600 text-white text-3xl font-bold">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+              {user.is_verified && (
+                <div className="absolute -bottom-1 -right-1 rounded-full bg-green-500 p-1 ring-2 ring-white dark:ring-gray-900">
+                  <CheckCircle2 className="h-3 w-3 text-white" />
+                </div>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-1.5 pt-2">
+              <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${ROLE_COLORS[user.role] || ROLE_COLORS.tenant}`}>
+                {user.role.replace('_', ' ')}
+              </span>
+              <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${user.is_suspended ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                }`}>
+                {user.is_suspended ? t('suspended') : t('active')}
+              </span>
+            </div>
+          </div>
+
+          {/* Name & email */}
+          <div className="mb-4">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{user.full_name || t('unknown')}</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{user.email}</p>
+          </div>
+
+          {/* Details grid */}
+          <div className="grid grid-cols-2 gap-3 mb-5">
+            {user.phone && (
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 col-span-1">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800">
+                  <Phone className="h-4 w-4 text-gray-500" />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400">{t('phone')}</p>
+                  <p className="font-medium text-gray-800 dark:text-gray-200 text-xs">{user.phone}</p>
+                </div>
+              </div>
+            )}
+            {location && (
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800">
+                  <MapPin className="h-4 w-4 text-gray-500" />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400">{t('location')}</p>
+                  <p className="font-medium text-gray-800 dark:text-gray-200 text-xs">{location}</p>
+                </div>
+              </div>
+            )}
+            {user.national_id && (
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800">
+                  <IdCard className="h-4 w-4 text-gray-500" />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400">{t('national_id')}</p>
+                  <p className="font-medium text-gray-800 dark:text-gray-200 text-xs">{user.national_id}</p>
+                </div>
+              </div>
+            )}
+            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800">
+                <Calendar className="h-4 w-4 text-gray-500" />
+              </div>
+              <div>
+                <p className="text-xs text-gray-400">{t('joined')}</p>
+                <p className="font-medium text-gray-800 dark:text-gray-200 text-xs">{new Date(user.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Bio */}
+          {user.bio && (
+            <div className="mb-5 rounded-xl bg-gray-50 dark:bg-gray-800/60 p-3">
+              <p className="text-xs text-gray-500 mb-1">{t('bio')}</p>
+              <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{user.bio}</p>
+            </div>
+          )}
+
+          {/* Role changer */}
+          <div className="mb-4 flex items-center gap-3">
+            <label className="text-xs font-medium text-gray-500 shrink-0">{t('change_role')}:</label>
+            <select
+              value={user.role}
+              onChange={e => onRoleChange(user, e.target.value)}
+              className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            >
+              <option value="tenant">{t('tenant')}</option>
+              <option value="owner">{t('owner')}</option>
+              <option value="agent">{t('agent')}</option>
+              <option value="admin">{t('admin')}</option>
+              {currentUserRole === 'super_admin' && <option value="super_admin">{t('super_admin')}</option>}
+            </select>
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className={`flex-1 ${user.is_verified ? 'text-gray-600' : 'text-blue-600 border-blue-300'}`}
+              onClick={() => onVerify(user)}
+            >
+              {user.is_verified ? <XCircle className="h-4 w-4 mr-1.5" /> : <Shield className="h-4 w-4 mr-1.5" />}
+              {user.is_verified ? t('unverify') : t('verify')}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className={`flex-1 ${user.is_suspended ? 'text-green-600 border-green-300' : 'text-orange-600 border-orange-300'}`}
+              onClick={() => onSuspend(user)}
+            >
+              {user.is_suspended ? <UserCheck className="h-4 w-4 mr-1.5" /> : <UserX className="h-4 w-4 mr-1.5" />}
+              {user.is_suspended ? t('reinstate_user') : t('suspend_user')}
+            </Button>
+            {currentUserRole === 'super_admin' && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 text-red-600 border-red-300 hover:bg-red-50 dark:hover:bg-red-900/20"
+                onClick={() => { onClose(); onDelete(user) }}
+              >
+                <Trash2 className="h-4 w-4 mr-1.5" />
+                {t('delete_user')}
+              </Button>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
 
 export function AdminUsers() {
   const { t } = useTranslation()
@@ -68,6 +242,7 @@ export function AdminUsers() {
     } catch { toast.error(t('failed')) }
   }, [t])
 
+  const [viewUser, setViewUser] = useState<Profile | null>(null)
   const [deleteUser, setDeleteUser] = useState<Profile | null>(null)
   const [deleting, setDeleting] = useState(false)
 
@@ -199,6 +374,15 @@ export function AdminUsers() {
                           <Button
                             variant="ghost"
                             size="icon"
+                            className="text-primary-600"
+                            onClick={() => setViewUser(user)}
+                            title={t('view_profile')}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             className={user.is_suspended ? 'text-green-500' : 'text-red-500'}
                             onClick={() => toggleSuspend(user)}
                             title={user.is_suspended ? t('reinstate_user') : t('suspend_user')}
@@ -227,6 +411,18 @@ export function AdminUsers() {
           </CardContent>
         </Card>
       )}
+
+      {/* User Profile View Modal */}
+      <UserProfileModal
+        user={viewUser}
+        open={!!viewUser}
+        onClose={() => setViewUser(null)}
+        onSuspend={(u) => { toggleSuspend(u); setViewUser(prev => prev ? { ...prev, is_suspended: !prev.is_suspended } : null) }}
+        onVerify={(u) => { toggleVerify(u); setViewUser(prev => prev ? { ...prev, is_verified: !prev.is_verified } : null) }}
+        onDelete={(u) => setDeleteUser(u)}
+        onRoleChange={(u, role) => { changeRole(u, role); setViewUser(prev => prev ? { ...prev, role: role as Profile['role'] } : null) }}
+        currentUserRole={currentUser?.role}
+      />
 
       <Dialog open={!!deleteUser} onOpenChange={() => setDeleteUser(null)}>
         <DialogContent>
