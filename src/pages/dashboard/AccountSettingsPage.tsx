@@ -46,7 +46,7 @@ export function AccountSettingsPage() {
     setUploading(true)
     try {
       const ext = file.name.split('.').pop()
-      const filePath = `${user.id}-${Date.now()}.${ext}`
+      const filePath = `avatars/${user.id}/${Date.now()}.${ext}`
 
       const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, file, { upsert: true })
       if (uploadError) throw uploadError
