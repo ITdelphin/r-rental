@@ -764,10 +764,10 @@
   "contracts": "Contracts",
   "maintenance": "Maintenance",
   "invalid_email_format": "Please enter a valid email address",
+  "disposable_email_blocked": "Disposable or temporary email domains are not allowed",
   "message_from_tenant": "Message from Tenant",
   "message_from_owner": "Message from Owner",
   "appearance": "Appearance",
-  "system": "System",
   "security": "Security",
   "notification_preferences": "Notification Preferences",
   "notification_preferences_description": "Manage how you receive notifications",
@@ -801,6 +801,5 @@
   "create_first_page": "Create your first page to get started",
   "please_fill_all_fields": "Please fill in all required fields",
   "your_information": "Your Information",
-  "click_or_drag_to_upload": "Click or drag to upload",
-  "uploading": "Uploading..."
+  "click_or_drag_to_upload": "Click or drag to upload"
 }

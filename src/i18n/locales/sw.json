@@ -752,5 +752,7 @@
   "yesterday": "Yesterday",
   "your_email": "Your Email",
   "your_name": "Your Name",
-  "zero": "0"
+  "zero": "0",
+  "invalid_email_format": "Tafadhali ingiza anwani halali ya barua pepe",
+  "disposable_email_blocked": "Barua pepe za muda au zinazoweza kutupwa haziruhusiwi"
 }

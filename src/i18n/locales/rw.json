@@ -752,5 +752,7 @@
   "yesterday": "Yesterday",
   "your_email": "Your Email",
   "your_name": "Your Name",
-  "zero": "0"
+  "zero": "0",
+  "invalid_email_format": "Mushyiremo aderese ya imeri yemewe",
+  "disposable_email_blocked": "Imeri za rukuruzi cyangwa iz'igihe gito ntizemewe"
 }

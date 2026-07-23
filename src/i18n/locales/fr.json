@@ -752,5 +752,7 @@
   "yesterday": "Yesterday",
   "your_email": "Your Email",
   "your_name": "Your Name",
-  "zero": "0"
+  "zero": "0",
+  "invalid_email_format": "Veuillez entrer une adresse e-mail valide",
+  "disposable_email_blocked": "Les adresses e-mail temporaires ne sont pas autorisées"
 }
