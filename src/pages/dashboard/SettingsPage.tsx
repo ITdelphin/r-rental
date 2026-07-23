@@ -108,7 +108,7 @@ function ProfileTab() {
     setUploading(true)
     try {
       const ext = file.name.split('.').pop()
-      const filePath = `avatars/${user.id}/${Date.now()}.${ext}`
+      const filePath = `u/${user.id}/${Date.now()}.${ext}`
       const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, file, { upsert: true })
       if (uploadError) throw uploadError
       const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filePath)
