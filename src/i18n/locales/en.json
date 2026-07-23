@@ -790,5 +790,17 @@
   "user_verified_label": "User Verified",
   "user_deleted_label": "User Deleted",
   "review_created": "Review Created",
-  "failed_to_load_logs": "Failed to load activity logs"
+  "failed_to_load_logs": "Failed to load activity logs",
+  "load_more": "Load More",
+  "preview": "Preview",
+  "priority": "Priority",
+  "uploaded": "Uploaded",
+  "or_drag_drop": "or drag & drop",
+  "unsaved_changes": "Unsaved changes",
+  "all_changes_saved": "All changes saved",
+  "create_first_page": "Create your first page to get started",
+  "please_fill_all_fields": "Please fill in all required fields",
+  "your_information": "Your Information",
+  "click_or_drag_to_upload": "Click or drag to upload",
+  "uploading": "Uploading..."
 }

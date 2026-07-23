@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -44,11 +44,7 @@ export function PaymentPage() {
   const [payments, setPayments] = useState<PaymentWithBooking[]>([])
   const [search, setSearch] = useState('')
 
-  useEffect(() => {
-    if (user && profile) fetchPayments()
-  }, [user, profile])
-
-  const fetchPayments = async () => {
+  const fetchPayments = useCallback(async () => {
     if (!user || !profile) return
     setLoading(true)
     try {
@@ -65,7 +61,11 @@ export function PaymentPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user, profile])
+
+  useEffect(() => {
+    if (user && profile) fetchPayments()
+  }, [fetchPayments, user, profile])
 
   const filtered = payments.filter(p =>
     !search ||

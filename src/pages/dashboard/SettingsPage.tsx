@@ -441,6 +441,7 @@ const SYSTEM_TABS: { key: SystemSection; labelKey: string; icon: typeof Building
 function UploadZone({ label, accept, currentUrl, onUpload, onRemove, uploading, uploadLabel }: {
   label: string; accept: string; currentUrl: string; onUpload: (file: File) => void; onRemove: () => void; uploading: boolean; uploadLabel: string
 }) {
+  const { t } = useTranslation()
   const [dragOver, setDragOver] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -479,12 +480,12 @@ function UploadZone({ label, accept, currentUrl, onUpload, onRemove, uploading, 
           </div>
           <div className="text-center">
             <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{uploadLabel}</p>
-            <p className="text-xs text-gray-500 mt-0.5">Click or drag to upload</p>
+            <p className="text-xs text-gray-500 mt-0.5">{t('click_or_drag_to_upload', 'Click or drag to upload')}</p>
           </div>
           <input ref={inputRef} type="file" accept={accept} className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) onUpload(f) }} />
         </div>
       )}
-      {uploading && <div className="flex items-center gap-2 text-sm text-primary-600"><Loader2 className="h-4 w-4 animate-spin" /> Uploading...</div>}
+      {uploading && <div className="flex items-center gap-2 text-sm text-primary-600"><Loader2 className="h-4 w-4 animate-spin" /> {t('uploading', 'Uploading...')}</div>}
     </div>
   )
 }

@@ -8,7 +8,7 @@ import { ListSkeleton } from '@/components/ui/loading'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Calendar, Home, CheckCircle, XCircle, Clock, Eye, User, Search, Building2, CheckCheck } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { sendBookingNotification } from '@/lib/email'
 import { createNotification } from '@/lib/notifications'
@@ -64,11 +64,7 @@ export function AdminBookings() {
   const [dateTo, setDateTo] = useState('')
   const [processingId, setProcessingId] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (user && profile) fetchBookings()
-  }, [user, profile])
-
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
     if (!user) return
     setLoading(true)
     try {
@@ -104,7 +100,11 @@ export function AdminBookings() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user])
+
+  useEffect(() => {
+    if (user && profile) fetchBookings()
+  }, [fetchBookings, user, profile])
 
   const updateStatus = async (id: string, newStatus: string, tenantId?: string, propertyTitle?: string) => {
     setProcessingId(id)

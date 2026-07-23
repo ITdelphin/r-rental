@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -55,16 +55,7 @@ export function MaintenanceRequestsPage() {
     const [description, setDescription] = useState('')
     const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'urgent'>('medium')
 
-    useEffect(() => {
-        if (user) {
-            fetchRequests()
-            if (profile?.role === 'tenant') {
-                fetchRentedProperties()
-            }
-        }
-    }, [user, profile])
-
-    const fetchRequests = async () => {
+    const fetchRequests = useCallback(async () => {
         setLoading(true)
         try {
             let query = supabase
@@ -75,11 +66,9 @@ export function MaintenanceRequestsPage() {
             if (profile?.role === 'tenant') {
                 query = query.eq('tenant_id', user!.id)
             } else if (profile?.role === 'owner' || profile?.role === 'agent') {
-                // Query requests for properties owned by this user
                 const { data: ownProps } = await supabase.from('properties').select('id').eq('owner_id', user!.id)
                 const propIds = ((ownProps || []) as any[]).map(p => p.id)
                 query = query.in('property_id', propIds)
-
             }
 
             const { data, error } = await query
@@ -91,11 +80,10 @@ export function MaintenanceRequestsPage() {
         } finally {
             setLoading(false)
         }
-    }
+    }, [user, profile])
 
-    const fetchRentedProperties = async () => {
+    const fetchRentedProperties = useCallback(async () => {
         try {
-            // Find properties from tenant's approved/completed bookings
             const { data, error } = await supabase
                 .from('bookings')
                 .select('property:properties(id, title)')
@@ -113,7 +101,16 @@ export function MaintenanceRequestsPage() {
         } catch (err) {
             console.error('Failed to load rented properties:', err)
         }
-    }
+    }, [user])
+
+    useEffect(() => {
+        if (user) {
+            fetchRequests()
+            if (profile?.role === 'tenant') {
+                fetchRentedProperties()
+            }
+        }
+    }, [fetchRequests, fetchRentedProperties, user, profile])
 
     const handleCreateRequest = async (e: React.FormEvent) => {
         e.preventDefault()

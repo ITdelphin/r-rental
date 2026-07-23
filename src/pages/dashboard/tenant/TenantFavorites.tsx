@@ -5,7 +5,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { ListSkeleton } from '@/components/ui/loading'
 import { Button } from '@/components/ui/button'
 import { Heart, Home, MapPin, Trash2 } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { formatPrice } from '@/lib/utils'
@@ -18,11 +18,7 @@ export function TenantFavorites() {
   const [loading, setLoading] = useState(true)
   const [favorites, setFavorites] = useState<Favorite[]>([])
 
-  useEffect(() => {
-    if (user) fetchFavorites()
-  }, [user])
-
-  const fetchFavorites = async () => {
+  const fetchFavorites = useCallback(async () => {
     if (!user) return
     setLoading(true)
     try {
@@ -38,7 +34,11 @@ export function TenantFavorites() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user])
+
+  useEffect(() => {
+    if (user) fetchFavorites()
+  }, [fetchFavorites, user])
 
   const handleRemove = async (id: string) => {
     try {

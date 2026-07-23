@@ -28,10 +28,10 @@ const ACTION_CONFIG: Record<string, { icon: typeof Activity; color: string; labe
     property_deleted: { icon: Trash2, color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 ring-1 ring-red-200 dark:ring-red-800', label: 'property_deleted' },
     settings_changed: { icon: Settings, color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 ring-1 ring-yellow-200 dark:ring-yellow-800', label: 'settings_changed' },
     user_suspended: { icon: Shield, color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 ring-1 ring-orange-200 dark:ring-orange-800', label: 'user_suspended' },
-    user_reinstated: { icon: UserCheck, color: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400 ring-1 ring-teal-200 dark:ring-teal-800', label: 'user_reinstated_label' },
-    user_verified: { icon: Shield, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 ring-1 ring-blue-200 dark:ring-blue-800', label: 'user_verified_label' },
-    role_changed: { icon: RefreshCw, color: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400 ring-1 ring-cyan-200 dark:ring-cyan-800', label: 'role_changed_label' },
-    user_deleted: { icon: Trash2, color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 ring-1 ring-red-200 dark:ring-red-800', label: 'user_deleted_label' },
+    user_reinstated: { icon: UserCheck, color: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400 ring-1 ring-teal-200 dark:ring-teal-800', label: 'user_reinstated' },
+    user_verified: { icon: Shield, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 ring-1 ring-blue-200 dark:ring-blue-800', label: 'user_verified' },
+    role_changed: { icon: RefreshCw, color: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400 ring-1 ring-cyan-200 dark:ring-cyan-800', label: 'role_changed' },
+    user_deleted: { icon: Trash2, color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 ring-1 ring-red-200 dark:ring-red-800', label: 'user_deleted' },
     review_created: { icon: Activity, color: 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400 ring-1 ring-pink-200 dark:ring-pink-800', label: 'review_created' },
 }
 
@@ -67,7 +67,7 @@ export function ActivityLogsPage() {
         try {
             let query = supabase
                 .from('audit_logs')
-                .select('*, user:profiles(full_name, email, avatar_url)')
+                .select('*')
                 .order('created_at', { ascending: false })
                 .range(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE - 1)
 
@@ -76,8 +76,33 @@ export function ActivityLogsPage() {
             }
 
             const { data, error } = await query
-            if (error) throw error
-            const result = (data || []) as unknown as ActivityLog[]
+            if (error) {
+                console.error("Fetch audit_logs error:", error)
+                throw error
+            }
+
+            let result = (data || []) as unknown as ActivityLog[]
+
+            // Manual profile fetch to prevent relation join errors
+            if (result.length > 0) {
+                const userIds = [...new Set(result.map(log => log.user_id).filter(Boolean))]
+                if (userIds.length > 0) {
+                    const { data: profiles, error: profileErr } = await supabase
+                        .from('profiles')
+                        .select('user_id, full_name, email, avatar_url')
+                        .in('user_id', userIds)
+
+                    if (!profileErr && profiles) {
+                        const profileMap = new Map()
+                        profiles.forEach((p: any) => profileMap.set(p.user_id, p))
+                        result = result.map(log => ({
+                            ...log,
+                            user: profileMap.get(log.user_id) || null
+                        }))
+                    }
+                }
+            }
+
             setLogs(reset ? result : prev => [...prev, ...result])
             setHasMore(result.length === PAGE_SIZE)
         } catch (err) {
@@ -120,11 +145,10 @@ export function ActivityLogsPage() {
                 <Filter className="h-4 w-4 text-gray-400" />
                 <button
                     onClick={() => setActionFilter(null)}
-                    className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-all cursor-pointer ${
-                        !actionFilter
-                            ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900 shadow-sm'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'
-                    }`}
+                    className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-all cursor-pointer ${!actionFilter
+                        ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900 shadow-sm'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'
+                        }`}
                 >
                     {t('all')}
                 </button>
@@ -134,11 +158,10 @@ export function ActivityLogsPage() {
                         <button
                             key={action}
                             onClick={() => setActionFilter(actionFilter === action ? null : action)}
-                            className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-all cursor-pointer ${
-                                actionFilter === action
-                                    ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900 shadow-sm'
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'
-                            }`}
+                            className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-all cursor-pointer ${actionFilter === action
+                                ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900 shadow-sm'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'
+                                }`}
                         >
                             {t(config.label)}
                         </button>

@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Users, Building2, Calendar, DollarSign, TrendingUp, RefreshCw } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { TableSkeleton } from '@/components/ui/loading'
@@ -54,34 +54,28 @@ export function AdminReports() {
     const [loading, setLoading] = useState(true)
     const [period, setPeriod] = useState<Period>('30d')
 
-    useEffect(() => {
-        fetchStats()
-    }, [period])
-
-    const fetchStats = async () => {
+    const fetchStats = useCallback(async () => {
         setLoading(true)
         try {
             const now = new Date()
-            const periodMap: Record<Period, Date> = {
-                '7d': new Date(now.getTime() - 7 * 86400000),
-                '30d': new Date(now.getTime() - 30 * 86400000),
-                '90d': new Date(now.getTime() - 90 * 86400000),
-                '1y': new Date(now.getTime() - 365 * 86400000),
+            let startDate: Date
+            switch (period) {
+                case '7d': startDate = new Date(now.getTime() - 7 * 86400000); break
+                case '30d': startDate = new Date(now.getTime() - 30 * 86400000); break
+                case '90d': startDate = new Date(now.getTime() - 90 * 86400000); break
+                case '1y': startDate = new Date(now.getTime() - 365 * 86400000); break
+                default: startDate = new Date(now.getTime() - 30 * 86400000)
             }
-            const since = periodMap[period].toISOString()
-
             const [usersRes, propsRes, bookingsRes, revenueRes, newUsersRes, newPropsRes] = await Promise.all([
                 supabase.from('profiles').select('*', { count: 'exact', head: true }),
                 supabase.from('properties').select('*', { count: 'exact', head: true }),
                 supabase.from('bookings').select('*', { count: 'exact', head: true }),
                 supabase.from('bookings').select('property:properties(price)').not('status', 'eq', 'cancelled'),
-                supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', since),
-                supabase.from('properties').select('*', { count: 'exact', head: true }).gte('created_at', since),
+                supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', startDate.toISOString()),
+                supabase.from('properties').select('*', { count: 'exact', head: true }).gte('created_at', startDate.toISOString()),
             ])
-
             const revenueData = ((revenueRes as { data: { property: { price: number } | null }[] | null }).data || [])
             const totalRevenue = revenueData.reduce((sum, b) => sum + (b.property?.price || 0), 0)
-
             setStats({
                 totalUsers: usersRes.count ?? 0,
                 totalProperties: propsRes.count ?? 0,
@@ -95,7 +89,11 @@ export function AdminReports() {
         } finally {
             setLoading(false)
         }
-    }
+    }, [period])
+
+    useEffect(() => {
+        fetchStats()
+    }, [fetchStats])
 
     const statCards = stats ? [
         { icon: Users, label: t('total_users'), value: stats.totalUsers.toLocaleString(), style: CARD_STYLES.users, change: `+${stats.newUsersThisMonth}` },

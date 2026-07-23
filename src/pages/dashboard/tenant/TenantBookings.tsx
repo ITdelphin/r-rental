@@ -6,7 +6,7 @@ import { ListSkeleton } from '@/components/ui/loading'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Calendar, Home, CheckCircle, XCircle, Clock, Eye, Sparkles, CreditCard, Wallet, Smartphone, Loader2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { supabase } from '@/lib/supabase'
 import { sendBookingNotification } from '@/lib/email'
@@ -44,11 +44,7 @@ export function TenantBookings() {
   const [paymentStep, setPaymentStep] = useState<'details' | 'processing' | 'success'>('details')
   const [paymentMessage, setPaymentMessage] = useState('')
 
-  useEffect(() => {
-    if (user && profile) fetchBookings()
-  }, [user, profile])
-
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
     if (!user) return
     setLoading(true)
     try {
@@ -64,7 +60,11 @@ export function TenantBookings() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user])
+
+  useEffect(() => {
+    if (user && profile) fetchBookings()
+  }, [fetchBookings, user, profile])
 
   const handleCancel = async (id: string) => {
     setProcessingId(id)

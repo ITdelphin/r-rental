@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -33,11 +33,7 @@ export function ComplaintsPage() {
     const [complaints, setComplaints] = useState<Complaint[]>([])
     const [search, setSearch] = useState('')
 
-    useEffect(() => {
-        fetchComplaints()
-    }, [])
-
-    const fetchComplaints = async () => {
+    const fetchComplaints = useCallback(async () => {
         setLoading(true)
         try {
             const { data, error } = await supabase
@@ -47,12 +43,16 @@ export function ComplaintsPage() {
             if (error) throw error
             setComplaints((data || []) as unknown as Complaint[])
         } catch {
-            // fallback to empty
             setComplaints([])
         } finally {
             setLoading(false)
         }
-    }
+    }, [])
+
+    useEffect(() => {
+        fetchComplaints()
+    }, [fetchComplaints])
+
 
     const updateStatus = async (id: string, status: string) => {
         try {

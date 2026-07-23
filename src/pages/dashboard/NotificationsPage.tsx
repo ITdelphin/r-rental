@@ -52,7 +52,7 @@ export function NotificationsPage() {
     supabase.from('notifications').update({ is_read: true } as never).eq('user_id', user.id).is('is_read', false).then(({ error }) => {
       if (!error) { setNotifications(prev => prev.map(n => ({ ...n, is_read: true }))); window.dispatchEvent(new CustomEvent('notification-changed')) }
     })
-  }, [user, notifications.length > 0])
+  }, [user, notifications])
 
   const unreadCount = notifications.filter((n) => !n.is_read).length
 

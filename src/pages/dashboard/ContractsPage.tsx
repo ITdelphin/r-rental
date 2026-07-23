@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -10,6 +10,8 @@ import { FileText, Search, Plus, Calendar, DollarSign, Download, ArrowUpRight, C
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { formatPrice } from '@/lib/utils'
+import { jsPDF } from 'jspdf'
+import 'jspdf-autotable'
 import toast from 'react-hot-toast'
 
 interface Contract {
@@ -56,16 +58,7 @@ export function ContractsPage() {
     const [monthlyRent, setMonthlyRent] = useState('')
     const [depositAmount, setDepositAmount] = useState('')
 
-    useEffect(() => {
-        if (user) {
-            fetchContracts()
-            if (profile?.role === 'owner' || profile?.role === 'agent') {
-                fetchApprovedBookingsWithoutContract()
-            }
-        }
-    }, [user, profile])
-
-    const fetchContracts = async () => {
+    const fetchContracts = useCallback(async () => {
         setLoading(true)
         try {
             let query = supabase
@@ -88,11 +81,10 @@ export function ContractsPage() {
         } finally {
             setLoading(false)
         }
-    }
+    }, [user, profile])
 
-    const fetchApprovedBookingsWithoutContract = async () => {
+    const fetchApprovedBookingsWithoutContract = useCallback(async () => {
         try {
-            // Find bookings status 'approved' or 'completed'
             const { data: bookingsData, error } = await supabase
                 .from('bookings')
                 .select('id, property_id, tenant_id, owner_id, property:properties(title, price, deposit), tenant:profiles!tenant_id(full_name)')
@@ -101,7 +93,6 @@ export function ContractsPage() {
 
             if (error) throw error
 
-            // Get contracts already created to filter them out
             const { data: existingContracts } = await supabase
                 .from('contracts')
                 .select('booking_id')
@@ -112,7 +103,16 @@ export function ContractsPage() {
         } catch (err) {
             console.error('Failed to load approved bookings:', err)
         }
-    }
+    }, [user])
+
+    useEffect(() => {
+        if (user) {
+            fetchContracts()
+            if (profile?.role === 'owner' || profile?.role === 'agent') {
+                fetchApprovedBookingsWithoutContract()
+            }
+        }
+    }, [fetchContracts, fetchApprovedBookingsWithoutContract, user, profile])
 
     const handleBookingChange = (bookingId: string) => {
         setSelectedBookingId(bookingId)
@@ -179,6 +179,89 @@ export function ContractsPage() {
             setContracts(prev => prev.map(c => c.id === id ? { ...c, status: 'terminated' } : c))
         } catch {
             toast.error(t('failed_to_terminate_contract'))
+        }
+    }
+
+    const handleDownloadPdf = (contract: Contract) => {
+        try {
+            const doc = new jsPDF()
+
+            // Header
+            doc.setFontSize(22)
+            doc.setTextColor(30, 58, 138) // dark blue
+            doc.text('Rwanda EasyRent', 105, 20, { align: 'center' })
+
+            doc.setFontSize(16)
+            doc.setTextColor(0, 0, 0)
+            doc.text('Rental Lease Agreement', 105, 30, { align: 'center' })
+
+            doc.setFontSize(10)
+            doc.setTextColor(100, 100, 100)
+            doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 38, { align: 'center' })
+            doc.text(`Contract ID: ${contract.id}`, 105, 43, { align: 'center' })
+
+            // Property Info
+            doc.setFontSize(14)
+            doc.setTextColor(0, 0, 0)
+            doc.text('Property Details', 14, 55)
+
+            doc.setFontSize(12)
+            doc.setTextColor(50, 50, 50)
+            doc.text(`Title: ${contract.property?.title || 'N/A'}`, 14, 63)
+            doc.text(`Location: ${contract.property?.district}, ${contract.property?.province}`, 14, 70)
+
+            // Parties
+            doc.setFontSize(14)
+            doc.setTextColor(0, 0, 0)
+            doc.text('Parties', 14, 85)
+
+            doc.setFontSize(12)
+            doc.setTextColor(50, 50, 50)
+            doc.text(`Landlord: ${contract.owner?.full_name} (${contract.owner?.email})`, 14, 93)
+            doc.text(`Tenant: ${contract.tenant?.full_name} (${contract.tenant?.email})`, 14, 100)
+
+            // Terms Table
+            doc.setFontSize(14)
+            doc.setTextColor(0, 0, 0)
+            doc.text('Terms of Agreement', 14, 115)
+
+            const tableData = [
+                ['Start Date', new Date(contract.start_date).toLocaleDateString()],
+                ['End Date', new Date(contract.end_date).toLocaleDateString()],
+                ['Monthly Rent', formatPrice(contract.monthly_rent)],
+                ['Security Deposit', formatPrice(contract.deposit_amount)],
+                ['Status', contract.status.toUpperCase()]
+            ];
+
+            (doc as any).autoTable({
+                startY: 122,
+                head: [['Term', 'Detail']],
+                body: tableData,
+                theme: 'grid',
+                headStyles: { fillColor: [30, 58, 138] },
+                styles: { fontSize: 11, cellPadding: 5 }
+            })
+
+            // Signatures
+            const finalY = (doc as any).lastAutoTable.finalY || 160
+
+            doc.setFontSize(10)
+            doc.setTextColor(100, 100, 100)
+            doc.text('By signing below, both parties agree to the terms outlined in this agreement.', 14, finalY + 15)
+
+            doc.setFontSize(12)
+            doc.setTextColor(0, 0, 0)
+            doc.text('Landlord Signature: _______________________', 14, finalY + 40)
+            doc.text('Date: ____________', 140, finalY + 40)
+
+            doc.text('Tenant Signature: _______________________', 14, finalY + 60)
+            doc.text('Date: ____________', 140, finalY + 60)
+
+            doc.save(`lease-agreement-${contract.id.substring(0, 8)}.pdf`)
+            toast.success(t('download_started') || 'Download started')
+        } catch (error) {
+            console.error('Failed to generate PDF:', error)
+            toast.error('Failed to generate PDF contract')
         }
     }
 
@@ -358,9 +441,7 @@ export function ContractsPage() {
                                 </div>
 
                                 <div className="flex gap-2 pt-2">
-                                    <Button variant="outline" size="sm" className="flex-1 cursor-pointer" onClick={() => {
-                                        toast.success(t('download_started'))
-                                    }}>
+                                    <Button variant="outline" size="sm" className="flex-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800" onClick={() => handleDownloadPdf(contract)}>
                                         <Download className="h-4 w-4 mr-1.5" />
                                         {t('download_pdf')}
                                     </Button>

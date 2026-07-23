@@ -21,11 +21,7 @@ export function AdminUsers() {
   const [users, setUsers] = useState<Profile[]>([])
   const [search, setSearch] = useState('')
 
-  useEffect(() => {
-    fetchUsers()
-  }, [])
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setLoading(true)
     try {
       const { data, error } = await supabase
@@ -39,7 +35,11 @@ export function AdminUsers() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchUsers()
+  }, [fetchUsers])
 
   const toggleSuspend = async (user: Profile) => {
     const newSuspended = !user.is_suspended
