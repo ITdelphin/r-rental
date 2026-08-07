@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /auth
+Disallow: /api
+
+Sitemap: https://rwanda-easyrent.vercel.app/sitemap.xml

@@ -5,6 +5,8 @@ import { Search, Home, MessageCircle, Key, Heart, Star, Shield, MapPin, ChevronR
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { SEO } from '@/components/SEO'
+import { organizationLD, websiteLD, localBusinessLD } from '@/lib/seo-data'
 import { useProperties } from '@/hooks/useProperties'
 import { formatPrice } from '@/lib/utils'
 import { getSettings } from '@/lib/settings'
@@ -49,6 +51,12 @@ export function HomePage() {
 
   return (
     <div>
+      <SEO
+        title="EasyRent - Find Your Perfect Home in Rwanda | Houses & Apartments for Rent"
+        description="Rwanda's #1 property rental platform. Browse houses, apartments, and rooms across Kigali, Musanze, Rubavu, and more. EasyRent makes finding your perfect home simple and secure."
+        image="/images/color.png"
+        structuredData={[organizationLD(), websiteLD(), localBusinessLD()]}
+      />
       <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-gradient-to-br from-primary-700 via-primary-800 to-primary-950">
         <div className="absolute inset-0 bg-cover bg-center opacity-40" style={{ backgroundImage: `url('${heroBg}')` }} />
         <div className="absolute inset-0 bg-gradient-to-r from-gray-950/70 via-gray-950/50 to-gray-950/30" />
@@ -115,7 +123,7 @@ export function HomePage() {
                   <Card className="overflow-hidden border-0 shadow-sm transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-2 rounded-2xl">
                     <div className="aspect-[4/3] bg-gray-200 dark:bg-gray-700 relative overflow-hidden">
                       {property.images?.[0] ? (
-                        <img src={property.images[0].url} alt={property.title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                        <img src={property.images[0].url} alt={property.title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" />
                       ) : (
                         <div className="flex h-full items-center justify-center text-gray-400"><Home className="h-12 w-12" /></div>
                       )}

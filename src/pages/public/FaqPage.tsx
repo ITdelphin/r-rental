@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { SEO } from '@/components/SEO'
+import { breadcrumbLD, faqLD } from '@/lib/seo-data'
 
 const faqKeys = [
   { qKey: 'faq1_q', aKey: 'faq1_a' },
@@ -17,8 +19,24 @@ export function FaqPage() {
   const { t } = useTranslation()
   const [open, setOpen] = useState<number | null>(null)
 
+  const faqItems = faqKeys.map((faq) => ({
+    question: t(faq.qKey),
+    answer: t(faq.aKey),
+  }))
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
+      <SEO
+        title="FAQ - Frequently Asked Questions | EasyRent Help Center"
+        description="Frequently asked questions about renting, listing, payments, and using the EasyRent platform in Rwanda."
+        structuredData={[
+          faqLD(faqItems),
+          breadcrumbLD([
+            { name: 'Home', url: '/' },
+            { name: 'FAQ', url: '/faq' },
+          ]),
+        ]}
+      />
       <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('faq')}</h1>
       <p className="mt-2 text-gray-600 dark:text-gray-400">{t('faq_subtitle')}</p>
       <div className="mt-8 space-y-2">

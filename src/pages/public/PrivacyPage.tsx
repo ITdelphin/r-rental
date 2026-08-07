@@ -1,10 +1,20 @@
 import { useTranslation } from 'react-i18next'
+import { SEO } from '@/components/SEO'
+import { breadcrumbLD } from '@/lib/seo-data'
 
 export function PrivacyPage() {
   const { t } = useTranslation()
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
+      <SEO
+        title="Privacy Policy | EasyRent"
+        description="How EasyRent collects, uses, and protects your personal data. Learn about our privacy practices and data protection in Rwanda."
+        structuredData={breadcrumbLD([
+          { name: 'Home', url: '/' },
+          { name: 'Privacy Policy', url: '/privacy' },
+        ])}
+      />
       <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('privacy')}</h1>
       <div className="mt-8 space-y-6 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
         <p>{t('privacy_intro')}</p>

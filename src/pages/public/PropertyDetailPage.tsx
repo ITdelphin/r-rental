@@ -5,6 +5,8 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { SEO } from '@/components/SEO'
+import { propertyLD, breadcrumbLD } from '@/lib/seo-data'
 import { useProperty } from '@/hooks/useProperties'
 import { useAuth } from '@/hooks/useAuth'
 import { propertyApi } from '@/lib/api'
@@ -169,6 +171,30 @@ export function PropertyDetailPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+      <SEO
+        title={`${property.title} - Rent in ${property.district}, ${property.province} | EasyRent Rwanda`}
+        description={property.description || `${property.title} - ${property.bedrooms} bedroom ${property.property_type} for rent in ${property.district}, ${property.province}, Rwanda. ${formatPrice(property.price)}/month on EasyRent.`}
+        image={property.images?.[0]?.url}
+        type="product"
+        structuredData={[
+          propertyLD({
+            id: property.id,
+            title: property.title,
+            description: property.description,
+            price: property.price,
+            bedrooms: property.bedrooms,
+            bathrooms: property.bathrooms,
+            district: property.district,
+            province: property.province,
+            images: property.images,
+          }),
+          breadcrumbLD([
+            { name: 'Home', url: '/' },
+            { name: 'Properties', url: '/properties' },
+            { name: property.title, url: `/properties/${property.id}` },
+          ]),
+        ]}
+      />
       <button onClick={() => navigate(-1)} className="mb-4 flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 cursor-pointer">
         <ChevronLeft className="h-4 w-4" /> {t('back')}
       </button>
@@ -179,7 +205,7 @@ export function PropertyDetailPage() {
           <div className="relative overflow-hidden rounded-xl bg-gray-200 dark:bg-gray-700">
             {images.length > 0 ? (
               <div className="relative aspect-[16/9]">
-                <img src={images[currentImage]?.url} alt={property.title} className="h-full w-full object-cover" />
+                <img src={images[currentImage]?.url} alt={property.title} className="h-full w-full object-cover" loading="lazy" />
                 {images.length > 1 && (
                   <>
                     <button onClick={() => setCurrentImage((i) => (i - 1 + images.length) % images.length)} className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-2 shadow hover:bg-white cursor-pointer">
@@ -218,7 +244,7 @@ export function PropertyDetailPage() {
             <div className="flex gap-2 overflow-x-auto pb-1">
               {images.map((img, i) => (
                 <button key={i} onClick={() => setCurrentImage(i)} className={`shrink-0 h-16 w-24 overflow-hidden rounded-lg border-2 ${i === currentImage ? 'border-primary-500' : 'border-transparent'}`}>
-                  <img src={img.url} alt="" className="h-full w-full object-cover" />
+                  <img src={img.url} alt="" className="h-full w-full object-cover" loading="lazy" />
                 </button>
               ))}
             </div>

@@ -6,6 +6,8 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { SEO } from '@/components/SEO'
+import { breadcrumbLD } from '@/lib/seo-data'
 import { useProperties } from '@/hooks/useProperties'
 import { formatPrice } from '@/lib/utils'
 
@@ -43,6 +45,14 @@ export function PropertiesPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+      <SEO
+        title="Browse Properties for Rent in Rwanda | Houses & Apartments | EasyRent"
+        description="Find houses, apartments, and rooms for rent across Rwanda. Filter by location, price, bedrooms, and amenities."
+        structuredData={breadcrumbLD([
+          { name: 'Home', url: '/' },
+          { name: 'Properties', url: '/properties' },
+        ])}
+      />
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('properties')}</h1>
@@ -130,7 +140,7 @@ export function PropertiesPage() {
                 <Card className="overflow-hidden transition-shadow hover:shadow-md h-full">
                   <div className="aspect-[16/10] bg-gray-200 dark:bg-gray-700 relative">
                     {property.images?.[0] ? (
-                      <img src={property.images[0].url} alt={property.title} className="h-full w-full object-cover" />
+                      <img src={property.images[0].url} alt={property.title} className="h-full w-full object-cover" loading="lazy" />
                     ) : (
                       <div className="flex h-full items-center justify-center text-gray-400"><Home className="h-12 w-12" /></div>
                     )}

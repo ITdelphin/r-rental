@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { useState } from 'react'
+import { SEO } from '@/components/SEO'
+import { breadcrumbLD } from '@/lib/seo-data'
 import { useContact } from '@/hooks/useContact'
 import { sendContactForm } from '@/lib/email'
 import toast from 'react-hot-toast'
@@ -34,6 +36,14 @@ export function ContactPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
+      <SEO
+        title="Contact Us | EasyRent Support"
+        description="Get in touch with EasyRent support. Email, phone, and office location in Kigali, Rwanda. We're here to help with your rental needs."
+        structuredData={breadcrumbLD([
+          { name: 'Home', url: '/' },
+          { name: 'Contact', url: '/contact' },
+        ])}
+      />
       <div className="text-center">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('contact')}</h1>
         <p className="mt-2 text-gray-600 dark:text-gray-400">{t('contact_subtitle')}</p>
