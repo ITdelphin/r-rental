@@ -57,15 +57,14 @@ const adminNav: NavItem[] = [
 
 const superAdminNav: NavItem[] = [
   { to: '/dashboard', key: 'dashboard', icon: LayoutDashboard },
+  { to: '/dashboard/super-admin/settings', key: 'platform_settings', icon: Settings },
   { to: '/dashboard/users', key: 'users', icon: Users },
   { to: '/dashboard/properties', key: 'properties', icon: Building2 },
   { to: '/dashboard/bookings', key: 'all_bookings', icon: Calendar },
   { to: '/dashboard/contracts', key: 'contracts', icon: FileText },
   { to: '/dashboard/payments', key: 'payments', icon: CreditCard },
-  { to: '/dashboard/maintenance', key: 'maintenance', icon: Wrench },
   { to: '/dashboard/reports', key: 'reports', icon: BarChart3 },
   { to: '/dashboard/complaints', key: 'complaints', icon: Shield },
-  { to: '/dashboard/settings', key: 'settings', icon: Settings },
   { to: '/dashboard/activity-logs', key: 'activity_logs', icon: Activity },
   { to: '/dashboard/messages', key: 'messages', icon: MessageSquare },
 ]

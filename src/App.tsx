@@ -40,6 +40,7 @@ import { ActivityLogsPage } from '@/pages/dashboard/ActivityLogsPage'
 import { MaintenanceRequestsPage } from '@/pages/dashboard/MaintenanceRequestsPage'
 import { ContractsPage } from '@/pages/dashboard/ContractsPage'
 import { PaymentPage } from '@/pages/dashboard/PaymentPage'
+import { SuperAdminSettings } from '@/pages/dashboard/super-admin/SuperAdminSettings'
 
 
 const queryClient = new QueryClient()
@@ -121,6 +122,7 @@ function AppRoutes() {
             {/* Super-Admin only */}
             <Route element={<ProtectedRoute allowedRoles={['super_admin']} />}>
               <Route path="/dashboard/activity-logs" element={<ActivityLogsPage />} />
+              <Route path="/dashboard/super-admin/settings" element={<SuperAdminSettings />} />
             </Route>
           </Route>
         </Route>

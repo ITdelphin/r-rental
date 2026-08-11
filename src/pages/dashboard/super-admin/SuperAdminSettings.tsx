@@ -1,21 +1,46 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { CardSkeleton } from '@/components/ui/loading'
-import { Save, RefreshCw, FileText, Image, Upload, X, Plus, Edit, Trash2, Building, Eye, AlertCircle, Globe, Loader2 } from 'lucide-react'
+import {
+  Save, RefreshCw, FileText, Plus, Edit, Trash2,
+  Building, AlertCircle, Loader2, Shield, Settings, Clock, User,
+} from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import toast from 'react-hot-toast'
+import { useAuth } from '@/hooks/useAuth'
+import { formatDate } from '@/lib/utils'
 import type { CmsPage } from '@/types'
 
-type Section = 'general' | 'branding' | 'pages'
+type Section = 'general' | 'operations' | 'pages' | 'history'
 
 const TABS: { key: Section; labelKey: string; icon: typeof Building }[] = [
   { key: 'general', labelKey: 'general_settings', icon: Building },
-  { key: 'branding', labelKey: 'branding', icon: Image },
+  { key: 'operations', labelKey: 'operations', icon: Settings },
   { key: 'pages', labelKey: 'cms_pages', icon: FileText },
+  { key: 'history', labelKey: 'config_history', icon: Clock },
 ]
+
+interface FeatureFlag {
+  id: string
+  key: string
+  label: string
+  enabled: boolean
+  description: string | null
+  created_at: string
+  updated_at: string
+}
+
+interface ConfigHistoryEntry {
+  id: string
+  actor_email: string
+  key: string
+  old_value: string | null
+  new_value: string
+  created_at: string
+}
 
 function SectionCard({ title, description, icon: Icon, children }: { title: string; description?: string; icon: typeof Building; children: React.ReactNode }) {
   return (
@@ -56,86 +81,53 @@ function InputField({ label, value, onChange, type = 'text', placeholder, error 
   )
 }
 
-function UploadZone({ label, accept, currentUrl, onUpload, onRemove, uploading, uploadLabel }: {
-  label: string; accept: string; currentUrl: string; onUpload: (file: File) => void; onRemove: () => void; uploading: boolean; uploadLabel: string
+function ToggleSetting({ label, description, enabled, onToggle, disabled }: {
+  label: string; description?: string; enabled: boolean; onToggle: () => void; disabled?: boolean
 }) {
-  const { t } = useTranslation()
-  const [dragOver, setDragOver] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setDragOver(false)
-    const file = e.dataTransfer.files?.[0]
-    if (file) onUpload(file)
-  }, [onUpload])
-
   return (
-    <div className="space-y-3">
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
-      {currentUrl ? (
-        <div className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-3">
-          {accept.startsWith('image') ? (
-            <img src={currentUrl} alt="" className="h-12 w-auto rounded object-contain" />
-          ) : (
-            <div className="flex h-12 w-16 items-center justify-center rounded bg-gray-200 dark:bg-gray-700 text-gray-400"><Image className="h-5 w-5" /></div>
-          )}
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{currentUrl.split('/').pop()}</p>
-            <p className="text-xs text-gray-500 truncate">{currentUrl}</p>
-          </div>
-          <button onClick={onRemove} className="shrink-0 rounded p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer"><X className="h-4 w-4" /></button>
-        </div>
-      ) : (
-        <div
-          onDragOver={e => { e.preventDefault(); setDragOver(true) }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={handleDrop}
-          onClick={() => inputRef.current?.click()}
-          className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-6 transition-colors ${
-            dragOver ? 'border-primary-400 bg-primary-50 dark:bg-primary-900/20' : 'border-gray-300 dark:border-gray-600 hover:border-primary-300 hover:bg-gray-50 dark:hover:bg-gray-800/50'
+    <div className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3">
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{label}</p>
+        {description && <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{description}</p>}
+      </div>
+      <button
+        type="button"
+        onClick={onToggle}
+        disabled={disabled}
+        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors ${
+          enabled ? 'bg-primary-600' : 'bg-gray-300 dark:bg-gray-600'
+        } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+      >
+        <span
+          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+            enabled ? 'translate-x-6' : 'translate-x-1'
           }`}
-        >
-          <div className={`rounded-full p-2.5 ${dragOver ? 'bg-primary-100 text-primary-600' : 'bg-gray-100 text-gray-400 dark:bg-gray-800'}`}>
-            <Upload className="h-5 w-5" />
-          </div>
-          <div className="text-center">
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{uploadLabel}</p>
-            <p className="text-xs text-gray-500 mt-0.5">{t('click_or_drag_to_upload', 'Click or drag to upload')}</p>
-          </div>
-          <input ref={inputRef} type="file" accept={accept} className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) onUpload(f) }} />
-        </div>
-      )}
-      {uploading && (
-        <div className="flex items-center gap-2 text-sm text-primary-600">
-          <Loader2 className="h-4 w-4 animate-spin" /> {t('uploading', 'Uploading...')}
-        </div>
-      )}
+        />
+      </button>
     </div>
   )
 }
 
 export function SuperAdminSettings() {
   const { t } = useTranslation()
+  const { profile } = useAuth()
   const [section, setSection] = useState<Section>('general')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState<string | null>(null)
 
-  // General
   const [platformName, setPlatformName] = useState('Rwanda EasyRent')
-  const [supportEmail, setSupportEmail] = useState('delphinngarambe@gmail.com')
-  const [phoneNumber, setPhoneNumber] = useState('0782680268')
-  const [address, setAddress] = useState('Gisenyi, Rwanda')
+  const [supportEmail, setSupportEmail] = useState('')
+  const [phoneNumber, setPhoneNumber] = useState('')
+  const [address, setAddress] = useState('')
   const [generalDirty, setGeneralDirty] = useState(false)
   const [generalErrors, setGeneralErrors] = useState<Record<string, string>>({})
 
-  // Branding
-  const [heroBgUrl, setHeroBgUrl] = useState('')
-  const [logoUrl, setLogoUrl] = useState('')
-  const [faviconUrl, setFaviconUrl] = useState('')
-  const [uploading, setUploading] = useState<string | null>(null)
+  const [featureFlags, setFeatureFlags] = useState<FeatureFlag[]>([])
+  const [flagsLoading, setFlagsLoading] = useState(true)
 
-  // Pages
+  const [configHistory, setConfigHistory] = useState<ConfigHistoryEntry[]>([])
+  const [historyLoading, setHistoryLoading] = useState(true)
+
   const [pages, setPages] = useState<CmsPage[]>([])
   const [pagesLoading, setPagesLoading] = useState(true)
   const [editPage, setEditPage] = useState<CmsPage | null>(null)
@@ -144,35 +136,75 @@ export function SuperAdminSettings() {
   const [pageForm, setPageForm] = useState({ title: '', slug: '', content: '', meta_title: '', meta_description: '', is_published: true })
   const [pageErrors, setPageErrors] = useState<Record<string, string>>({})
 
-  const fetchAll = useCallback(async () => {
-    setLoading(true)
+  const logConfigChange = useCallback(async (key: string, oldValue: string | null, newValue: string) => {
     try {
-      const { data } = await supabase.from('settings').select('key, value') as { data: { key: string; value: string }[] | null }
-      if (data) {
-        const map: Record<string, string> = {}
-        for (const row of data) map[row.key] = row.value
-        if (map.platform_name) setPlatformName(map.platform_name)
-        if (map.support_email) setSupportEmail(map.support_email)
-        if (map.phone_number) setPhoneNumber(map.phone_number)
-        if (map.address) setAddress(map.address)
-        if (map.hero_background) setHeroBgUrl(map.hero_background)
-        if (map.logo_url) setLogoUrl(map.logo_url)
-        if (map.favicon_url) setFaviconUrl(map.favicon_url)
-      }
-    } catch { toast.error(t('failed_to_load_settings')) }
-    setLoading(false)
-  }, [t])
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      await supabase.from('config_history').insert({
+        actor_email: user.email,
+        key,
+        old_value: oldValue,
+        new_value: newValue,
+      } as never)
+    } catch {
+      // silently fail
+    }
+  }, [])
 
-  useEffect(() => { fetchAll(); fetchPages() }, [fetchAll])
+  const fetchGeneral = useCallback(async () => {
+    const { data } = await supabase.from('settings').select('key, value') as { data: { key: string; value: string }[] | null }
+    if (data) {
+      const map: Record<string, string> = {}
+      for (const row of data) map[row.key] = row.value
+      if (map.platform_name) setPlatformName(map.platform_name)
+      if (map.support_email) setSupportEmail(map.support_email)
+      if (map.phone_number) setPhoneNumber(map.phone_number)
+      if (map.address) setAddress(map.address)
+    }
+  }, [])
 
-  const fetchPages = async () => {
+  const fetchFlags = useCallback(async () => {
+    setFlagsLoading(true)
+    try {
+      const { data, error } = await supabase.from('feature_flags').select('*').order('key')
+      if (error) throw error
+      setFeatureFlags((data || []) as FeatureFlag[])
+    } catch {
+      setFeatureFlags([])
+    }
+    setFlagsLoading(false)
+  }, [])
+
+  const fetchHistory = useCallback(async () => {
+    setHistoryLoading(true)
+    try {
+      const { data, error } = await supabase.from('config_history').select('*').order('created_at', { ascending: false }).limit(50)
+      if (error) throw error
+      setConfigHistory((data || []) as ConfigHistoryEntry[])
+    } catch {
+      setConfigHistory([])
+    }
+    setHistoryLoading(false)
+  }, [])
+
+  const fetchPages = useCallback(async () => {
     setPagesLoading(true)
     try {
       const { data } = await supabase.from('cms_pages').select('*').order('created_at', { ascending: false })
       setPages((data || []) as unknown as CmsPage[])
-    } catch { setPages([]) }
+    } catch {
+      setPages([])
+    }
     setPagesLoading(false)
-  }
+  }, [])
+
+  const fetchAll = useCallback(async () => {
+    setLoading(true)
+    await Promise.all([fetchGeneral(), fetchFlags(), fetchHistory(), fetchPages()])
+    setLoading(false)
+  }, [fetchGeneral, fetchFlags, fetchHistory, fetchPages])
+
+  useEffect(() => { fetchAll() }, [fetchAll])
 
   const upsertSetting = async (key: string, value: string) => {
     const { error } = await supabase.from('settings').upsert({ key, value } as never, { onConflict: 'key' })
@@ -188,9 +220,21 @@ export function SuperAdminSettings() {
 
     setSaving('general')
     try {
-      const keys = ['platform_name', 'support_email', 'phone_number', 'address']
-      const values = { platform_name: platformName.trim(), support_email: supportEmail.trim(), phone_number: phoneNumber.trim(), address: address.trim() }
-      for (const key of keys) await upsertSetting(key, values[key as keyof typeof values])
+      const keys = ['platform_name', 'support_email', 'phone_number', 'address'] as const
+      const newValues = {
+        platform_name: platformName.trim(),
+        support_email: supportEmail.trim(),
+        phone_number: phoneNumber.trim(),
+        address: address.trim(),
+      }
+      for (const key of keys) {
+        const { data: existing } = await supabase.from('settings').select('value').eq('key', key).single()
+        const oldVal = existing?.value ?? null
+        await upsertSetting(key, newValues[key])
+        if (oldVal !== newValues[key]) {
+          await logConfigChange(key, oldVal, newValues[key])
+        }
+      }
       toast.success(t('settings_saved'))
       setGeneralDirty(false)
     } catch (err: unknown) {
@@ -199,28 +243,17 @@ export function SuperAdminSettings() {
     setSaving(null)
   }
 
-  const uploadMedia = async (file: File, folder: string): Promise<string | null> => {
-    const ext = file.name.split('.').pop()
-    const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-    const { error: uploadError } = await supabase.storage.from('cms').upload(path, file)
-    if (uploadError) { toast.error(`${t('upload_failed')}: ${uploadError.message}`); return null }
-    const { data: { publicUrl } } = supabase.storage.from('cms').getPublicUrl(path)
-    return publicUrl
-  }
-
-  const handleUpload = (field: string, folder: string, setter: (v: string) => void) => async (file: File) => {
-    setUploading(field)
+  const toggleFlag = async (flag: FeatureFlag) => {
+    const newValue = !flag.enabled
     try {
-      const url = await uploadMedia(file, folder)
-      if (url) {
-        setter(url)
-        await upsertSetting(field, url)
-        toast.success(`${t('uploaded')} ${t('successfully')}`)
-      }
+      const { error } = await supabase.from('feature_flags').update({ enabled: newValue } as never).eq('id', flag.id)
+      if (error) throw error
+      setFeatureFlags(prev => prev.map(f => f.id === flag.id ? { ...f, enabled: newValue } : f))
+      await logConfigChange(`flag:${flag.key}`, String(flag.enabled), String(newValue))
+      toast.success(t('feature_flag_updated'))
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : t('upload_failed'))
+      toast.error(err instanceof Error ? err.message : t('failed_to_save'))
     }
-    setUploading(null)
   }
 
   const openNewPage = () => {
@@ -261,29 +294,47 @@ export function SuperAdminSettings() {
       if (editPage) {
         const res = await supabase.from('cms_pages').update(payload as never).eq('id', editPage.id)
         error = res.error
+        await logConfigChange(`cms_page:${editPage.id}`, editPage.title, payload.title)
       } else {
         const res = await supabase.from('cms_pages').insert(payload as never)
         error = res.error
+        await logConfigChange('cms_page:new', null, payload.title)
       }
       if (error) throw error
       toast.success(editPage ? t('page_updated') : t('page_created'))
       setShowPageModal(false)
       fetchPages()
-    } catch (err: unknown) { toast.error(err instanceof Error ? err.message : t('failed')) }
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : t('failed'))
+    }
     setSaving(null)
   }
 
   const deletePage = async () => {
     if (!deleteTarget) return
     try {
+      const page = pages.find(p => p.id === deleteTarget)
       const { error } = await supabase.from('cms_pages').delete().eq('id', deleteTarget)
       if (error) throw error
+      await logConfigChange('cms_page:deleted', page?.title ?? deleteTarget, '')
       toast.success(t('page_deleted'))
       setDeleteTarget(null)
       fetchPages()
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : t('failed_to_delete'))
     }
+  }
+
+  if (profile && profile.role !== 'super_admin') {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center">
+        <div className="rounded-full bg-red-100 dark:bg-red-900/30 p-4 mb-4">
+          <Shield className="h-10 w-10 text-red-500" />
+        </div>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('access_denied')}</h2>
+        <p className="mt-2 text-sm text-gray-500">{t('super_admin_only')}</p>
+      </div>
+    )
   }
 
   if (loading) return (
@@ -301,7 +352,6 @@ export function SuperAdminSettings() {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('settings')}</h1>
@@ -313,7 +363,6 @@ export function SuperAdminSettings() {
         </Button>
       </div>
 
-      {/* Tab Bar */}
       <div className="flex gap-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-1">
         {TABS.map(tab => (
           <button
@@ -331,7 +380,6 @@ export function SuperAdminSettings() {
         ))}
       </div>
 
-      {/* Sections */}
       <div className="space-y-6">
         {section === 'general' && (
           <SectionCard title={t('general_settings')} description={t('general_settings_description')} icon={Building}>
@@ -350,43 +398,34 @@ export function SuperAdminSettings() {
           </SectionCard>
         )}
 
-        {section === 'branding' && (
-          <div className="space-y-6">
-            <SectionCard title={t('logo_favicon')} description={t('brand_assets_description')} icon={Image}>
-              <div className="grid gap-6 sm:grid-cols-2">
-                <UploadZone label={t('site_logo')} accept="image/*" currentUrl={logoUrl} onUpload={handleUpload('logo_url', 'logo', setLogoUrl)} onRemove={async () => { setLogoUrl(''); try { await upsertSetting('logo_url', '') } catch { toast.error(t('failed_to_save')) } }} uploading={uploading === 'logo_url'} uploadLabel={t('upload_logo')} />
-                <UploadZone label={t('favicon')} accept="image/*" currentUrl={faviconUrl} onUpload={handleUpload('favicon_url', 'favicon', setFaviconUrl)} onRemove={async () => { setFaviconUrl(''); try { await upsertSetting('favicon_url', '') } catch { toast.error(t('failed_to_save')) } }} uploading={uploading === 'favicon_url'} uploadLabel={t('upload_favicon')} />
+        {section === 'operations' && (
+          <SectionCard title={t('feature_flags')} description={t('feature_flags_description')} icon={Settings}>
+            {flagsLoading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="h-14 animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800" />
+                ))}
               </div>
-            </SectionCard>
-
-            <SectionCard title={t('hero_section')} description={t('hero_section_description')} icon={Eye}>
-              <UploadZone label={t('hero_background')} accept="image/*" currentUrl={heroBgUrl} onUpload={handleUpload('hero_background', 'hero-bg', setHeroBgUrl)} onRemove={async () => { setHeroBgUrl(''); try { await upsertSetting('hero_background', '') } catch { toast.error(t('failed_to_save')) } }} uploading={uploading === 'hero_background'} uploadLabel={t('upload_image')} />
-            </SectionCard>
-
-            {(logoUrl || heroBgUrl) && (
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <Globe className="h-4 w-4 text-primary-500" />
-                    {t('preview')}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="relative aspect-[3/1] overflow-hidden rounded-b-lg bg-gradient-to-r from-primary-600 to-primary-800">
-                    {heroBgUrl && <img src={heroBgUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />}
-                    <div className="absolute inset-0 bg-black/40" />
-                    <div className="relative flex h-full items-center p-6">
-                      {logoUrl ? (
-                        <img src={logoUrl} alt="" className="h-10 w-auto" />
-                      ) : (
-                        <img src="/images/easyrentlogo.jpeg" alt="" className="h-10 w-auto rounded" />
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+            ) : featureFlags.length === 0 ? (
+              <div className="py-12 text-center">
+                <Settings className="mx-auto h-8 w-8 text-gray-300" />
+                <h3 className="mt-3 text-sm font-medium text-gray-900 dark:text-gray-100">{t('no_feature_flags')}</h3>
+                <p className="mt-1 text-xs text-gray-500">{t('create_feature_flags_hint')}</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {featureFlags.map(flag => (
+                  <ToggleSetting
+                    key={flag.id}
+                    label={flag.label || flag.key}
+                    description={flag.description || undefined}
+                    enabled={flag.enabled}
+                    onToggle={() => toggleFlag(flag)}
+                  />
+                ))}
+              </div>
             )}
-          </div>
+          </SectionCard>
         )}
 
         {section === 'pages' && (
@@ -436,9 +475,56 @@ export function SuperAdminSettings() {
             )}
           </SectionCard>
         )}
+
+        {section === 'history' && (
+          <SectionCard title={t('config_history')} description={t('config_history_description')} icon={Clock}>
+            {historyLoading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="h-16 animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800" />
+                ))}
+              </div>
+            ) : configHistory.length === 0 ? (
+              <div className="py-12 text-center">
+                <Clock className="mx-auto h-8 w-8 text-gray-300" />
+                <h3 className="mt-3 text-sm font-medium text-gray-900 dark:text-gray-100">{t('no_history_yet')}</h3>
+                <p className="mt-1 text-xs text-gray-500">{t('history_will_appear_here')}</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {configHistory.map(entry => (
+                  <div key={entry.id} className="rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-gray-400" />
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{entry.actor_email}</span>
+                      </div>
+                      <span className="text-xs text-gray-400">{formatDate(entry.created_at)}</span>
+                    </div>
+                    <div className="mt-2">
+                      <span className="inline-flex items-center rounded bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-xs font-mono text-gray-600 dark:text-gray-400">
+                        {entry.key}
+                      </span>
+                    </div>
+                    {(entry.old_value || entry.new_value) && (
+                      <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
+                        {entry.old_value && (
+                          <span className="line-through text-red-500/80">{entry.old_value}</span>
+                        )}
+                        {entry.old_value && entry.new_value && <span>&rarr;</span>}
+                        {entry.new_value && (
+                          <span className="text-green-600 dark:text-green-400">{entry.new_value}</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </SectionCard>
+        )}
       </div>
 
-      {/* Page Editor Modal */}
       <Dialog open={showPageModal} onOpenChange={setShowPageModal}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
@@ -449,7 +535,7 @@ export function SuperAdminSettings() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('title')} *</label>
-                <input type="text" value={pageForm.title} onChange={e => { const t = e.target.value; setPageForm(p => ({ ...p, title: t, slug: editPage ? p.slug : t.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') })); setPageErrors(prev => ({ ...prev, title: '' })) }}
+                <input type="text" value={pageForm.title} onChange={e => { const val = e.target.value; setPageForm(p => ({ ...p, title: val, slug: editPage ? p.slug : val.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') })); setPageErrors(prev => ({ ...prev, title: '' })) }}
                   className={`w-full rounded-lg border bg-white px-3 py-2 text-sm dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 outline-none ${pageErrors.title ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
                   placeholder={t('page_title_placeholder')} />
                 {pageErrors.title && <p className="mt-1 text-xs text-red-500">{pageErrors.title}</p>}
@@ -494,7 +580,6 @@ export function SuperAdminSettings() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation */}
       <Dialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
