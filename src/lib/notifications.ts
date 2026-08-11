@@ -65,16 +65,27 @@ export async function notifyBookingResponded(bookingId: string, tenantId: string
 }
 
 export async function notifyPropertyAdded(propertyId: string, ownerName: string, propertyTitle: string, ownerId?: string) {
+  const { data: property } = await supabase
+    .from('properties')
+    .select('province, district')
+    .eq('id', propertyId)
+    .single()
+
+  if (!property) return
+
   const { data: users } = await supabase
     .from('profiles')
     .select('user_id')
+    .eq('role', 'tenant')
+    .not('user_id', 'eq', ownerId || '')
+    .limit(100)
+
   if (!users || users.length === 0) return
   const notifications = users
-    .filter(u => u.user_id !== ownerId)
     .map(u => ({
       user_id: u.user_id,
       title: 'New Property Added',
-      body: `${ownerName} added "${propertyTitle}"`,
+      body: `${ownerName} added "${propertyTitle}" in ${property.district || property.province || 'Rwanda'}`,
       type: 'info' as const,
       data: { property_id: propertyId },
       is_read: false,

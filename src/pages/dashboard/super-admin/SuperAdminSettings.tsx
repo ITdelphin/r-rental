@@ -379,7 +379,7 @@ export function SuperAdminSettings() {
                       {logoUrl ? (
                         <img src={logoUrl} alt="" className="h-10 w-auto" />
                       ) : (
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/20 text-lg font-bold text-white">R</div>
+                        <img src="/images/easyrentlogo.jpeg" alt="" className="h-10 w-auto rounded" />
                       )}
                     </div>
                   </div>

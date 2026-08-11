@@ -15,6 +15,10 @@ interface DashboardStats {
   pendingProperties: number
   openComplaints: number
   totalViews: number
+  averageRating?: string
+  savedProperties?: number
+  unreadMessages?: number
+  reviewsGiven?: number
 }
 
 const CARD_STYLES: Record<string, string> = {
@@ -33,30 +37,82 @@ export function DashboardHome() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
 
+  const isAdmin = profile?.role === 'super_admin' || profile?.role === 'admin'
+  const isOwner = profile?.role === 'owner' || profile?.role === 'agent'
+
   useEffect(() => {
     async function fetchStats() {
       try {
-        const [profiles, properties, bookings, complaints, payments] = await Promise.all([
-          supabase.from('profiles').select('id', { count: 'exact', head: true }),
-          supabase.from('properties').select('id, status, views_count', { count: 'exact', head: false }),
-          supabase.from('bookings').select('id', { count: 'exact', head: true }),
-          supabase.from('complaints').select('id', { count: 'exact', head: false }).eq('status', 'open'),
-          supabase.from('payments').select('amount').eq('status', 'completed'),
-        ])
-        const totalProperties = properties.count || 0
-        const pendingProps = (properties.data as Array<{ status: string; views_count: number }> | null)?.filter(p => p.status === 'pending_approval').length || 0
-        const totalViews = (properties.data as Array<{ status: string; views_count: number }> | null)?.reduce((s, p) => s + (p.views_count || 0), 0) || 0
-        const totalRevenue = (payments.data as Array<{ amount: number }> | null)?.reduce((s, p) => s + (p.amount || 0), 0) || 0
+        if (isAdmin) {
+          const [profiles, properties, bookings, complaints, payments] = await Promise.all([
+            supabase.from('profiles').select('id', { count: 'exact', head: true }),
+            supabase.from('properties').select('id, status, views_count', { count: 'exact', head: false }),
+            supabase.from('bookings').select('id', { count: 'exact', head: true }),
+            supabase.from('complaints').select('id', { count: 'exact', head: false }).eq('status', 'open'),
+            supabase.from('payments').select('amount').eq('status', 'completed'),
+          ])
+          const totalProperties = properties.count || 0
+          const pendingProps = (properties.data as Array<{ status: string; views_count: number }> | null)?.filter(p => p.status === 'pending_approval').length || 0
+          const totalViews = (properties.data as Array<{ status: string; views_count: number }> | null)?.reduce((s, p) => s + (p.views_count || 0), 0) || 0
+          const totalRevenue = (payments.data as Array<{ amount: number }> | null)?.reduce((s, p) => s + (p.amount || 0), 0) || 0
 
-        setStats({
-          totalUsers: profiles.count || 0,
-          totalProperties,
-          totalBookings: bookings.count || 0,
-          totalRevenue,
-          pendingProperties: pendingProps,
-          openComplaints: complaints.count || 0,
-          totalViews,
-        })
+          setStats({
+            totalUsers: profiles.count || 0,
+            totalProperties,
+            totalBookings: bookings.count || 0,
+            totalRevenue,
+            pendingProperties: pendingProps,
+            openComplaints: complaints.count || 0,
+            totalViews,
+          })
+        } else if (profile?.user_id) {
+          const userId = profile.user_id
+          if (isOwner) {
+            const [myProperties, myBookings, myPayments, myReviews] = await Promise.all([
+              supabase.from('properties').select('id, views_count', { count: 'exact', head: false }).eq('owner_id', userId),
+              supabase.from('bookings').select('id', { count: 'exact', head: true }).eq('owner_id', userId).eq('status', 'approved'),
+              supabase.from('payments').select('amount').eq('payee_id', userId).eq('status', 'completed'),
+              supabase.from('reviews').select('rating').in('property_id',
+                ((await supabase.from('properties').select('id').eq('owner_id', userId)).data || []).map((p: { id: string }) => p.id)
+              ),
+            ])
+            const totalViews = (myProperties.data as Array<{ views_count: number }> | null)?.reduce((s, p) => s + (p.views_count || 0), 0) || 0
+            const totalEarnings = (myPayments.data as Array<{ amount: number }> | null)?.reduce((s, p) => s + (p.amount || 0), 0) || 0
+            const ratings = (myReviews.data as Array<{ rating: number }> | null) || []
+            const avgRating = ratings.length > 0 ? (ratings.reduce((s, r) => s + r.rating, 0) / ratings.length).toFixed(1) : '0'
+
+            setStats({
+              totalUsers: 0,
+              totalProperties: myProperties.count || 0,
+              totalBookings: myBookings.count || 0,
+              totalRevenue: totalEarnings,
+              pendingProperties: 0,
+              openComplaints: 0,
+              totalViews,
+              averageRating: avgRating,
+            })
+          } else {
+            const [myBookings, myFavorites, myMessages, myReviews] = await Promise.all([
+              supabase.from('bookings').select('id', { count: 'exact', head: true }).eq('tenant_id', userId).eq('status', 'approved'),
+              supabase.from('favorites').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+              supabase.from('messages').select('id', { count: 'exact', head: true }).or(`sender_id.eq.${userId},receiver_id.eq.${userId}`).eq('is_read', false),
+              supabase.from('reviews').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+            ])
+
+            setStats({
+              totalUsers: 0,
+              totalProperties: 0,
+              totalBookings: myBookings.count || 0,
+              totalRevenue: 0,
+              pendingProperties: 0,
+              openComplaints: 0,
+              totalViews: 0,
+              savedProperties: myFavorites.count || 0,
+              unreadMessages: myMessages.count || 0,
+              reviewsGiven: myReviews.count || 0,
+            })
+          }
+        }
       } catch {
         setStats({ totalUsers: 0, totalProperties: 0, totalBookings: 0, totalRevenue: 0, pendingProperties: 0, openComplaints: 0, totalViews: 0 })
       } finally {
@@ -64,7 +120,7 @@ export function DashboardHome() {
       }
     }
     fetchStats()
-  }, [])
+  }, [isAdmin, isOwner, profile?.user_id])
 
   if (authLoading || loading) {
     return (
@@ -75,9 +131,6 @@ export function DashboardHome() {
       </div>
     )
   }
-
-  const isAdmin = profile?.role === 'super_admin' || profile?.role === 'admin'
-  const isOwner = profile?.role === 'owner' || profile?.role === 'agent'
 
   const adminCards = [
     { icon: Users, label: t('total_users'), value: stats?.totalUsers ?? 0, style: CARD_STYLES.users },
@@ -91,16 +144,16 @@ export function DashboardHome() {
 
   const ownerCards = [
     { icon: Building2, label: t('total_properties'), value: stats?.totalProperties ?? 0, style: CARD_STYLES.properties },
-    { icon: Calendar, label: t('active_bookings'), value: t('zero'), style: CARD_STYLES.bookings },
-    { icon: DollarSign, label: t('monthly_earnings'), value: t('rwf_zero'), style: CARD_STYLES.revenue },
-    { icon: Star, label: t('average_rating'), value: t('zero'), style: CARD_STYLES.views },
+    { icon: Calendar, label: t('active_bookings'), value: stats?.totalBookings ?? 0, style: CARD_STYLES.bookings },
+    { icon: DollarSign, label: `${t('total_earnings')} (${t('rwf')})`, value: (stats?.totalRevenue ?? 0).toLocaleString(), style: CARD_STYLES.revenue },
+    { icon: Star, label: t('average_rating'), value: stats?.averageRating ?? '0', style: CARD_STYLES.views },
   ]
 
   const tenantCards = [
-    { icon: Calendar, label: t('active_bookings'), value: t('zero'), style: CARD_STYLES.bookings },
-    { icon: Heart, label: t('saved_properties'), value: t('zero'), style: CARD_STYLES.views },
-    { icon: MessageSquare, label: t('unread_messages'), value: t('zero'), style: CARD_STYLES.complaints },
-    { icon: Star, label: t('reviews_given'), value: t('zero'), style: CARD_STYLES.pending },
+    { icon: Calendar, label: t('active_bookings'), value: stats?.totalBookings ?? 0, style: CARD_STYLES.bookings },
+    { icon: Heart, label: t('saved_properties'), value: stats?.savedProperties ?? 0, style: CARD_STYLES.views },
+    { icon: MessageSquare, label: t('unread_messages'), value: stats?.unreadMessages ?? 0, style: CARD_STYLES.complaints },
+    { icon: Star, label: t('reviews_given'), value: stats?.reviewsGiven ?? 0, style: CARD_STYLES.pending },
   ]
 
   const statCards = isAdmin ? adminCards : isOwner ? ownerCards : tenantCards

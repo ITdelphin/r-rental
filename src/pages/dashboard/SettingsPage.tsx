@@ -715,7 +715,7 @@ function SystemTab() {
                   {heroBgUrl && <img src={heroBgUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />}
                   <div className="absolute inset-0 bg-black/40" />
                   <div className="relative flex h-full items-center p-6">
-                    {logoUrl ? <img src={logoUrl} alt="" className="h-10 w-auto" /> : <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/20 text-lg font-bold text-white">R</div>}
+                    {logoUrl ? <img src={logoUrl} alt="" className="h-10 w-auto" /> : <img src="/images/easyrentlogo.jpeg" alt="" className="h-10 w-auto rounded" />}
                   </div>
                 </div>
               </CardContent>

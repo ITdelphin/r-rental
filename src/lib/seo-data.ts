@@ -6,7 +6,7 @@ export function organizationLD() {
     '@type': 'Organization',
     name: 'EasyRent',
     url: SITE_URL,
-    logo: `${SITE_URL}/images/color.png`,
+    logo: `${SITE_URL}/images/easyrentlogo.jpeg`,
     description: "Rwanda's leading property rental management platform",
     address: {
       '@type': 'PostalAddress',
@@ -40,7 +40,7 @@ export function localBusinessLD() {
     '@type': 'LocalBusiness',
     name: 'EasyRent',
     url: SITE_URL,
-    logo: `${SITE_URL}/images/color.png`,
+    logo: `${SITE_URL}/images/easyrentlogo.jpeg`,
     description: "Rwanda's leading property rental management platform",
     address: {
       '@type': 'PostalAddress',

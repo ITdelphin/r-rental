@@ -141,6 +141,11 @@ export const reviewApi = {
     createAuditLog('review_created', 'review', created.id, { property_id: created.property_id, rating: created.rating })
     return created
   },
+  delete: async (id: string) => {
+    const { error } = await supabase.from('reviews').delete().eq('id', id)
+    if (error) throw error
+    createAuditLog('review_deleted', 'review', id)
+  },
 }
 
 export const favoriteApi = {

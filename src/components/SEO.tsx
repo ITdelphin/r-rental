@@ -2,7 +2,7 @@ import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
 
 const SITE_URL = 'https://rwanda-easyrent.vercel.app'
-const DEFAULT_IMAGE = '/images/color.png'
+const DEFAULT_IMAGE = '/images/easyrentlogo.jpeg'
 
 interface SEOProps {
   title?: string
@@ -28,10 +28,14 @@ export function SEO({
   const currentUrl = url || `${SITE_URL}${window.location.pathname}`
   const ogImage = image?.startsWith('http') ? image : `${SITE_URL}${image || DEFAULT_IMAGE}`
 
-  const langAlternates = ['en', 'rw', 'fr', 'sw'].map((lang) => ({
-    lang,
-    href: `${SITE_URL}${window.location.pathname}`,
-  }))
+  const langAlternates = ['en', 'rw', 'fr', 'sw'].map((lang) => {
+    const url = new URL(window.location.href)
+    url.searchParams.set('lang', lang)
+    return {
+      lang,
+      href: url.toString(),
+    }
+  })
 
   return (
     <Helmet>

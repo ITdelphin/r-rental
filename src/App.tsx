@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
+import { ErrorBoundary } from '@/components/ui/error-boundary'
 import { PublicLayout } from '@/components/layout/PublicLayout'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
@@ -14,6 +15,7 @@ import { PrivacyPage } from '@/pages/public/PrivacyPage'
 import { TermsPage } from '@/pages/public/TermsPage'
 import { PropertiesPage } from '@/pages/public/PropertiesPage'
 import { PropertyDetailPage } from '@/pages/public/PropertyDetailPage'
+import { ComparePage } from '@/components/ui/compare-properties'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { RegisterPage } from '@/pages/auth/RegisterPage'
 import { AuthCallbackPage } from '@/pages/auth/AuthCallbackPage'
@@ -29,6 +31,7 @@ import { EditPropertyPage } from '@/pages/dashboard/owner/EditPropertyPage'
 import { AdminUsers } from '@/pages/dashboard/admin/AdminUsers'
 import { AdminReports } from '@/pages/dashboard/admin/AdminReports'
 import { SettingsPage } from '@/pages/dashboard/SettingsPage'
+import { AccountSettingsPage } from '@/pages/dashboard/AccountSettingsPage'
 import { MessagesPage } from '@/pages/dashboard/MessagesPage'
 import { NotificationsPage } from '@/pages/dashboard/NotificationsPage'
 import { ReviewsPage } from '@/pages/dashboard/ReviewsPage'
@@ -75,6 +78,7 @@ function AppRoutes() {
           <Route path="/faq" element={<FaqPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terms" element={<TermsPage />} />
+          <Route path="/compare" element={<ComparePage />} />
         </Route>
 
         {/* Auth routes */}
@@ -90,7 +94,7 @@ function AppRoutes() {
             {/* Common */}
             <Route path="/dashboard" element={<DashboardHome />} />
             <Route path="/dashboard/settings" element={<SettingsPage />} />
-            <Route path="/dashboard/account" element={<SettingsPage />} />
+            <Route path="/dashboard/account" element={<AccountSettingsPage />} />
             <Route path="/dashboard/messages" element={<MessagesPage />} />
             <Route path="/dashboard/notifications" element={<NotificationsPage />} />
             <Route path="/dashboard/reviews" element={<ReviewsPage />} />
@@ -129,7 +133,9 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <AppRoutes />
+        <ErrorBoundary>
+          <AppRoutes />
+        </ErrorBoundary>
       </BrowserRouter>
       <Toaster position="top-right" />
     </QueryClientProvider>
