@@ -6,13 +6,11 @@ import { sendAccountNotification } from '@/lib/email'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { CardSkeleton } from '@/components/ui/loading'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
-import { Camera, Save, Key, Trash2, Loader2, AlertTriangle, Upload, User, Shield, Bell, Palette, Settings, Sun, Moon, Monitor, Building, Image, FileText, RefreshCw, X, Plus, Edit, Eye, Globe, AlertCircle, Check } from 'lucide-react'
+import { Camera, Save, Key, Trash2, Loader2, AlertTriangle, Upload, User, Shield, Bell, Palette, Settings, Sun, Moon, Monitor, Building, Image, RefreshCw, X, Eye, Globe, AlertCircle, Check, Languages } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
-import type { CmsPage } from '@/types'
 
 type Tab = 'profile' | 'security' | 'notifications' | 'appearance' | 'system'
 
@@ -428,12 +426,12 @@ function AppearanceTab() {
   )
 }
 
-type SystemSection = 'general' | 'branding' | 'pages'
+type SystemSection = 'general' | 'branding' | 'localization'
 
 const SYSTEM_TABS: { key: SystemSection; labelKey: string; icon: typeof Building }[] = [
   { key: 'general', labelKey: 'general_settings', icon: Building },
   { key: 'branding', labelKey: 'branding', icon: Image },
-  { key: 'pages', labelKey: 'cms_pages', icon: FileText },
+  { key: 'localization', labelKey: 'localization', icon: Languages },
 ]
 
 function UploadZone({ label, accept, currentUrl, onUpload, onRemove, uploading, uploadLabel }: {
@@ -488,7 +486,7 @@ function UploadZone({ label, accept, currentUrl, onUpload, onRemove, uploading, 
 }
 
 function SystemTab() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [section, setSection] = useState<SystemSection>('general')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState<string | null>(null)
@@ -505,13 +503,9 @@ function SystemTab() {
   const [faviconUrl, setFaviconUrl] = useState('')
   const [uploading, setUploading] = useState<string | null>(null)
 
-  const [pages, setPages] = useState<CmsPage[]>([])
-  const [pagesLoading, setPagesLoading] = useState(true)
-  const [editPage, setEditPage] = useState<CmsPage | null>(null)
-  const [showPageModal, setShowPageModal] = useState(false)
-  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
-  const [pageForm, setPageForm] = useState({ title: '', slug: '', content: '', meta_title: '', meta_description: '', is_published: true })
-  const [pageErrors, setPageErrors] = useState<Record<string, string>>({})
+  const [defaultLanguage, setDefaultLanguage] = useState('en')
+  const [baseCurrency, setBaseCurrency] = useState('RWF')
+  const [localizationDirty, setLocalizationDirty] = useState(false)
 
   const fetchAll = useCallback(async () => {
     setLoading(true)
@@ -527,21 +521,14 @@ function SystemTab() {
         if (map.hero_background) setHeroBgUrl(map.hero_background)
         if (map.logo_url) setLogoUrl(map.logo_url)
         if (map.favicon_url) setFaviconUrl(map.favicon_url)
+        if (map.default_language) setDefaultLanguage(map.default_language)
+        if (map.base_currency) setBaseCurrency(map.base_currency)
       }
     } catch { toast.error(t('failed_to_load_settings')) }
     setLoading(false)
   }, [t])
 
-  useEffect(() => { fetchAll(); fetchPages() }, [fetchAll])
-
-  const fetchPages = async () => {
-    setPagesLoading(true)
-    try {
-      const { data } = await supabase.from('cms_pages').select('*').order('created_at', { ascending: false })
-      setPages((data || []) as unknown as CmsPage[])
-    } catch { setPages([]) }
-    setPagesLoading(false)
-  }
+  useEffect(() => { fetchAll() }, [fetchAll])
 
   const upsertSetting = async (key: string, value: string) => {
     const { error } = await supabase.from('settings').upsert({ key, value } as never, { onConflict: 'key' })
@@ -567,6 +554,18 @@ function SystemTab() {
     setSaving(null)
   }
 
+  const saveLocalization = async () => {
+    setSaving('localization')
+    try {
+      await upsertSetting('default_language', defaultLanguage)
+      await upsertSetting('base_currency', baseCurrency)
+      toast.success(t('settings_saved'))
+      setLocalizationDirty(false)
+      await i18n.changeLanguage(defaultLanguage)
+    } catch (err: unknown) { toast.error(err instanceof Error ? err.message : t('failed_to_save')) }
+    setSaving(null)
+  }
+
   const uploadMedia = async (file: File, folder: string): Promise<string | null> => {
     const ext = file.name.split('.').pop()
     const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
@@ -583,67 +582,6 @@ function SystemTab() {
       if (url) { setter(url); await upsertSetting(field, url); toast.success(`${t('uploaded')} ${t('successfully')}`) }
     } catch (err: unknown) { toast.error(err instanceof Error ? err.message : t('upload_failed')) }
     setUploading(null)
-  }
-
-  const openNewPage = () => {
-    setEditPage(null)
-    setPageForm({ title: '', slug: '', content: '', meta_title: '', meta_description: '', is_published: true })
-    setPageErrors({})
-    setShowPageModal(true)
-  }
-
-  const openEditPage = (page: CmsPage) => {
-    setEditPage(page)
-    setPageForm({ title: page.title, slug: page.slug, content: page.content || '', meta_title: page.meta_title || '', meta_description: page.meta_description || '', is_published: page.is_published })
-    setPageErrors({})
-    setShowPageModal(true)
-  }
-
-  const validatePageForm = () => {
-    const errors: Record<string, string> = {}
-    if (!pageForm.title.trim()) errors.title = t('required')
-    if (!pageForm.slug.trim()) errors.slug = t('required')
-    setPageErrors(errors)
-    return Object.keys(errors).length === 0
-  }
-
-  const savePage = async () => {
-    if (!validatePageForm()) return
-    setSaving('page')
-    try {
-      const payload = {
-        title: pageForm.title.trim(),
-        slug: pageForm.slug.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
-        content: pageForm.content,
-        meta_title: pageForm.meta_title,
-        meta_description: pageForm.meta_description,
-        is_published: pageForm.is_published,
-      }
-      let error
-      if (editPage) {
-        const res = await supabase.from('cms_pages').update(payload as never).eq('id', editPage.id)
-        error = res.error
-      } else {
-        const res = await supabase.from('cms_pages').insert(payload as never)
-        error = res.error
-      }
-      if (error) throw error
-      toast.success(editPage ? t('page_updated') : t('page_created'))
-      setShowPageModal(false)
-      fetchPages()
-    } catch (err: unknown) { toast.error(err instanceof Error ? err.message : t('failed')) }
-    setSaving(null)
-  }
-
-  const deletePage = async () => {
-    if (!deleteTarget) return
-    try {
-      const { error } = await supabase.from('cms_pages').delete().eq('id', deleteTarget)
-      if (error) throw error
-      toast.success(t('page_deleted'))
-      setDeleteTarget(null)
-      fetchPages()
-    } catch (err: unknown) { toast.error(err instanceof Error ? err.message : t('failed_to_delete')) }
   }
 
   if (loading) return (
@@ -724,115 +662,41 @@ function SystemTab() {
         </div>
       )}
 
-      {section === 'pages' && (
-        <SectionCard title={t('cms_pages')} description={t('manage_cms_pages')} icon={FileText}>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500">{t('total')}:</span>
-              <span className="inline-flex items-center justify-center rounded-full bg-primary-50 dark:bg-primary-900/30 px-2.5 py-0.5 text-sm font-semibold text-primary-700 dark:text-primary-300">{pages.length}</span>
+      {section === 'localization' && (
+        <div className="space-y-6">
+          <SectionCard title={t('localization')} description={t('localization_description')} icon={Languages}>
+            <div className="grid gap-6 sm:grid-cols-2">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('default_language')}</label>
+                <select value={defaultLanguage} onChange={e => { setDefaultLanguage(e.target.value); setLocalizationDirty(true) }}
+                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white px-3 py-2 text-sm dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 outline-none">
+                  <option value="en">English</option>
+                  <option value="rw">Kinyarwanda</option>
+                  <option value="fr">Français</option>
+                  <option value="sw">Kiswahili</option>
+                </select>
+                <p className="mt-1 text-xs text-gray-400">{t('default_language_hint')}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('base_currency')}</label>
+                <select value={baseCurrency} onChange={e => { setBaseCurrency(e.target.value); setLocalizationDirty(true) }}
+                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white px-3 py-2 text-sm dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 outline-none">
+                  <option value="RWF">RWF — Rwandan Franc</option>
+                  <option value="USD">USD — US Dollar</option>
+                  <option value="EUR">EUR — Euro</option>
+                </select>
+                <p className="mt-1 text-xs text-gray-400">{t('base_currency_hint')}</p>
+              </div>
             </div>
-            <Button size="sm" onClick={openNewPage}><Plus className="h-4 w-4 mr-1.5" /> {t('new_page')}</Button>
-          </div>
-          {pagesLoading ? (
-            <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-14 animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800" />)}</div>
-          ) : pages.length === 0 ? (
-            <div className="py-12 text-center">
-              <FileText className="mx-auto h-8 w-8 text-gray-300" />
-              <h3 className="mt-3 text-sm font-medium text-gray-900 dark:text-gray-100">{t('no_pages_yet')}</h3>
-              <p className="mt-1 text-xs text-gray-500">{t('create_first_page')}</p>
-              <Button size="sm" onClick={openNewPage} className="mt-3"><Plus className="h-4 w-4 mr-1.5" /> {t('new_page')}</Button>
+            <div className="mt-6 flex items-center justify-between border-t border-gray-100 dark:border-gray-800 pt-4">
+              <span className="text-xs text-gray-400">{localizationDirty ? t('unsaved_changes') : t('all_changes_saved')}</span>
+              <Button disabled={saving === 'localization'} onClick={saveLocalization}>
+                {saving === 'localization' ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> {t('saving')}...</> : <><Save className="h-4 w-4 mr-2" /> {t('save_changes')}</>}
+              </Button>
             </div>
-          ) : (
-            <div className="space-y-2">
-              {pages.map(page => (
-                <div key={page.id} className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <FileText className="h-5 w-5 shrink-0 text-gray-400" />
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{page.title}</p>
-                        <span className={`shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${page.is_published ? 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
-                          }`}>{page.is_published ? t('published') : t('draft')}</span>
-                      </div>
-                      <p className="text-xs text-gray-400 font-mono">/{page.slug}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Button variant="ghost" size="sm" onClick={() => openEditPage(page)}><Edit className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="sm" className="text-red-500" onClick={() => setDeleteTarget(page.id)}><Trash2 className="h-4 w-4" /></Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </SectionCard>
+          </SectionCard>
+        </div>
       )}
-
-      <Dialog open={showPageModal} onOpenChange={setShowPageModal}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{editPage ? t('edit_page') : t('new_page')}</DialogTitle>
-            <DialogDescription>{t('create_edit_page_description')}</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('title')} *</label>
-                <input type="text" value={pageForm.title} onChange={e => { const t = e.target.value; setPageForm(p => ({ ...p, title: t, slug: editPage ? p.slug : t.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') })); setPageErrors(prev => ({ ...prev, title: '' })) }}
-                  className={`w-full rounded-lg border bg-white px-3 py-2 text-sm dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 outline-none ${pageErrors.title ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
-                  placeholder={t('page_title_placeholder')} />
-                {pageErrors.title && <p className="mt-1 text-xs text-red-500">{pageErrors.title}</p>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('slug')} *</label>
-                <input type="text" value={pageForm.slug} onChange={e => { setPageForm(p => ({ ...p, slug: e.target.value })); setPageErrors(prev => ({ ...prev, slug: '' })) }}
-                  className={`w-full rounded-lg border bg-white px-3 py-2 text-sm dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 outline-none ${pageErrors.slug ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
-                  placeholder="about-us" />
-                <p className="mt-1 text-xs text-gray-400">{t('url_prefix')}/<span className="text-primary-600 font-mono">{pageForm.slug || '...'}</span></p>
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('content')}</label>
-              <textarea value={pageForm.content} onChange={e => setPageForm(p => ({ ...p, content: e.target.value }))} rows={8}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white px-3 py-2 text-sm dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 outline-none"
-                placeholder={t('page_content_placeholder')} />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('meta_title')}</label>
-                <input type="text" value={pageForm.meta_title} onChange={e => setPageForm(p => ({ ...p, meta_title: e.target.value }))} className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white px-3 py-2 text-sm dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 outline-none" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('meta_description')}</label>
-                <input type="text" value={pageForm.meta_description} onChange={e => setPageForm(p => ({ ...p, meta_description: e.target.value }))} className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white px-3 py-2 text-sm dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 outline-none" />
-              </div>
-            </div>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" checked={pageForm.is_published} onChange={e => setPageForm(p => ({ ...p, is_published: e.target.checked }))} className="rounded" />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('published')}</span>
-            </label>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowPageModal(false)}>{t('cancel')}</Button>
-            <Button onClick={savePage} disabled={saving === 'page'}>
-              {saving === 'page' ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> {t('saving')}...</> : <><Save className="h-4 w-4 mr-2" /> {editPage ? t('update') : t('create')}</>}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t('delete_page')}</DialogTitle>
-            <DialogDescription>{t('delete_page_warning')}</DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteTarget(null)}>{t('cancel')}</Button>
-            <Button variant="destructive" onClick={deletePage}>{t('delete')}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }
