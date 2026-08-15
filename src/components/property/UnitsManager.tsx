@@ -35,7 +35,7 @@ export function UnitsManager({ propertyId }: { propertyId: string }) {
     setLoading(false)
   }
 
-  useEffect(() => { load() }, [propertyId]) // eslint-disable-line @typescript-eslint/no-empty-function
+  useEffect(() => { load() }, [propertyId])
 
   const addUnit = async () => {
     const rent = Number(form.monthly_rent)

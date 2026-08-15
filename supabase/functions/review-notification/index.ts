@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js'
 import { corsHeaders, handleCors } from '../_shared/cors.ts'
+import { requireUser, UnauthorizedError } from '../_shared/auth.ts'
 import { createTransporter, getFromEmail } from '../_shared/smtp.ts'
 import { buildEmailHtml } from '../_shared/templates.ts'
 
@@ -8,6 +9,7 @@ Deno.serve(async (req: Request) => {
   if (corsResponse) return corsResponse
 
   try {
+    const { user } = await requireUser(req)
     const { review_id } = await req.json()
     if (!review_id) {
       return new Response(JSON.stringify({ error: 'Missing review_id' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
@@ -24,6 +26,10 @@ Deno.serve(async (req: Request) => {
       .single()
     if (error || !review) {
       return new Response(JSON.stringify({ error: 'Review not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+
+    if (user.id !== review.user_id) {
+      return new Response(JSON.stringify({ error: 'Forbidden: only the review author can trigger this' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
     const transporter = createTransporter()
@@ -69,9 +75,10 @@ Deno.serve(async (req: Request) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (err) {
+    const status = err instanceof UnauthorizedError ? 401 : 500
     const message = err instanceof Error ? err.message : 'Unknown error'
     return new Response(JSON.stringify({ error: message }), {
-      status: 500,
+      status,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }

@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js'
 import { corsHeaders, handleCors } from '../_shared/cors.ts'
+import { requireUser, UnauthorizedError } from '../_shared/auth.ts'
 import { createTransporter, getFromEmail } from '../_shared/smtp.ts'
 import { buildEmailHtml } from '../_shared/templates.ts'
 
@@ -8,6 +9,7 @@ Deno.serve(async (req: Request) => {
   if (corsResponse) return corsResponse
 
   try {
+    const { user } = await requireUser(req)
     const { message_id } = await req.json()
     if (!message_id) {
       return new Response(JSON.stringify({ error: 'Missing message_id' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
@@ -24,6 +26,10 @@ Deno.serve(async (req: Request) => {
       .single()
     if (error || !message) {
       return new Response(JSON.stringify({ error: 'Message not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+
+    if (user.id !== message.sender_id && user.id !== message.receiver_id) {
+      return new Response(JSON.stringify({ error: 'Forbidden: not a participant of this message' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
     if (message.sender_id === message.receiver_id) return new Response(JSON.stringify({ success: true }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
@@ -71,9 +77,10 @@ Deno.serve(async (req: Request) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (err) {
+    const status = err instanceof UnauthorizedError ? 401 : 500
     const message = err instanceof Error ? err.message : 'Unknown error'
     return new Response(JSON.stringify({ error: message }), {
-      status: 500,
+      status,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }

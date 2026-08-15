@@ -1,13 +1,26 @@
 import { createClient } from 'npm:@supabase/supabase-js'
 import { corsHeaders, handleCors } from '../_shared/cors.ts'
+import { requireUser, UnauthorizedError } from '../_shared/auth.ts'
 import { createTransporter, getFromEmail } from '../_shared/smtp.ts'
 import { buildEmailHtml } from '../_shared/templates.ts'
+
+const IMAGE_DOMAINS = ['rwanda-easyrent.vercel.app', 'supabase.co']
+
+function isAllowedImageUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url)
+    return IMAGE_DOMAINS.some(d => parsed.hostname === d || parsed.hostname.endsWith('.' + d))
+  } catch {
+    return false
+  }
+}
 
 Deno.serve(async (req: Request) => {
   const corsResponse = handleCors(req)
   if (corsResponse) return corsResponse
 
   try {
+    const { user } = await requireUser(req)
     const { property_id, owner_name, property_title, property_image } = await req.json()
     if (!property_id || !property_title) {
       return new Response(JSON.stringify({ error: 'Missing property_id or property_title' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
@@ -23,11 +36,16 @@ Deno.serve(async (req: Request) => {
       .eq('id', property_id)
       .single()
 
+    if (!property || property.owner_id !== user.id) {
+      return new Response(JSON.stringify({ error: 'Forbidden: you must be the property owner' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+
     const { data: users } = await supabase
       .from('profiles')
       .select('user_id, email, full_name')
       .not('email', 'is', null)
       .neq('email', '')
+      .neq('user_id', user.id)
       .limit(500)
 
     if (!users || users.length === 0) {
@@ -58,11 +76,12 @@ Deno.serve(async (req: Request) => {
     })
 
     const prepareImage = async () => {
-      if (!property_image) return undefined
+      if (!property_image || !isAllowedImageUrl(property_image)) return undefined
       try {
         const imgRes = await fetch(property_image)
         if (!imgRes.ok) return undefined
         const contentType = imgRes.headers.get('Content-Type') || 'image/jpeg'
+        if (!contentType.startsWith('image/')) return undefined
         const buf = await imgRes.arrayBuffer()
         return {
           attachment: { filename: 'property.jpg', content: new Uint8Array(buf), contentType, contentDisposition: 'inline', cid: 'property-image' },
@@ -107,9 +126,10 @@ Deno.serve(async (req: Request) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (err) {
+    const status = err instanceof UnauthorizedError ? 401 : 500
     const message = err instanceof Error ? err.message : 'Unknown error'
     return new Response(JSON.stringify({ error: message }), {
-      status: 500,
+      status,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }

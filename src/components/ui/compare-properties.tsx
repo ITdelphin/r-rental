@@ -1,4 +1,3 @@
-import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useCompareStore } from '@/store/compareStore'
 import { formatPrice } from '@/lib/utils'

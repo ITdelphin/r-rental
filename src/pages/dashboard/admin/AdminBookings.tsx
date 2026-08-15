@@ -76,7 +76,7 @@ export function AdminBookings() {
       const raw = (data || []) as unknown as BookingWithAll[]
 
       const profileIds = [...new Set(raw.flatMap(b => [b.tenant_id, b.owner_id]).filter(Boolean))]
-      let profileMap: Record<string, Profile> = {}
+      const profileMap: Record<string, Profile> = {}
       if (profileIds.length > 0) {
         const { data: profiles } = await supabase
           .from('profiles')

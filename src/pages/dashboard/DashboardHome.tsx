@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatsSkeleton } from '@/components/ui/loading'
-import { Building2, Calendar, Heart, MessageSquare, Star, DollarSign, Users, TrendingUp, Activity, UserCheck, Settings, FileText, AlertTriangle, Eye, Zap, Plus } from 'lucide-react'
+import { Building2, Calendar, Heart, MessageSquare, Star, DollarSign, Users, TrendingUp, Activity, Settings, FileText, AlertTriangle, Eye, Zap, Plus } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 interface DashboardStats {

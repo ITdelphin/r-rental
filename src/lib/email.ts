@@ -28,16 +28,8 @@ export async function sendMessageNotification(messageId: string) {
   return triggerEmail('message-notification', { message_id: messageId })
 }
 
-export async function sendReviewNotification(reviewId: string) {
-  return triggerEmail('review-notification', { review_id: reviewId })
-}
-
 export async function sendContactForm(name: string, email: string, subject: string, message: string) {
   return triggerEmail('contact-form', { name, email, subject, message })
-}
-
-export async function sendNewsletterSubscribe(email: string) {
-  return triggerEmail('newsletter', { email })
 }
 
 export async function sendComplaintNotification(complaintId: string, newStatus: string) {

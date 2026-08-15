@@ -6,8 +6,8 @@ import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { TableSkeleton } from '@/components/ui/loading'
 import {
-    AreaChart, Area, BarChart, Bar, LineChart, Line,
-    XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
+    AreaChart, Area, BarChart, Bar,
+    XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts'
 
 interface ReportStats {
@@ -94,8 +94,6 @@ export function AdminReports() {
                 newPropertiesThisMonth: newPropsRes.count ?? 0,
             })
 
-            // Trend charts
-            const bucketDays = days > 30 ? Math.round(days / 12) : 1
             const usersData = (allUsersRes.data || []) as { created_at: string }[]
             const bookingsData = (allBookingsRes.data || []) as { created_at: string }[]
             const paymentsData = (allPaymentsRes.data || []) as { created_at: string; amount: number }[]

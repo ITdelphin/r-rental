@@ -81,6 +81,6 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
       - run: |
-          for func in send-email welcome-email booking-notification message-notification review-notification contact-form newsletter complaint-notification account-notification new-property-notification; do
+          for func in welcome-email booking-notification message-notification review-notification contact-form newsletter complaint-notification account-notification new-property-notification delete-user; do
             supabase functions deploy $func --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
           done

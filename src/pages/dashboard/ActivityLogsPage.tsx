@@ -105,7 +105,7 @@ export function ActivityLogsPage() {
 
             setLogs(reset ? result : prev => [...prev, ...result])
             setHasMore(result.length === PAGE_SIZE)
-        } catch (err) {
+        } catch {
             toast.error(t('failed_to_load_logs'))
             if (reset) setLogs([])
         } finally {
@@ -182,10 +182,9 @@ export function ActivityLogsPage() {
                             <div className="absolute left-8 top-0 bottom-0 w-px bg-gradient-to-b from-primary-500 via-gray-200 to-gray-100 dark:via-gray-700 dark:to-gray-800" />
 
                             <div className="divide-y divide-gray-100 dark:divide-gray-800">
-                                {logs.map((log, idx) => {
+                                {logs.map((log) => {
                                     const config = ACTION_CONFIG[log.action] || { icon: Activity, color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400 ring-1 ring-gray-200 dark:ring-gray-700', label: log.action }
                                     const IconComp = config.icon
-                                    const isFirst = idx === 0
                                     return (
                                         <div key={log.id} className="relative flex items-start gap-5 px-4 py-5 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
                                             {/* Timeline dot */}

@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js'
 import { corsHeaders, handleCors } from '../_shared/cors.ts'
+import { requireUser, UnauthorizedError } from '../_shared/auth.ts'
 import { createTransporter, getAdminEmail, getFromEmail } from '../_shared/smtp.ts'
 import { buildEmailHtml } from '../_shared/templates.ts'
 
@@ -8,14 +9,22 @@ Deno.serve(async (req: Request) => {
   if (corsResponse) return corsResponse
 
   try {
+    const { user } = await requireUser(req)
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
     const { user_id, event, details } = await req.json()
     if (!user_id || !event) {
       return new Response(JSON.stringify({ error: 'Missing user_id or event' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    const { data: caller } = await supabase.from('profiles').select('role').eq('user_id', user.id).single()
+    const isAdmin = caller && ['admin', 'super_admin'].includes(caller.role)
+    if (user.id !== user_id && !isAdmin) {
+      return new Response(JSON.stringify({ error: 'Forbidden: not allowed to notify this account' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
 
     const { data: profile } = await supabase.from('profiles').select('*').eq('user_id', user_id).single()
     if (!profile) {
@@ -156,9 +165,10 @@ Deno.serve(async (req: Request) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (err) {
+    const status = err instanceof UnauthorizedError ? 401 : 500
     const message = err instanceof Error ? err.message : 'Unknown error'
     return new Response(JSON.stringify({ error: message }), {
-      status: 500,
+      status,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }

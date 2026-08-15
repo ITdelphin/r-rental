@@ -13,7 +13,7 @@ import { LocationSelect } from '@/components/ui/LocationSelect'
 import { notifyPropertyAdded } from '@/lib/notifications'
 import { sendNewPropertyNotification } from '@/lib/email'
 import {
-  ChevronLeft, Building2, Save, Upload, Check, X, AlertCircle, ImageIcon,
+  ChevronLeft, Save, Upload, Check, X, AlertCircle, ImageIcon,
   MapPin, DollarSign, Home, Sparkles, Loader2, Trash2
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -455,7 +455,7 @@ export function AddPropertyPage() {
         {/* Section 4: Amenities */}
         <FormSection icon={Sparkles} title={t('amenities_and_features')} subtitle={t('what_does_your_property_offer')} step={4}>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {amenityFields.map(({ key, label }) => {
+            {amenityFields.map(({ key }) => {
               const isOn = formValues[key as keyof PropertyFormData] as boolean
               return (
                 <button

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { ListSkeleton } from '@/components/ui/loading'
 import { EmptyState } from '@/components/ui/empty-state'
-import { Calendar, Home, CheckCircle, XCircle, Clock, Eye, User, Phone, Mail, Sparkles, Building2, ChevronDown, ChevronUp } from 'lucide-react'
+import { Calendar, CheckCircle, XCircle, Clock, Eye, User, Phone, Mail, Sparkles, Building2, ChevronDown, ChevronUp } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
@@ -13,7 +13,6 @@ import { sendBookingNotification } from '@/lib/email'
 import { createNotification } from '@/lib/notifications'
 import { createAuditLog } from '@/lib/audit'
 import { useAuth } from '@/hooks/useAuth'
-import { formatPrice } from '@/lib/utils'
 import type { Profile } from '@/types'
 import toast from 'react-hot-toast'
 
@@ -78,7 +77,7 @@ export function OwnerBookings() {
       const raw = (data || []) as unknown as BookingWithRelations[]
 
       const tenantIds = [...new Set(raw.map(b => b.tenant_id).filter(Boolean))]
-      let tenantMap: Record<string, Profile> = {}
+      const tenantMap: Record<string, Profile> = {}
       if (tenantIds.length > 0) {
         const { data: tenants } = await supabase
           .from('profiles')

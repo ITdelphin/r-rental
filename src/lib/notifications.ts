@@ -16,24 +16,6 @@ export async function createNotification(userId: string, title: string, body: st
   }
 }
 
-export async function removeNotification(id: string) {
-  try {
-    const { error } = await supabase.from('notifications').delete().eq('id', id)
-    if (error) console.error('Failed to delete notification:', error)
-  } catch (err) {
-    console.error('Failed to delete notification:', err)
-  }
-}
-
-export async function markAllNotificationsRead(userId: string) {
-  try {
-    const { error } = await supabase.from('notifications').update({ is_read: true } as never).eq('user_id', userId).is('is_read', false)
-    if (error) console.error('Failed to mark notifications as read:', error)
-  } catch (err) {
-    console.error('Failed to mark notifications as read:', err)
-  }
-}
-
 export async function notifyBookingCreated(bookingId: string, tenantId: string, ownerId: string, propertyTitle: string, message?: string) {
   const { data: tenant } = await supabase
     .from('profiles')
@@ -51,17 +33,6 @@ export async function notifyBookingCreated(bookingId: string, tenantId: string, 
       { booking_id: bookingId, tenant_id: tenantId }
     )
   }
-}
-
-export async function notifyBookingResponded(bookingId: string, tenantId: string, status: 'approved' | 'rejected', propertyTitle: string, replyMessage?: string) {
-  const msgText = replyMessage ? ` Owner says: "${replyMessage}"` : ''
-  await createNotification(
-    tenantId,
-    `Booking ${status}`,
-    `Your booking for "${propertyTitle}" has been ${status}.${msgText}`,
-    status === 'approved' ? 'success' : 'error',
-    { booking_id: bookingId }
-  )
 }
 
 export async function notifyPropertyAdded(propertyId: string, ownerName: string, propertyTitle: string, ownerId?: string) {

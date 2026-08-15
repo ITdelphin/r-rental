@@ -12,7 +12,7 @@ import { Select } from '@/components/ui/select'
 import { LocationSelect } from '@/components/ui/LocationSelect'
 import {
   ChevronLeft, Building2, Save, Upload, Check, X, AlertCircle, ImageIcon,
-  MapPin, DollarSign, Home, Sparkles, Loader2, Trash2, DoorOpen
+  MapPin, DollarSign, Home, Sparkles, Loader2, DoorOpen
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
@@ -474,7 +474,7 @@ export function EditPropertyPage() {
 
         <FormSection icon={Sparkles} title={t('amenities_and_features')} subtitle={t('update_amenities')}>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {amenityFields.map(({ key, label }) => {
+            {amenityFields.map(({ key }) => {
               const isOn = formValues[key as keyof EditFormData] as boolean
               return (
                 <button

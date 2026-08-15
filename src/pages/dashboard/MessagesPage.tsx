@@ -4,7 +4,6 @@ import { useSearchParams } from 'react-router-dom'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { LoadingSpinner } from '@/components/ui/loading'
-import { EmptyState } from '@/components/ui/empty-state'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { Search, Send, MessageSquare, ChevronLeft, Trash2, Edit2, Check, X, Plus, CheckCheck, Clock } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
@@ -72,7 +71,6 @@ export function MessagesPage() {
   // Handle deep-link: ?to=userId&name=UserName&property=PropertyTitle
   useEffect(() => {
     const toUser = searchParams.get('to')
-    const userName = searchParams.get('name')
     const propertyTitle = searchParams.get('property')
     if (toUser && user && toUser !== user.id) {
       setActiveChatUser(toUser)
