@@ -35,7 +35,7 @@ export function UnitsManager({ propertyId }: { propertyId: string }) {
     setLoading(false)
   }
 
-  useEffect(() => { load() }, [propertyId]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load() }, [propertyId]) // eslint-disable-line @typescript-eslint/no-empty-function
 
   const addUnit = async () => {
     const rent = Number(form.monthly_rent)
