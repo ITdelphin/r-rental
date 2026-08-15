@@ -32,6 +32,7 @@ export function PropertyDetailPage() {
   const [checkIn, setCheckIn] = useState('')
   const [checkOut, setCheckOut] = useState('')
   const [bookingLoading, setBookingLoading] = useState(false)
+  const [showBookingForm, setShowBookingForm] = useState(false)
   const [favoriteLoading, setFavoriteLoading] = useState(false)
   const [isFavorited, setIsFavorited] = useState(false)
   const [dateError, setDateError] = useState('')
@@ -454,71 +455,90 @@ export function PropertyDetailPage() {
               <div className="absolute top-0 right-0 p-4 opacity-10">
                 <Calendar className="h-24 w-24 -mr-8 -mt-8" />
               </div>
-              <h3 className="text-xl font-bold flex items-center gap-2 relative z-10"><Calendar className="h-5 w-5" /> {t('book_now')}</h3>
+              <h3 className="text-xl font-bold flex items-center gap-2 relative z-10">
+                <Calendar className="h-5 w-5" /> {t('book_now')}
+              </h3>
+              <p className="text-3xl font-extrabold mt-2 relative z-10">{formatPrice(property.price)}<span className="text-primary-100 text-sm font-medium">/{t('mo') || 'mo'}</span></p>
               <p className="text-primary-100 text-sm mt-1 relative z-10">{t('secure_your_spot') || 'Request to book this property'}</p>
             </div>
             <CardContent className="p-6 space-y-5 bg-white dark:bg-gray-900">
-              {user && profile && (
-                <div className="rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 p-4 relative overflow-hidden">
-                  <div className="absolute left-0 top-0 w-1 h-full bg-primary-500"></div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-primary-600 dark:text-primary-400 mb-1">{t('your_information') || 'Your Information'}</p>
-                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{profile.full_name}</p>
-                  <div className="flex flex-col gap-0.5 mt-1">
-                    {profile.email && <p className="text-xs text-gray-500">{profile.email}</p>}
-                    {profile.phone && <p className="text-xs text-gray-500">{profile.phone}</p>}
+              {!showBookingForm ? (
+                <div className="pt-2 space-y-3">
+                  <Button
+                    className="w-full h-12 text-sm font-bold shadow-lg shadow-primary-500/25 hover:shadow-primary-500/40 transition-all rounded-xl"
+                    onClick={() => { if (!user) { navigate('/auth/login'); return } setShowBookingForm(true) }}
+                  >
+                    <Calendar className="h-4 w-4 mr-2" /> {t('book_now')}
+                  </Button>
+                  <Button
+                    variant={isFavorited ? 'default' : 'outline'}
+                    className={`w-full h-12 text-sm font-bold rounded-xl transition-all ${isFavorited ? 'bg-rose-50 border-rose-200 text-rose-600 hover:bg-rose-100 dark:bg-rose-900/20 dark:border-rose-900/50 dark:text-rose-400' : ''}`}
+                    onClick={handleFavorite}
+                    disabled={favoriteLoading}
+                  >
+                    <Heart className={`h-4 w-4 mr-2 ${isFavorited ? 'fill-current text-rose-500' : ''}`} />
+                    {isFavorited ? t('saved_to_favorites') : t('save_favorite')}
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  {user && profile && (
+                    <div className="rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 p-4 relative overflow-hidden">
+                      <div className="absolute left-0 top-0 w-1 h-full bg-primary-500"></div>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-primary-600 dark:text-primary-400 mb-1">{t('your_information') || 'Your Information'}</p>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{profile.full_name}</p>
+                      <div className="flex flex-col gap-0.5 mt-1">
+                        {profile.email && <p className="text-xs text-gray-500">{profile.email}</p>}
+                        {profile.phone && <p className="text-xs text-gray-500">{profile.phone}</p>}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('check_in')}</label>
+                      <input
+                        type="date"
+                        value={checkIn}
+                        onChange={e => { setCheckIn(e.target.value); setDateError('') }}
+                        min={new Date().toISOString().split('T')[0]}
+                        className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('check_out')}</label>
+                      <input
+                        type="date"
+                        value={checkOut}
+                        onChange={e => { setCheckOut(e.target.value); setDateError('') }}
+                        min={checkIn || new Date().toISOString().split('T')[0]}
+                        className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                      />
+                    </div>
                   </div>
-                </div>
+                  {dateError && <p className="text-xs font-medium text-red-500 bg-red-50 dark:bg-red-900/20 p-2 rounded-lg">{dateError}</p>}
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('message')}</label>
+                    <textarea
+                      value={bookingMessage}
+                      onChange={(e) => setBookingMessage(e.target.value)}
+                      placeholder={t('tell_owner_about_you')}
+                      rows={3}
+                      className="w-full rounded-xl border border-gray-200 bg-white p-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all overflow-hidden resize-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                    />
+                  </div>
+
+                  <div className="pt-2 space-y-3">
+                    <Button className="w-full h-12 text-sm font-bold shadow-lg shadow-primary-500/25 hover:shadow-primary-500/40 transition-all rounded-xl" onClick={handleBooking} disabled={bookingLoading}>
+                      <Calendar className="h-4 w-4 mr-2" /> {bookingLoading ? t('sending') : t('book_now')}
+                    </Button>
+                    <button type="button" onClick={() => setShowBookingForm(false)} className="w-full text-center text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer">
+                      {t('cancel')}
+                    </button>
+                  </div>
+                </>
               )}
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('check_in')}</label>
-                  <input
-                    type="date"
-                    value={checkIn}
-                    onChange={e => { setCheckIn(e.target.value); setDateError('') }}
-                    min={new Date().toISOString().split('T')[0]}
-                    className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('check_out')}</label>
-                  <input
-                    type="date"
-                    value={checkOut}
-                    onChange={e => { setCheckOut(e.target.value); setDateError('') }}
-                    min={checkIn || new Date().toISOString().split('T')[0]}
-                    className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-                  />
-                </div>
-              </div>
-              {dateError && <p className="text-xs font-medium text-red-500 bg-red-50 dark:bg-red-900/20 p-2 rounded-lg">{dateError}</p>}
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('message')}</label>
-                <textarea
-                  value={bookingMessage}
-                  onChange={(e) => setBookingMessage(e.target.value)}
-                  placeholder={t('tell_owner_about_you')}
-                  rows={3}
-                  className="w-full rounded-xl border border-gray-200 bg-white p-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all overflow-hidden resize-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-                />
-              </div>
-
-              <div className="pt-2 space-y-3">
-                <Button className="w-full h-12 text-sm font-bold shadow-lg shadow-primary-500/25 hover:shadow-primary-500/40 transition-all rounded-xl" onClick={handleBooking} disabled={bookingLoading}>
-                  <Calendar className="h-4 w-4 mr-2" /> {bookingLoading ? t('sending') : t('book_now')}
-                </Button>
-                <Button
-                  variant={isFavorited ? 'default' : 'outline'}
-                  className={`w-full h-12 text-sm font-bold rounded-xl transition-all ${isFavorited ? 'bg-rose-50 border-rose-200 text-rose-600 hover:bg-rose-100 dark:bg-rose-900/20 dark:border-rose-900/50 dark:text-rose-400' : ''}`}
-                  onClick={handleFavorite}
-                  disabled={favoriteLoading}
-                >
-                  <Heart className={`h-4 w-4 mr-2 ${isFavorited ? 'fill-current text-rose-500' : ''}`} />
-                  {isFavorited ? t('saved_to_favorites') : t('save_favorite')}
-                </Button>
-              </div>
             </CardContent>
           </Card>
 
