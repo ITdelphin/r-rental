@@ -27,7 +27,7 @@ interface FeatureFlag {
   id: string
   key: string
   label: string
-  enabled: boolean
+  is_enabled: boolean
   description: string | null
   created_at: string
   updated_at: string
@@ -35,11 +35,13 @@ interface FeatureFlag {
 
 interface ConfigHistoryEntry {
   id: string
-  actor_email: string
-  key: string
+  actor_id: string | null
+  actor_email?: string | null
+  setting_key: string
   old_value: string | null
   new_value: string
   created_at: string
+  profiles?: { email: string | null } | null
 }
 
 function SectionCard({ title, description, icon: Icon, children }: { title: string; description?: string; icon: typeof Building; children: React.ReactNode }) {
@@ -114,7 +116,6 @@ export function SuperAdminSettings() {
   const [section, setSection] = useState<Section>('general')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState<string | null>(null)
-
   const [platformName, setPlatformName] = useState('Rwanda EasyRent')
   const [supportEmail, setSupportEmail] = useState('')
   const [phoneNumber, setPhoneNumber] = useState('')
@@ -136,15 +137,16 @@ export function SuperAdminSettings() {
   const [pageForm, setPageForm] = useState({ title: '', slug: '', content: '', meta_title: '', meta_description: '', is_published: true })
   const [pageErrors, setPageErrors] = useState<Record<string, string>>({})
 
-  const logConfigChange = useCallback(async (key: string, oldValue: string | null, newValue: string) => {
+  const logConfigChange = useCallback(async (key: string, oldValue: string | null, newValue: string, action: 'create' | 'update' | 'delete' = 'update') => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
       await supabase.from('config_history').insert({
-        actor_email: user.email,
-        key,
+        actor_id: user.id,
+        setting_key: key,
         old_value: oldValue,
         new_value: newValue,
+        action,
       } as never)
     } catch {
       // silently fail
@@ -178,7 +180,7 @@ export function SuperAdminSettings() {
   const fetchHistory = useCallback(async () => {
     setHistoryLoading(true)
     try {
-      const { data, error } = await supabase.from('config_history').select('*').order('created_at', { ascending: false }).limit(50)
+      const { data, error } = await supabase.from('config_history').select('*, profiles(email)').order('created_at', { ascending: false }).limit(50)
       if (error) throw error
       setConfigHistory((data || []) as ConfigHistoryEntry[])
     } catch {
@@ -244,12 +246,12 @@ export function SuperAdminSettings() {
   }
 
   const toggleFlag = async (flag: FeatureFlag) => {
-    const newValue = !flag.enabled
+    const newValue = !flag.is_enabled
     try {
-      const { error } = await supabase.from('feature_flags').update({ enabled: newValue } as never).eq('id', flag.id)
+      const { error } = await supabase.from('feature_flags').update({ is_enabled: newValue } as never).eq('id', flag.id)
       if (error) throw error
-      setFeatureFlags(prev => prev.map(f => f.id === flag.id ? { ...f, enabled: newValue } : f))
-      await logConfigChange(`flag:${flag.key}`, String(flag.enabled), String(newValue))
+      setFeatureFlags(prev => prev.map(f => f.id === flag.id ? { ...f, is_enabled: newValue } : f))
+      await logConfigChange(`flag:${flag.key}`, String(flag.is_enabled), String(newValue))
       toast.success(t('feature_flag_updated'))
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : t('failed_to_save'))
@@ -298,7 +300,7 @@ export function SuperAdminSettings() {
       } else {
         const res = await supabase.from('cms_pages').insert(payload as never)
         error = res.error
-        await logConfigChange('cms_page:new', null, payload.title)
+        await logConfigChange('cms_page:new', null, payload.title, 'create')
       }
       if (error) throw error
       toast.success(editPage ? t('page_updated') : t('page_created'))
@@ -316,7 +318,7 @@ export function SuperAdminSettings() {
       const page = pages.find(p => p.id === deleteTarget)
       const { error } = await supabase.from('cms_pages').delete().eq('id', deleteTarget)
       if (error) throw error
-      await logConfigChange('cms_page:deleted', page?.title ?? deleteTarget, '')
+      await logConfigChange('cms_page:deleted', page?.title ?? deleteTarget, '', 'delete')
       toast.success(t('page_deleted'))
       setDeleteTarget(null)
       fetchPages()
@@ -419,7 +421,7 @@ export function SuperAdminSettings() {
                     key={flag.id}
                     label={flag.label || flag.key}
                     description={flag.description || undefined}
-                    enabled={flag.enabled}
+                    enabled={flag.is_enabled}
                     onToggle={() => toggleFlag(flag)}
                   />
                 ))}
@@ -497,13 +499,13 @@ export function SuperAdminSettings() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4 text-gray-400" />
-                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{entry.actor_email}</span>
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{entry.profiles?.email ?? entry.actor_email ?? '—'}</span>
                       </div>
                       <span className="text-xs text-gray-400">{formatDate(entry.created_at)}</span>
                     </div>
                     <div className="mt-2">
                       <span className="inline-flex items-center rounded bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-xs font-mono text-gray-600 dark:text-gray-400">
-                        {entry.key}
+                        {entry.setting_key}
                       </span>
                     </div>
                     {(entry.old_value || entry.new_value) && (
