@@ -12,11 +12,12 @@ import { Select } from '@/components/ui/select'
 import { LocationSelect } from '@/components/ui/LocationSelect'
 import {
   ChevronLeft, Building2, Save, Upload, Check, X, AlertCircle, ImageIcon,
-  MapPin, DollarSign, Home, Sparkles, Loader2, Trash2
+  MapPin, DollarSign, Home, Sparkles, Loader2, Trash2, DoorOpen
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { useProperty, useUpdateProperty } from '@/hooks/useProperties'
+import { UnitsManager } from '@/components/property/UnitsManager'
 import toast from 'react-hot-toast'
 import type { Property } from '@/types'
 
@@ -574,6 +575,10 @@ export function EditPropertyPage() {
               </div>
             )}
           </div>
+        </FormSection>
+
+        <FormSection icon={DoorOpen} title={t('property_units')} subtitle={t('units_section_hint')}>
+          <UnitsManager propertyId={property.id} />
         </FormSection>
 
         <div className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">

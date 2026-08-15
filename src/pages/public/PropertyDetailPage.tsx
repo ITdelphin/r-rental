@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { MapPin, Bed, Bath, Square, Wifi, Shield, Car, TreePine, Waves, Zap, Droplets, Heart, MessageCircle, Calendar, Star, ChevronLeft, ChevronRight, Share2, CookingPot, Sun, Eye } from 'lucide-react'
+import { MapPin, Bed, Bath, Square, Wifi, Shield, Car, TreePine, Waves, Zap, Droplets, Heart, MessageCircle, Calendar, Star, ChevronLeft, ChevronRight, Share2, CookingPot, Sun, Eye, DoorOpen, Flag, BadgeCheck } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -15,6 +15,7 @@ import { supabase } from '@/lib/supabase'
 import { sendBookingNotification } from '@/lib/email'
 import { notifyBookingCreated } from '@/lib/notifications'
 import toast from 'react-hot-toast'
+import type { PropertyUnit, PropertyVerification } from '@/types'
 
 const amenityIcons: Record<string, typeof Wifi> = {
   internet: Wifi, security: Shield, parking: Car, garden: TreePine, swimming_pool: Waves, electricity: Zap, water: Droplets, balcony: Sun,
@@ -34,12 +35,31 @@ export function PropertyDetailPage() {
   const [favoriteLoading, setFavoriteLoading] = useState(false)
   const [isFavorited, setIsFavorited] = useState(false)
   const [dateError, setDateError] = useState('')
+  const [units, setUnits] = useState<PropertyUnit[]>([])
+  const [verification, setVerification] = useState<PropertyVerification | null>(null)
+  const [applying, setApplying] = useState(false)
+  const [reportOpen, setReportOpen] = useState(false)
+  const [reportReason, setReportReason] = useState('fake_listing')
+  const [reportDetails, setReportDetails] = useState('')
   const whatsappNumber = property?.whatsapp_number
 
   useEffect(() => {
     if (property) {
       propertyApi.incrementViews(property.id)
     }
+  }, [property])
+
+  useEffect(() => {
+    if (!property) return
+    const load = async () => {
+      const [unitsRes, verRes] = await Promise.all([
+        supabase.from('property_units').select('*').eq('property_id', property.id).order('monthly_rent'),
+        supabase.from('property_verifications').select('*').eq('property_id', property.id).order('created_at', { ascending: false }).limit(1),
+      ])
+      setUnits((unitsRes.data || []) as PropertyUnit[])
+      setVerification(verRes.data?.[0] || null)
+    }
+    load()
   }, [property])
 
   if (isLoading) {
@@ -165,6 +185,57 @@ export function PropertyDetailPage() {
     toast.success(t('link_copied'))
   }
 
+  const handleApply = async (unitId?: string) => {
+    if (!user) {
+      navigate('/auth/login')
+      return
+    }
+    if (!bookingMessage.trim()) {
+      toast.error(t('please_add_message'))
+      return
+    }
+    setApplying(true)
+    try {
+      const { error } = await supabase.from('rental_applications').insert({
+        property_id: property.id,
+        unit_id: unitId || null,
+        applicant_id: user.id,
+        owner_id: property.owner_id,
+        status: 'pending',
+        message: bookingMessage,
+      } as never)
+      if (error) throw error
+      toast.success(t('application_submitted'))
+      setBookingMessage('')
+      setReportOpen(false)
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : t('application_failed'))
+    }
+    setApplying(false)
+  }
+
+  const handleReport = async () => {
+    if (!user) {
+      navigate('/auth/login')
+      return
+    }
+    try {
+      const { error } = await supabase.from('property_reports').insert({
+        property_id: property.id,
+        reported_by: user.id,
+        reason: reportReason,
+        details: reportDetails || null,
+        status: 'reported',
+      } as never)
+      if (error) throw error
+      toast.success(t('report_submitted'))
+      setReportOpen(false)
+      setReportDetails('')
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : t('report_failed'))
+    }
+  }
+
   const avgRating = property.reviews?.length
     ? (property.reviews.reduce((s, r) => s + r.rating, 0) / property.reviews.length).toFixed(1)
     : null
@@ -257,6 +328,9 @@ export function PropertyDetailPage() {
                 <div className="flex items-center gap-2 flex-wrap">
                   <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{property.title}</h1>
                   {property.is_featured && <Badge variant="success">{t('featured')}</Badge>}
+                  {verification?.status === 'verified' && (
+                    <Badge variant="success" className="gap-1"><BadgeCheck className="h-3 w-3" /> {t('verified_property')}</Badge>
+                  )}
                 </div>
                 <p className="mt-1 flex items-center gap-1 text-sm text-gray-500">
                   <MapPin className="h-4 w-4" /> {property.village}, {property.cell ? `${property.cell}, ` : ''}{property.sector}, {property.district}, {property.province}
@@ -304,6 +378,43 @@ export function PropertyDetailPage() {
                       </div>
                     )
                   })}
+                </div>
+              </div>
+            )}
+
+            {units.length > 0 && (
+              <div className="mt-6">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2"><DoorOpen className="h-5 w-5 text-primary-600" /> {t('available_units')}</h2>
+                <p className="mt-1 text-xs text-gray-500">{t('units_select_hint')}</p>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  {units.map(unit => (
+                    <div key={unit.id} className="rounded-xl border border-gray-200 dark:border-gray-700 p-4 flex flex-col gap-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                          {unit.unit_number ? `${t('unit')} ${unit.unit_number}` : t('unit')}
+                          {unit.floor ? ` · ${t('floor')} ${unit.floor}` : ''}
+                        </p>
+                        <Badge variant={unit.status === 'available' ? 'success' : 'secondary'}>{t(unit.status)}</Badge>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-gray-500">
+                        <span className="flex items-center gap-1"><Bed className="h-3.5 w-3.5" /> {unit.bedrooms} {t('bedrooms')}</span>
+                        <span className="flex items-center gap-1"><Bath className="h-3.5 w-3.5" /> {unit.bathrooms} {t('bathrooms')}</span>
+                      </div>
+                      <div className="flex items-end justify-between gap-2">
+                        <div>
+                          <p className="text-lg font-bold text-primary-600">{formatPrice(unit.monthly_rent)}<span className="text-xs font-normal text-gray-500">/{t('mo')}</span></p>
+                          {unit.deposit_amount ? <p className="text-xs text-gray-500">{t('deposit')}: {formatPrice(unit.deposit_amount)}</p> : null}
+                        </div>
+                        <Button
+                          size="sm"
+                          disabled={unit.status !== 'available' || applying}
+                          onClick={() => handleApply(unit.id)}
+                        >
+                          {t('apply_for_this_unit')}
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -465,6 +576,30 @@ export function PropertyDetailPage() {
               </CardContent>
             </Card>
           )}
+
+          <Card>
+            <CardContent className="p-6">
+              {!reportOpen ? (
+                <Button variant="ghost" size="sm" className="w-full text-gray-500" onClick={() => setReportOpen(true)}>
+                  <Flag className="h-4 w-4 mr-2" /> {t('report_listing')}
+                </Button>
+              ) : (
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2"><Flag className="h-4 w-4" /> {t('report_listing')}</h3>
+                  <select value={reportReason} onChange={e => setReportReason(e.target.value)} className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white px-3 py-2 text-sm dark:bg-gray-800">
+                    {['fake_listing', 'wrong_price', 'wrong_location', 'duplicate', 'scam', 'already_rented', 'inappropriate', 'other'].map(r => (
+                      <option key={r} value={r}>{t(r)}</option>
+                    ))}
+                  </select>
+                  <textarea value={reportDetails} onChange={e => setReportDetails(e.target.value)} rows={3} placeholder={t('report_details_placeholder')} className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white px-3 py-2 text-sm dark:bg-gray-800" />
+                  <div className="flex gap-2">
+                    <Button size="sm" className="flex-1" onClick={handleReport}>{t('submit_report')}</Button>
+                    <Button size="sm" variant="outline" onClick={() => setReportOpen(false)}>{t('cancel')}</Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           {(property.latitude && property.longitude) && (
             <Card>

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { TableSkeleton } from '@/components/ui/loading'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog'
-import { Wrench, Search, Plus, AlertTriangle, Clock, CheckCircle, XCircle } from 'lucide-react'
+import { Wrench, Search, Plus, AlertTriangle, Clock, CheckCircle, XCircle, Eye, UserCheck, BadgeCheck } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import toast from 'react-hot-toast'
@@ -18,7 +18,7 @@ interface MaintenanceRequest {
     title: string
     description: string
     priority: 'low' | 'medium' | 'high' | 'urgent'
-    status: 'open' | 'in_progress' | 'resolved' | 'closed'
+    status: 'submitted' | 'acknowledged' | 'assigned' | 'in_progress' | 'completed' | 'verified' | 'closed'
     created_at: string
     updated_at: string
     property?: { title: string; district: string; province: string }
@@ -26,10 +26,22 @@ interface MaintenanceRequest {
 }
 
 const statusConfig: Record<string, { label: string; variant: 'warning' | 'default' | 'success' | 'secondary'; icon: typeof Clock }> = {
-    open: { label: 'open', variant: 'warning', icon: AlertTriangle },
+    submitted: { label: 'submitted', variant: 'warning', icon: AlertTriangle },
+    acknowledged: { label: 'acknowledged', variant: 'default', icon: Eye },
+    assigned: { label: 'assigned', variant: 'default', icon: UserCheck },
     in_progress: { label: 'in_progress', variant: 'default', icon: Clock },
-    resolved: { label: 'resolved', variant: 'success', icon: CheckCircle },
+    completed: { label: 'completed', variant: 'success', icon: CheckCircle },
+    verified: { label: 'verified', variant: 'success', icon: BadgeCheck },
     closed: { label: 'closed', variant: 'secondary', icon: XCircle },
+}
+
+const NEXT_STATUSES: Record<string, string> = {
+    submitted: 'acknowledged',
+    acknowledged: 'assigned',
+    assigned: 'in_progress',
+    in_progress: 'completed',
+    completed: 'verified',
+    verified: 'closed',
 }
 
 const priorityConfig: Record<string, { label: string; variant: 'secondary' | 'warning' | 'default' | 'danger' }> = {
@@ -126,7 +138,7 @@ export function MaintenanceRequestsPage() {
                 title,
                 description,
                 priority,
-                status: 'open',
+                status: 'submitted',
             } as never)
 
             if (error) throw error
@@ -299,24 +311,19 @@ export function MaintenanceRequestsPage() {
                                         </div>
 
                                         {/* Request Status Updates */}
-                                        {(isOwner || isAdmin || (isTenant && req.status === 'open')) && (
+                                        {(isOwner || isAdmin || (isTenant && req.status === 'submitted')) && (
                                             <div className="flex items-center gap-2 self-end sm:self-start">
-                                                {(isOwner || isAdmin) && req.status === 'open' && (
-                                                    <Button size="sm" variant="outline" onClick={() => updateStatus(req.id, 'in_progress')}>
-                                                        {t('in_progress')}
+                                                {(isOwner || isAdmin) && req.status !== 'closed' && (
+                                                    <Button size="sm" variant="outline" onClick={() => updateStatus(req.id, NEXT_STATUSES[req.status] as MaintenanceRequest['status'])}>
+                                                        {t(NEXT_STATUSES[req.status])}
                                                     </Button>
                                                 )}
-                                                {(isOwner || isAdmin) && (req.status === 'open' || req.status === 'in_progress') && (
-                                                    <Button size="sm" onClick={() => updateStatus(req.id, 'resolved')}>
-                                                        {t('resolve')}
-                                                    </Button>
-                                                )}
-                                                {req.status === 'resolved' && (
-                                                    <Button size="sm" variant="secondary" onClick={() => updateStatus(req.id, 'closed')}>
+                                                {req.status === 'verified' && (isOwner || isAdmin) && (
+                                                    <Button size="sm" onClick={() => updateStatus(req.id, 'closed')}>
                                                         {t('close')}
                                                     </Button>
                                                 )}
-                                                {isTenant && req.status === 'open' && (
+                                                {isTenant && req.status === 'submitted' && (
                                                     <Button size="sm" variant="outline" className="text-red-500" onClick={() => updateStatus(req.id, 'closed')}>
                                                         {t('cancel')}
                                                     </Button>

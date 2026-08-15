@@ -1,15 +1,16 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/useAuth'
-import { profileApi } from '@/lib/api'
+import { profileApi, dataRequestApi, consentApi } from '@/lib/api'
 import { sendAccountNotification } from '@/lib/email'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
-import { Camera, Save, Key, Trash2, Loader2, AlertTriangle, Upload } from 'lucide-react'
+import { Camera, Save, Key, Trash2, Loader2, AlertTriangle, Upload, FileDown, ShieldCheck, UserX } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
+import type { DataRequest, ConsentRecord } from '@/types'
 
 export function AccountSettingsPage() {
   const { t } = useTranslation()
@@ -153,6 +154,45 @@ export function AccountSettingsPage() {
     }
   }
 
+  const [dataRequests, setDataRequests] = useState<DataRequest[]>([])
+  const [consents, setConsents] = useState<ConsentRecord[]>([])
+  const [reqLoading, setReqLoading] = useState(false)
+
+  const loadPrivacy = useCallback(async () => {
+    if (!user) return
+    const [reqRes, consentRes] = await Promise.all([
+      dataRequestApi.listForUser(user.id),
+      consentApi.list(user.id),
+    ])
+    setDataRequests(reqRes)
+    setConsents(consentRes)
+  }, [user])
+
+  useEffect(() => { loadPrivacy() }, [loadPrivacy])
+
+  const requestData = async (type: DataRequest['request_type']) => {
+    if (!user) return
+    setReqLoading(true)
+    try {
+      await dataRequestApi.create({ user_id: user.id, request_type: type })
+      toast.success(t('data_request_submitted'))
+      loadPrivacy()
+    } catch {
+      toast.error(t('data_request_failed'))
+    }
+    setReqLoading(false)
+  }
+
+  const revokeConsent = async (id: string) => {
+    try {
+      await consentApi.revoke(id)
+      toast.success(t('consent_revoked'))
+      loadPrivacy()
+    } catch {
+      toast.error(t('consent_revoke_failed'))
+    }
+  }
+
   if (!profile) return null
 
   return (
@@ -249,6 +289,57 @@ export function AccountSettingsPage() {
               <Button onClick={handlePasswordChange} variant="outline">
                 <Key className="h-4 w-4" /> {t('update_password')}
               </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><ShieldCheck className="h-5 w-5" /> {t('privacy_and_data')}</CardTitle>
+              <CardDescription>{t('privacy_and_data_description')}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" variant="outline" disabled={reqLoading} onClick={() => requestData('export')}>
+                  <FileDown className="h-4 w-4 mr-1.5" /> {t('request_data_export')}
+                </Button>
+                <Button size="sm" variant="outline" disabled={reqLoading} onClick={() => requestData('access')}>
+                  {t('request_data_access')}
+                </Button>
+                <Button size="sm" variant="outline" disabled={reqLoading} onClick={() => requestData('correction')}>
+                  {t('request_correction')}
+                </Button>
+                <Button size="sm" variant="outline" disabled={reqLoading} className="text-red-500" onClick={() => requestData('deletion')}>
+                  <UserX className="h-4 w-4 mr-1.5" /> {t('request_erasure')}
+                </Button>
+              </div>
+
+              {dataRequests.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">{t('your_requests')}</p>
+                  {dataRequests.map(r => (
+                    <div key={r.id} className="flex items-center justify-between rounded-lg border border-gray-100 dark:border-gray-800 px-3 py-2 text-sm">
+                      <span className="text-gray-700 dark:text-gray-300">{t(r.request_type)}</span>
+                      <span className={`text-xs font-medium ${r.status === 'fulfilled' ? 'text-green-600' : 'text-gray-500'}`}>{t(r.status)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {consents.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">{t('consent_records')}</p>
+                  {consents.map(c => (
+                    <div key={c.id} className="flex items-center justify-between rounded-lg border border-gray-100 dark:border-gray-800 px-3 py-2 text-sm">
+                      <span className="text-gray-700 dark:text-gray-300">{t(c.purpose)}</span>
+                      {c.granted ? (
+                        <button onClick={() => revokeConsent(c.id)} className="text-xs font-medium text-red-500 hover:text-red-600 cursor-pointer">{t('revoke')}</button>
+                      ) : (
+                        <span className="text-xs font-medium text-gray-400">{t('revoked')}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

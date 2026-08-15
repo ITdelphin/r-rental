@@ -19,10 +19,10 @@ import { ComparePage } from '@/components/ui/compare-properties'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { RegisterPage } from '@/pages/auth/RegisterPage'
 import { AuthCallbackPage } from '@/pages/auth/AuthCallbackPage'
-import { RoleSelectionPage } from '@/pages/auth/RoleSelectionPage'
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
 import { DashboardHome } from '@/pages/dashboard/DashboardHome'
 import { BookingsPage } from '@/pages/dashboard/BookingsPage'
+import { ApplicationsPage } from '@/pages/dashboard/ApplicationsPage'
 import { TenantFavorites } from '@/pages/dashboard/tenant/TenantFavorites'
 import { OwnerProperties } from '@/pages/dashboard/owner/OwnerProperties'
 import { OwnerEarnings } from '@/pages/dashboard/owner/OwnerEarnings'
@@ -87,7 +87,6 @@ function AppRoutes() {
         <Route path="/auth/register" element={<RegisterPage />} />
         <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
-        <Route path="/auth/choose-role" element={<RoleSelectionPage />} />
 
         {/* Protected dashboard routes */}
         <Route element={<ProtectedRoute />}>
@@ -101,6 +100,7 @@ function AppRoutes() {
             <Route path="/dashboard/reviews" element={<ReviewsPage />} />
 
             <Route path="/dashboard/bookings" element={<BookingsPage />} />
+            <Route path="/dashboard/applications" element={<ApplicationsPage />} />
             <Route path="/dashboard/favorites" element={<TenantFavorites />} />
             <Route path="/dashboard/maintenance" element={<MaintenanceRequestsPage />} />
             <Route path="/dashboard/contracts" element={<ContractsPage />} />

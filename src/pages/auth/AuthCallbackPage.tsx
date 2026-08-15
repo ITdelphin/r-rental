@@ -15,19 +15,14 @@ export function AuthCallbackPage() {
         return
       }
 
-      const pending = sessionStorage.getItem('oauth_role_pending')
-      sessionStorage.removeItem('oauth_role_pending')
-
-      navigate(pending ? '/auth/choose-role' : '/dashboard', { replace: true })
+      navigate('/dashboard', { replace: true })
     }
 
     handleSession()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
-        const pending = sessionStorage.getItem('oauth_role_pending')
-        sessionStorage.removeItem('oauth_role_pending')
-        navigate(pending ? '/auth/choose-role' : '/dashboard', { replace: true })
+        navigate('/dashboard', { replace: true })
       }
     })
 

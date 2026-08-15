@@ -9,16 +9,10 @@ import { supabase } from '@/lib/supabase'
 import { sendWelcomeEmail } from '@/lib/email'
 import toast from 'react-hot-toast'
 
-const roleOptions = [
-  { value: 'tenant', labelKey: 'tenant' },
-  { value: 'owner', labelKey: 'owner' },
-  { value: 'agent', labelKey: 'agent' },
-]
-
 export function RegisterPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const [form, setForm] = useState({ full_name: '', email: '', phone: '', password: '', role: 'tenant' })
+  const [form, setForm] = useState({ full_name: '', email: '', phone: '', password: '' })
   const [loading, setLoading] = useState(false)
   const [oauthLoading, setOauthLoading] = useState(false)
 
@@ -61,7 +55,7 @@ export function RegisterPage() {
     const { data, error } = await supabase.auth.signUp({
       email,
       password: form.password,
-      options: { data: { full_name: form.full_name, role: form.role } },
+      options: { data: { full_name: form.full_name, role: 'tenant' } },
     })
     setLoading(false)
     if (error) {
@@ -90,7 +84,6 @@ export function RegisterPage() {
 
   const handleGoogleOAuth = async () => {
     setOauthLoading(true)
-    sessionStorage.setItem('oauth_role_pending', 'true')
     try {
       await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -116,16 +109,6 @@ export function RegisterPage() {
             <Input label={t('email_address')} type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
             <Input label={t('phone_number')} type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
             <Input label={t('password')} type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required minLength={6} />
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('role')}</label>
-              <div className="flex gap-3">
-                {roleOptions.map((opt) => (
-                  <button key={opt.value} type="button" onClick={() => setForm({ ...form, role: opt.value })} className={`flex-1 rounded-lg border px-4 py-2 text-sm font-medium cursor-pointer ${form.role === opt.value ? 'bg-primary-600 text-white border-primary-600' : 'border-gray-300 dark:border-gray-600 hover:border-primary-300'}`}>
-                    {t(opt.labelKey)}
-                  </button>
-                ))}
-              </div>
-            </div>
             <Button type="submit" className="w-full" loading={loading}>{t('sign_up')}</Button>
           </form>
 

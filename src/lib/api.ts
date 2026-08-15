@@ -1,6 +1,11 @@
 import { supabase } from './supabase'
 import { createAuditLog } from './audit'
-import type { Profile, Property, Booking, Review, Favorite, Message, Notification, Payment } from '@/types'
+import type {
+  Profile, Property, Booking, Review, Favorite, Message, Notification, Payment,
+  PropertyUnit, RentalApplication, RentCharge, PaymentTransaction, PropertyReport,
+  PropertyVerification, OwnerVerification, MaintenanceComment, MaintenanceAssignment,
+  LeaseRenewal, DataRequest, ConsentRecord, SavedSearch, Contract,
+} from '@/types'
 
 export const authApi = {
   login: async (email: string, password: string) => {
@@ -241,5 +246,243 @@ export const paymentApi = {
     const { data, error } = await supabase.from('payments').update(updates as never).eq('id', id).select().single()
     if (error) throw error
     return data as unknown as Payment
+  },
+}
+
+export const unitApi = {
+  listForProperty: async (propertyId: string) => {
+    const { data, error } = await supabase.from('property_units').select('*').eq('property_id', propertyId).order('monthly_rent')
+    if (error) throw error
+    return (data || []) as unknown as PropertyUnit[]
+  },
+  create: async (unit: Partial<PropertyUnit>) => {
+    const { data, error } = await supabase.from('property_units').insert(unit as never).select().single()
+    if (error) throw error
+    return data as unknown as PropertyUnit
+  },
+  update: async (id: string, updates: Partial<PropertyUnit>) => {
+    const { data, error } = await supabase.from('property_units').update(updates as never).eq('id', id).select().single()
+    if (error) throw error
+    return data as unknown as PropertyUnit
+  },
+  remove: async (id: string) => {
+    const { error } = await supabase.from('property_units').delete().eq('id', id)
+    if (error) throw error
+  },
+}
+
+export const applicationApi = {
+  listForUser: async (userId: string) => {
+    const { data, error } = await supabase
+      .from('rental_applications')
+      .select('*, property:properties(*), unit:property_units(*)')
+      .eq('applicant_id', userId)
+      .order('submitted_at', { ascending: false })
+    if (error) throw error
+    return (data || []) as unknown as RentalApplication[]
+  },
+  listForOwner: async (ownerId: string) => {
+    const { data, error } = await supabase
+      .from('rental_applications')
+      .select('*, property:properties(*), unit:property_units(*), applicant:profiles!applicant_id(*)')
+      .eq('owner_id', ownerId)
+      .order('submitted_at', { ascending: false })
+    if (error) throw error
+    return (data || []) as unknown as RentalApplication[]
+  },
+  create: async (app: Partial<RentalApplication>) => {
+    const { data, error } = await supabase.from('rental_applications').insert(app as never).select().single()
+    if (error) throw error
+    return data as unknown as RentalApplication
+  },
+  updateStatus: async (id: string, status: RentalApplication['status'], extra?: Partial<RentalApplication>) => {
+    const { data, error } = await supabase
+      .from('rental_applications')
+      .update({ status, reviewed_at: new Date().toISOString(), ...extra } as never)
+      .eq('id', id)
+      .select()
+      .single()
+    if (error) throw error
+    return data as unknown as RentalApplication
+  },
+  withdraw: async (id: string, applicantId: string) => {
+    const { error } = await supabase.from('rental_applications').update({ status: 'withdrawn' } as never).eq('id', id).eq('applicant_id', applicantId)
+    if (error) throw error
+  },
+}
+
+export const chargeApi = {
+  listForTenant: async (tenantId: string) => {
+    const { data, error } = await supabase
+      .from('rent_charges')
+      .select('*, property:properties(title)')
+      .eq('tenant_id', tenantId)
+      .order('due_date', { ascending: false })
+    if (error) throw error
+    return (data || []) as unknown as (RentCharge & { property?: { title: string } })[]
+  },
+  listForOwner: async (ownerId: string) => {
+    const { data, error } = await supabase
+      .from('rent_charges')
+      .select('*, property:properties(title), unit:property_units(unit_number)')
+      .in('property_id', (await supabase.from('properties').select('id').eq('owner_id', ownerId)).data?.map(p => p.id) || [])
+      .order('due_date', { ascending: false })
+    if (error) throw error
+    return (data || []) as unknown as RentCharge[]
+  },
+  create: async (charge: Partial<RentCharge>) => {
+    const { data, error } = await supabase.from('rent_charges').insert(charge as never).select().single()
+    if (error) throw error
+    return data as unknown as RentCharge
+  },
+}
+
+export const transactionApi = {
+  create: async (tx: Partial<PaymentTransaction>) => {
+    const { data, error } = await supabase.from('payment_transactions').insert(tx as never).select().single()
+    if (error) throw error
+    return data as unknown as PaymentTransaction
+  },
+  listForPayment: async (paymentId: string) => {
+    const { data, error } = await supabase.from('payment_transactions').select('*').eq('payment_id', paymentId)
+    if (error) throw error
+    return (data || []) as unknown as PaymentTransaction[]
+  },
+}
+
+export const reportApi = {
+  create: async (report: Partial<PropertyReport>) => {
+    const { data, error } = await supabase.from('property_reports').insert(report as never).select().single()
+    if (error) throw error
+    return data as unknown as PropertyReport
+  },
+  listForProperty: async (propertyId: string) => {
+    const { data, error } = await supabase.from('property_reports').select('*').eq('property_id', propertyId).order('created_at', { ascending: false })
+    if (error) throw error
+    return (data || []) as unknown as PropertyReport[]
+  },
+  updateStatus: async (id: string, status: PropertyReport['status'], resolutionNotes?: string) => {
+    const { data, error } = await supabase
+      .from('property_reports')
+      .update({ status, resolution_notes: resolutionNotes, resolved_at: status === 'resolved' || status === 'dismissed' ? new Date().toISOString() : null } as never)
+      .eq('id', id)
+      .select()
+      .single()
+    if (error) throw error
+    return data as unknown as PropertyReport
+  },
+}
+
+export const verificationApi = {
+  getForProperty: async (propertyId: string) => {
+    const { data, error } = await supabase.from('property_verifications').select('*').eq('property_id', propertyId).order('created_at', { ascending: false }).limit(1)
+    if (error) throw error
+    return (data?.[0] || null) as PropertyVerification | null
+  },
+  setPropertyStatus: async (propertyId: string, status: PropertyVerification['status'], notes?: string) => {
+    const { data, error } = await supabase
+      .from('property_verifications')
+      .upsert({ property_id: propertyId, status, notes, verified_at: status === 'verified' ? new Date().toISOString() : null } as never, { onConflict: 'property_id' })
+      .select()
+      .single()
+    if (error) throw error
+    return data as unknown as PropertyVerification
+  },
+  getForOwner: async (ownerId: string) => {
+    const { data, error } = await supabase.from('owner_verifications').select('*').eq('owner_id', ownerId).order('created_at', { ascending: false }).limit(1)
+    if (error) throw error
+    return (data?.[0] || null) as OwnerVerification | null
+  },
+  setOwnerStatus: async (ownerId: string, status: OwnerVerification['status'], notes?: string) => {
+    const { data, error } = await supabase
+      .from('owner_verifications')
+      .upsert({ owner_id: ownerId, status, notes, verified_at: status === 'verified' ? new Date().toISOString() : null } as never, { onConflict: 'owner_id' })
+      .select()
+      .single()
+    if (error) throw error
+    return data as unknown as OwnerVerification
+  },
+}
+
+export const maintenanceApi = {
+  comment: async (comment: Partial<MaintenanceComment>) => {
+    const { data, error } = await supabase.from('maintenance_comments').insert(comment as never).select().single()
+    if (error) throw error
+    return data as unknown as MaintenanceComment
+  },
+  listComments: async (requestId: string) => {
+    const { data, error } = await supabase.from('maintenance_comments').select('*').eq('request_id', requestId).order('created_at')
+    if (error) throw error
+    return (data || []) as unknown as MaintenanceComment[]
+  },
+  assign: async (assignment: Partial<MaintenanceAssignment>) => {
+    const { data, error } = await supabase.from('maintenance_assignments').insert(assignment as never).select().single()
+    if (error) throw error
+    return data as unknown as MaintenanceAssignment
+  },
+  listAssignments: async (requestId: string) => {
+    const { data, error } = await supabase.from('maintenance_assignments').select('*').eq('request_id', requestId)
+    if (error) throw error
+    return (data || []) as unknown as MaintenanceAssignment[]
+  },
+}
+
+export const renewalApi = {
+  listForUser: async (userId: string) => {
+    const { data, error } = await supabase.from('lease_renewals').select('*, contract:contracts(*)').or(`tenant_id.eq.${userId},owner_id.eq.${userId}`).order('offered_at', { ascending: false })
+    if (error) throw error
+    return (data || []) as unknown as (LeaseRenewal & { contract?: Contract })[]
+  },
+  respond: async (id: string, status: LeaseRenewal['status']) => {
+    const { data, error } = await supabase.from('lease_renewals').update({ status, responded_at: new Date().toISOString() } as never).eq('id', id).select().single()
+    if (error) throw error
+    return data as unknown as LeaseRenewal
+  },
+}
+
+export const dataRequestApi = {
+  create: async (req: Partial<DataRequest>) => {
+    const { data, error } = await supabase.from('data_requests').insert(req as never).select().single()
+    if (error) throw error
+    return data as unknown as DataRequest
+  },
+  listForUser: async (userId: string) => {
+    const { data, error } = await supabase.from('data_requests').select('*').eq('user_id', userId).order('created_at', { ascending: false })
+    if (error) throw error
+    return (data || []) as unknown as DataRequest[]
+  },
+}
+
+export const consentApi = {
+  list: async (userId: string) => {
+    const { data, error } = await supabase.from('consent_records').select('*').eq('user_id', userId)
+    if (error) throw error
+    return (data || []) as unknown as ConsentRecord[]
+  },
+  grant: async (userId: string, purpose: string) => {
+    const { data, error } = await supabase.from('consent_records').insert({ user_id: userId, purpose, granted: true } as never).select().single()
+    if (error) throw error
+    return data as unknown as ConsentRecord
+  },
+  revoke: async (id: string) => {
+    const { error } = await supabase.from('consent_records').update({ granted: false, revoked_at: new Date().toISOString() } as never).eq('id', id)
+    if (error) throw error
+  },
+}
+
+export const savedSearchApi = {
+  list: async (userId: string) => {
+    const { data, error } = await supabase.from('saved_searches').select('*').eq('user_id', userId).order('created_at', { ascending: false })
+    if (error) throw error
+    return (data || []) as unknown as SavedSearch[]
+  },
+  save: async (search: Partial<SavedSearch>) => {
+    const { data, error } = await supabase.from('saved_searches').insert(search as never).select().single()
+    if (error) throw error
+    return data as unknown as SavedSearch
+  },
+  remove: async (id: string) => {
+    const { error } = await supabase.from('saved_searches').delete().eq('id', id)
+    if (error) throw error
   },
 }
