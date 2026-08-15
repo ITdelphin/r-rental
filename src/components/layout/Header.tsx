@@ -114,6 +114,20 @@ export function Header() {
               <Button size="sm" className="flex-1" onClick={() => { navigate('/auth/register'); setMobileOpen(false) }}>{t('register')}</Button>
             </div>
           )}
+          {user && (
+            <div className="flex gap-2 pt-2">
+              <Button variant="outline" size="sm" className="flex-1" onClick={() => { navigate('/dashboard'); setMobileOpen(false) }}>
+                <Avatar className="h-5 w-5">
+                  {profile?.avatar_url ? <AvatarImage src={profile.avatar_url} /> : null}
+                  <AvatarFallback className="text-[10px]">{profile?.full_name?.charAt(0) || 'U'}</AvatarFallback>
+                </Avatar>
+                {profile?.full_name || t('dashboard')}
+              </Button>
+              <Button variant="ghost" size="sm" className="flex-1 text-red-600" onClick={() => { handleLogout() }}>
+                <LogOut className="h-4 w-4 mr-1" /> {t('logout')}
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </header>
