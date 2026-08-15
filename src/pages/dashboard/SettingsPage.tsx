@@ -491,7 +491,6 @@ function SystemTab() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState<string | null>(null)
 
-  const [platformName, setPlatformName] = useState('EasyRent')
   const [supportEmail, setSupportEmail] = useState('delphinngarambe@gmail.com')
   const [phoneNumber, setPhoneNumber] = useState('0782680268')
   const [address, setAddress] = useState('Gisenyi, Rwanda')
@@ -514,7 +513,6 @@ function SystemTab() {
       if (data) {
         const map: Record<string, string> = {}
         for (const row of data) map[row.key] = row.value
-        if (map.platform_name) setPlatformName(map.platform_name)
         if (map.support_email) setSupportEmail(map.support_email)
         if (map.phone_number) setPhoneNumber(map.phone_number)
         if (map.address) setAddress(map.address)
@@ -537,14 +535,13 @@ function SystemTab() {
 
   const saveGeneral = async () => {
     const errors: Record<string, string> = {}
-    if (!platformName.trim()) errors.platformName = t('required')
     if (!supportEmail.trim()) errors.supportEmail = t('required')
     setGeneralErrors(errors)
     if (Object.keys(errors).length > 0) return
     setSaving('general')
     try {
-      const keys = ['platform_name', 'support_email', 'phone_number', 'address']
-      const values = { platform_name: platformName.trim(), support_email: supportEmail.trim(), phone_number: phoneNumber.trim(), address: address.trim() }
+      const keys = ['support_email', 'phone_number', 'address']
+      const values = { support_email: supportEmail.trim(), phone_number: phoneNumber.trim(), address: address.trim() }
       for (const key of keys) await upsertSetting(key, values[key as keyof typeof values])
       toast.success(t('settings_saved'))
       setGeneralDirty(false)
@@ -618,7 +615,6 @@ function SystemTab() {
       {section === 'general' && (
         <SectionCard title={t('general_settings')} description={t('general_settings_description')} icon={Building}>
           <div className="grid gap-4 sm:grid-cols-2">
-            <InputField label={t('platform_name')} value={platformName} onChange={v => { setPlatformName(v); setGeneralDirty(true); setGeneralErrors(p => ({ ...p, platformName: '' })) }} placeholder="EasyRent" error={generalErrors.platformName} />
             <InputField label={t('support_email')} value={supportEmail} onChange={v => { setSupportEmail(v); setGeneralDirty(true); setGeneralErrors(p => ({ ...p, supportEmail: '' })) }} type="email" placeholder="delphinngarambe@gmail.com" error={generalErrors.supportEmail} />
             <InputField label={t('phone_number')} value={phoneNumber} onChange={v => { setPhoneNumber(v); setGeneralDirty(true) }} type="tel" placeholder="0782680268" />
             <InputField label={t('address')} value={address} onChange={v => { setAddress(v); setGeneralDirty(true) }} placeholder="Gisenyi, Rwanda" />
