@@ -47,3 +47,7 @@ export async function sendComplaintNotification(complaintId: string, newStatus: 
 export async function sendAccountNotification(userId: string, event: string, details?: Record<string, unknown>) {
   return triggerEmail('account-notification', { user_id: userId, event, details })
 }
+
+export async function sendNewPropertyNotification(propertyId: string, ownerName: string, propertyTitle: string, propertyImage?: string) {
+  return triggerEmail('new-property-notification', { property_id: propertyId, owner_name: ownerName, property_title: propertyTitle, property_image: propertyImage })
+}

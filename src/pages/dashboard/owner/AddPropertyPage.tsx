@@ -11,6 +11,7 @@ import { Select } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { LocationSelect } from '@/components/ui/LocationSelect'
 import { notifyPropertyAdded } from '@/lib/notifications'
+import { sendNewPropertyNotification } from '@/lib/email'
 import {
   ChevronLeft, Building2, Save, Upload, Check, X, AlertCircle, ImageIcon,
   MapPin, DollarSign, Home, Sparkles, Loader2, Trash2
@@ -276,6 +277,7 @@ export function AddPropertyPage() {
       toast.success(t('property_published_successfully'))
       if (created?.id && user) {
         notifyPropertyAdded(created.id, profile?.full_name || 'Owner', created.title || 'Property', user.id)
+        sendNewPropertyNotification(created.id, profile?.full_name || 'Owner', created.title || 'Property', uploadedImages[0])
       }
       navigate('/dashboard/properties')
     } catch (err: unknown) {
