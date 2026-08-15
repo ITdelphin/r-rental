@@ -1,76 +1,179 @@
-export function buildEmailHtml(opts: {
+export interface EmailButton {
+  text: string
+  url: string
+}
+
+export interface BuildEmailHtmlOptions {
   title: string
   greeting: string
   paragraphs: string[]
+  preheader?: string
+  subtext?: string
   features?: { icon: string; text: string }[]
-  cta?: { text: string; url: string }
+  cta?: EmailButton
+  secondaryCta?: EmailButton
   footer?: string
-}) {
-  const { title, greeting, paragraphs, features, cta, footer } = opts
+}
 
-  const featuresHtml = features?.length
-    ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;">
-        ${features.map(f => `<tr><td style="padding:8px 0;color:#3f3f46;font-size:14px;line-height:1.6;">${f.icon} ${f.text}</td></tr>`).join('')}
-       </table>`
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+function renderButton(button: EmailButton, variant: 'primary' | 'secondary'): string {
+  const primary = variant === 'primary'
+  const bg = primary ? '#0e7490' : '#ffffff'
+  const color = primary ? '#ffffff' : '#0e7490'
+  const border = primary ? '' : 'border:1px solid #0e7490;'
+  const text = escapeHtml(button.text)
+
+  return `
+  <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:separate;mso-table-lspace:0pt;mso-table-rspace:0pt;">
+    <tr>
+      <td align="center" style="border-radius:10px;background:${bg};${border}">
+        <a href="${button.url}" target="_blank" rel="noopener"
+           style="display:inline-block;padding:13px 34px;background:${bg};color:${color};font-size:15px;font-weight:600;line-height:20px;text-decoration:none;border-radius:10px;font-family:Arial,Helvetica,sans-serif;">
+          ${text}
+        </a>
+      </td>
+    </tr>
+  </table>`
+}
+
+export function buildEmailHtml(opts: BuildEmailHtmlOptions) {
+  const { title, greeting, paragraphs, features, cta, secondaryCta, footer } = opts
+
+  const preheader = opts.preheader
+    ? `<div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;font-family:sans-serif;">
+        ${escapeHtml(opts.preheader)}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
+      </div>`
     : ''
 
-  const ctaHtml = cta
-    ? `<table cellpadding="0" cellspacing="0" style="margin:28px 0;">
+  const subtextHtml = opts.subtext
+    ? `<p style="color:#52525b;font-size:15px;line-height:1.6;margin:0 0 4px;">${opts.subtext}</p>`
+    : ''
+
+  const featuresHtml = features?.length
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:8px 0 4px;">
+        ${features.map(f => `
         <tr>
-          <td style="background:#0891b2;border-radius:8px;text-align:center;">
-            <a href="${cta.url}" style="display:inline-block;padding:14px 36px;color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;border-radius:8px;">${cta.text}</a>
+          <td style="padding:10px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;margin:0 0 8px;">
+            <table role="presentation" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="width:34px;vertical-align:top;">
+                  <span style="display:inline-block;width:34px;height:34px;line-height:34px;text-align:center;background:#e0f2fe;border-radius:8px;font-size:17px;">${f.icon}</span>
+                </td>
+                <td style="padding-left:12px;vertical-align:middle;">
+                  <span style="color:#334155;font-size:14px;line-height:1.5;">${f.text}</span>
+                </td>
+              </tr>
+            </table>
           </td>
+        </tr>`).join('')}
+      </table>`
+    : ''
+
+  const ctaRow = cta || secondaryCta
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+        <tr>
+          <td align="center" style="padding:12px 0 4px;">${cta ? renderButton(cta, 'primary') : ''}</td>
         </tr>
-       </table>`
+        ${secondaryCta ? `<tr><td align="center" style="padding:10px 0 0;"><span style="color:#71717a;font-size:13px;">&mdash; or &mdash;</span></td></tr>
+        <tr><td align="center" style="padding:10px 0 0;">${renderButton(secondaryCta, 'secondary')}</td></tr>` : ''}
+      </table>`
     : ''
 
   const footerText = footer || 'If you have any questions, reply to this email or contact our support team.'
 
   return `<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background-color:#f4f4f5;font-family:'Inter',Arial,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 10px;">
-<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="x-apple-disable-message-reformatting">
+  <title>${escapeHtml(title)}</title>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
+  <style>
+    /* Liquid rescale for small screens only */
+    @media only screen and (max-width:620px){
+      .container{width:100% !important;max-width:100% !important;}
+      .content{padding:32px 20px !important;}
+      .header{padding:28px 20px !important;}
+      .footer{padding:24px 20px !important;}
+      .stack{display:block !important;width:100% !important;}
+    }
+  </style>
+</head>
+<body style="margin:0;padding:0;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;background-color:#eef2f6;">
+  ${preheader}
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#eef2f6;">
+    <tr>
+      <td align="center" style="padding:28px 12px;">
+        <table role="presentation" class="container" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 8px 30px rgba(15,23,42,0.08);">
 
-<tr>
-<td style="background:linear-gradient(135deg,#0891b2,#0e7490);padding:32px 40px;border-radius:16px 16px 0 0;text-align:center;">
-  <h1 style="color:#ffffff;font-size:26px;font-weight:800;margin:0;letter-spacing:-0.5px;">EasyRent</h1>
-  <p style="color:#cffafe;font-size:13px;margin:4px 0 0;opacity:0.9;">Rwanda's Trusted Property Platform</p>
-</td>
-</tr>
+          <!-- Header -->
+          <tr>
+            <td class="header" style="background:linear-gradient(135deg,#0e7490 0%,#0f766e 100%);padding:34px 40px;text-align:center;">
+              <table role="presentation" cellpadding="0" cellspacing="0" align="center">
+                <tr>
+                  <td style="background:rgba(255,255,255,0.14);border-radius:12px;padding:10px 18px;">
+                    <span style="color:#ffffff;font-size:24px;font-weight:800;letter-spacing:-0.5px;font-family:Arial,Helvetica,sans-serif;">EasyRent</span>
+                  </td>
+                </tr>
+              </table>
+              <p style="color:#cffafe;font-size:13px;margin:12px 0 0;font-family:Arial,Helvetica,sans-serif;letter-spacing:0.3px;">Rwanda&rsquo;s Trusted Property Platform</p>
+            </td>
+          </tr>
 
-<tr>
-<td style="background:#ffffff;padding:40px;border-left:1px solid #e4e4e7;border-right:1px solid #e4e4e7;">
+          <!-- Body -->
+          <tr>
+            <td class="content" style="padding:40px;background:#ffffff;">
+              <h2 style="color:#0f172a;font-size:22px;font-weight:700;margin:0 0 6px;font-family:Arial,Helvetica,sans-serif;line-height:1.3;">${title}</h2>
+              <p style="color:#64748b;font-size:14px;margin:0 0 20px;font-family:Arial,Helvetica,sans-serif;">${subtextHtml || ''}</p>
+              <p style="color:#1e293b;font-size:15px;line-height:1.7;margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;">${greeting}</p>
+              ${paragraphs.map(p => `<p style="color:#334155;font-size:15px;line-height:1.7;margin:0 0 12px;font-family:Arial,Helvetica,sans-serif;">${p}</p>`).join('')}
+              ${featuresHtml}
+              ${ctaRow}
+              <hr style="border:none;border-top:1px solid #e2e8f0;margin:30px 0 22px;">
+              <p style="color:#94a3b8;font-size:13px;line-height:1.6;margin:0;font-family:Arial,Helvetica,sans-serif;">${escapeHtml(footerText)}</p>
+              <p style="color:#334155;font-size:14px;line-height:1.6;margin:20px 0 0;font-family:Arial,Helvetica,sans-serif;">Best regards,<br><strong style="color:#0e7490;">The EasyRent Team</strong></p>
+            </td>
+          </tr>
 
-  <h2 style="color:#18181b;font-size:20px;font-weight:700;margin:0 0 6px;">${title}</h2>
+          <!-- Footer -->
+          <tr>
+            <td class="footer" style="background:#0f172a;padding:26px 40px;text-align:center;">
+              <p style="color:#94a3b8;font-size:12px;margin:0 0 8px;font-family:Arial,Helvetica,sans-serif;">&copy; ${new Date().getFullYear()} EasyRent. All rights reserved.</p>
+              <table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:0 auto;">
+                <tr>
+                  <td style="padding:0 8px;"><a href="https://rwanda-easyrent.vercel.app" style="color:#cbd5e1;font-size:12px;">Website</a></td>
+                  <td style="color:#475569;padding:0;">&bull;</td>
+                  <td style="padding:0 8px;"><a href="https://rwanda-easyrent.vercel.app/privacy" style="color:#cbd5e1;font-size:12px;">Privacy</a></td>
+                  <td style="color:#475569;padding:0;">&bull;</td>
+                  <td style="padding:0 8px;"><a href="https://rwanda-easyrent.vercel.app/terms" style="color:#cbd5e1;font-size:12px;">Terms</a></td>
+                </tr>
+              </table>
+              <p style="color:#475569;font-size:11px;margin:14px 0 0;font-family:Arial,Helvetica,sans-serif;">This is an automated message from EasyRent. Please do not reply to this email.</p>
+            </td>
+          </tr>
 
-  <p style="color:#3f3f46;font-size:15px;line-height:1.7;margin:0 0 16px;">${greeting}</p>
-
-  ${paragraphs.map(p => `<p style="color:#3f3f46;font-size:15px;line-height:1.7;margin:0 0 12px;">${p}</p>`).join('')}
-
-  ${featuresHtml}
-
-  ${ctaHtml}
-
-  <hr style="border:none;border-top:1px solid #e4e4e7;margin:28px 0 20px;">
-
-  <p style="color:#71717a;font-size:13px;line-height:1.6;margin:0;">${footerText}</p>
-
-  <p style="color:#3f3f46;font-size:14px;line-height:1.6;margin:20px 0 0;">Best regards,<br><strong style="color:#0891b2;">The EasyRent Team</strong></p>
-
-</td>
-</tr>
-
-<tr>
-<td style="background:#18181b;padding:24px 40px;border-radius:0 0 16px 16px;text-align:center;">
-  <p style="color:#71717a;font-size:12px;margin:0 0 6px;">&copy; ${new Date().getFullYear()} EasyRent. All rights reserved.</p>
-  <p style="color:#52525b;font-size:12px;margin:0;">Gisenyi, Rwanda &mdash; delphinngarambe@gmail.com</p>
-</td>
-</tr>
-
-</table>
-</td></tr></table>
+        </table>
+        <p style="color:#94a3b8;font-size:11px;margin:16px 0 0;font-family:Arial,Helvetica,sans-serif;">You are receiving this email because you have an account on EasyRent.</p>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>`
 }

@@ -41,13 +41,15 @@ Deno.serve(async (req: Request) => {
     const subject = `Welcome to EasyRent, ${profile.full_name}!`
     const htmlBody = buildEmailHtml({
       title: 'Welcome to EasyRent! 🎉',
+      preheader: 'Your account is ready. Here is how to get started.',
       greeting: `Hi ${profile.full_name},`,
+      subtext: 'Your account has been created successfully.',
       paragraphs: [
-        'Welcome to EasyRent! Your account has been created successfully.',
         `Email: ${profile.email}<br>Account Type: ${profile.role.charAt(0).toUpperCase() + profile.role.slice(1)}`,
       ],
       features: roleFeatures,
       cta: { text: 'Login to Your Account', url: 'https://rwanda-easyrent.vercel.app/auth/login' },
+      secondaryCta: { text: 'Browse Properties', url: 'https://rwanda-easyrent.vercel.app/properties' },
     })
 
     await transporter.sendMail({

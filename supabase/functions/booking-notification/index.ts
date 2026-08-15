@@ -40,7 +40,9 @@ Deno.serve(async (req: Request) => {
       const subject = `New Booking Request for ${propertyTitle}`
       const htmlBody = buildEmailHtml({
         title: 'New Booking Request 📋',
+        preheader: `${booking.tenant?.full_name} would like to visit your property.`,
         greeting: `Hi ${booking.owner?.full_name},`,
+        subtext: `Someone is interested in "${propertyTitle}".`,
         paragraphs: [
           `${booking.tenant?.full_name} has requested to book your property "${propertyTitle}".`,
         ],
@@ -69,7 +71,9 @@ Deno.serve(async (req: Request) => {
       const subject = `Booking Approved - ${propertyTitle}`
       const htmlBody = buildEmailHtml({
         title: 'Booking Approved ✅',
+        preheader: `Great news — your booking for "${propertyTitle}" was approved.`,
         greeting: `Hi ${booking.tenant?.full_name},`,
+        subtext: 'Your visit is confirmed.',
         paragraphs: [
           `Your booking request for "${propertyTitle}" has been approved by the owner!`,
         ],
