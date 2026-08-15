@@ -252,7 +252,7 @@ export function HomePage() {
             <Button size="lg" className="bg-white text-gray-900 hover:bg-gray-100 shadow-xl" onClick={() => navigate('/auth/register')}>
               {t('sign_up')}
             </Button>
-            <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10" onClick={() => navigate('/properties')}>
+            <Button size="lg" variant="outline" className="border-white/40 text-black hover:bg-white/10" onClick={() => navigate('/properties')}>
               {t('browse_properties')}
             </Button>
           </div>
