@@ -197,7 +197,7 @@ export function AddPropertyPage() {
         const file = validFiles[i]
         setUploadProgress(t('uploading_n_of_m', { current: i + 1, total: validFiles.length }))
         const ext = file.name.split('.').pop() || 'jpg'
-        const path = `properties/${user.id}-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+        const path = `properties/${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
         const { error: uploadError } = await supabase.storage.from('property-images').upload(path, file)
         if (uploadError) throw uploadError
         const { data: { publicUrl } } = supabase.storage.from('property-images').getPublicUrl(path)
