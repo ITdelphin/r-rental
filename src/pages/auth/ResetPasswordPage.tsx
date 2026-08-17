@@ -28,36 +28,48 @@ export function ResetPasswordPage() {
     let fallbackTimer: ReturnType<typeof setTimeout>
 
     const urlAtMount = window.location.hash + window.location.search
+    // PKCE flow delivers the recovery code in the query string (?code=...),
+    // implicit flow delivers the token in the hash (#access_token=...&type=recovery).
     const hasRecoveryToken =
+      /[?&]code=/.test(window.location.search) ||
       urlAtMount.includes('type=recovery') ||
       urlAtMount.includes('access_token') ||
       urlAtMount.includes('token_hash')
 
+    let settled = false
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event: AuthChangeEvent) => {
       // PASSWORD_RECOVERY fires when supabase-js validates the recovery token.
-      // It can arrive after getSession resolves, so listen for it the whole time.
-      if (event !== 'PASSWORD_RECOVERY') return
-      if (!active) return
+      // It can arrive after getSession resolves, so listen for the whole time.
+      if (event !== 'PASSWORD_RECOVERY' && event !== 'SIGNED_IN') return
+      if (!active || settled) return
+      settled = true
       clearTimeout(fallbackTimer)
       setState('form')
     })
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!active) return
 
       // A valid recovery token establishes a session. supabase-js strips the
       // token from the URL quickly, so the session is the reliable signal.
       if (session) {
+        settled = true
         setState('form')
         return
       }
 
-      // No session yet. If the URL showed a recovery token, the exchange may
-      // still be running — wait for PASSWORD_RECOVERY before declaring failure.
+      // No session yet. If the URL showed a recovery token/code, the exchange
+      // may still be running — wait for PASSWORD_RECOVERY, then re-check the
+      // session before declaring the link invalid.
       if (hasRecoveryToken) {
-        fallbackTimer = setTimeout(() => {
-          if (active) setState('invalid')
-        }, 8000)
+        fallbackTimer = setTimeout(async () => {
+          if (!active || settled) return
+          const { data: recheck } = await supabase.auth.getSession()
+          if (!active) return
+          if (recheck.session) setState('form')
+          else setState('invalid')
+        }, 10000)
         return
       }
 
