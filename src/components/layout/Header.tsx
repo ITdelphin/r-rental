@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { BrandLogo } from '@/components/ui/brand-logo'
+import { MobileNavMenu } from '@/components/layout/MobileNavMenu'
 import { supabase } from '@/lib/supabase'
 
 const languages = [
@@ -35,6 +36,13 @@ export function Header() {
     navigate('/')
   }
 
+  const toggleTheme = () => {
+    const next = !dark
+    setDark(next)
+    document.documentElement.classList.toggle('dark', next)
+    localStorage.setItem('theme', next ? 'dark' : 'light')
+  }
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md dark:bg-gray-900/80">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
@@ -49,7 +57,7 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <button onClick={() => { const next = !dark; setDark(next); document.documentElement.classList.toggle('dark', next); localStorage.setItem('theme', next ? 'dark' : 'light') }} className="p-2 text-gray-700 hover:text-primary-600 dark:text-gray-300 cursor-pointer" title={t('theme')}>
+          <button onClick={toggleTheme} className="p-2 text-gray-700 hover:text-primary-600 dark:text-gray-300 cursor-pointer" title={t('theme')}>
             {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </button>
           <div className="relative hidden sm:block">
@@ -94,42 +102,7 @@ export function Header() {
         </div>
       </div>
 
-      {mobileOpen && (
-        <div className="md:hidden border-t bg-white dark:bg-gray-900 px-4 py-4 space-y-3">
-          {navLinks.map((link) => (
-            <Link key={link.to} to={link.to} onClick={() => setMobileOpen(false)} className="block text-sm font-medium text-gray-700 hover:text-primary-600 dark:text-gray-300">
-              {link.label}
-            </Link>
-          ))}
-          <div className="border-t pt-3 flex flex-wrap gap-2">
-            {languages.map((lang) => (
-              <button key={lang.code} onClick={() => { i18n.changeLanguage(lang.code); setMobileOpen(false) }} className={`px-3 py-1 text-sm rounded-full border ${i18n.language === lang.code ? 'bg-primary-600 text-white border-primary-600' : 'border-gray-300 dark:border-gray-600'}`}>
-                {lang.label}
-              </button>
-            ))}
-          </div>
-          {!user && (
-            <div className="flex gap-2 pt-2">
-              <Button variant="outline" size="sm" className="flex-1" onClick={() => { navigate('/auth/login'); setMobileOpen(false) }}>{t('login')}</Button>
-              <Button size="sm" className="flex-1" onClick={() => { navigate('/auth/register'); setMobileOpen(false) }}>{t('register')}</Button>
-            </div>
-          )}
-          {user && (
-            <div className="flex gap-2 pt-2">
-              <Button variant="outline" size="sm" className="flex-1" onClick={() => { navigate('/dashboard'); setMobileOpen(false) }}>
-                <Avatar className="h-5 w-5">
-                  {profile?.avatar_url ? <AvatarImage src={profile.avatar_url} /> : null}
-                  <AvatarFallback className="text-[10px]">{profile?.full_name?.charAt(0) || 'U'}</AvatarFallback>
-                </Avatar>
-                {profile?.full_name || t('dashboard')}
-              </Button>
-              <Button variant="ghost" size="sm" className="flex-1 text-red-600" onClick={() => { handleLogout() }}>
-                <LogOut className="h-4 w-4 mr-1" /> {t('logout')}
-              </Button>
-            </div>
-          )}
-        </div>
-      )}
+      <MobileNavMenu open={mobileOpen} dark={dark} onToggleTheme={toggleTheme} onClose={() => setMobileOpen(false)} />
     </header>
   )
 }
