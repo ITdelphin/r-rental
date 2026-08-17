@@ -27,28 +27,43 @@ export function ResetPasswordPage() {
     let active = true
     let fallbackTimer: ReturnType<typeof setTimeout>
 
+    const urlAtMount = window.location.hash + window.location.search
+    const hasRecoveryToken =
+      urlAtMount.includes('type=recovery') ||
+      urlAtMount.includes('access_token') ||
+      urlAtMount.includes('token_hash')
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event: AuthChangeEvent) => {
+      // PASSWORD_RECOVERY fires when supabase-js validates the recovery token.
+      // It can arrive after getSession resolves, so listen for it the whole time.
       if (event !== 'PASSWORD_RECOVERY') return
       if (!active) return
       clearTimeout(fallbackTimer)
       setState('form')
     })
 
-    const hasRecoveryToken =
-      window.location.hash.includes('type=recovery') ||
-      window.location.search.includes('type=recovery') ||
-      window.location.hash.includes('access_token') ||
-      window.location.search.includes('access_token')
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!active) return
 
-    // If there is no recovery token in the URL at all, the link is invalid right away.
-    if (!hasRecoveryToken) {
+      // A valid recovery token establishes a session. supabase-js strips the
+      // token from the URL quickly, so the session is the reliable signal.
+      if (session) {
+        setState('form')
+        return
+      }
+
+      // No session yet. If the URL showed a recovery token, the exchange may
+      // still be running — wait for PASSWORD_RECOVERY before declaring failure.
+      if (hasRecoveryToken) {
+        fallbackTimer = setTimeout(() => {
+          if (active) setState('invalid')
+        }, 8000)
+        return
+      }
+
+      // No token in the URL and no session: the link is invalid.
       setState('invalid')
-    } else {
-      // Give supabase-js a moment to parse the token and fire PASSWORD_RECOVERY.
-      fallbackTimer = setTimeout(() => {
-        if (active) setState('invalid')
-      }, 2500)
-    }
+    })
 
     return () => {
       active = false
@@ -75,6 +90,11 @@ export function ResetPasswordPage() {
     setError(null)
     setLoading(true)
     const { error: updateError } = await supabase.auth.updateUser({ password: newPassword })
+    if (!updateError) {
+      // The recovery link creates a session; sign out so we do not leave the
+      // user logged in. They log in again with the new password.
+      await supabase.auth.signOut()
+    }
     setLoading(false)
     if (updateError) {
       // Generic message — do not leak whether it was a token or server problem.
