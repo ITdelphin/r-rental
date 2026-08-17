@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { BrandLogo } from '@/components/ui/brand-logo'
 import { supabase } from '@/lib/supabase'
+import { isValidEmail } from '@/lib/utils'
 
 export function ForgotPasswordPage() {
   const { t } = useTranslation()
@@ -19,8 +20,7 @@ export function ForgotPasswordPage() {
     e.preventDefault()
     const trimmed = email.trim().toLowerCase()
 
-    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
-    if (!emailRegex.test(trimmed)) {
+    if (!isValidEmail(trimmed)) {
       setError(t('invalid_email_format'))
       return
     }

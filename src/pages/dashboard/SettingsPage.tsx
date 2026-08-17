@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { CardSkeleton } from '@/components/ui/loading'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Camera, Save, Key, Trash2, Loader2, AlertTriangle, Upload, User, Shield, Bell, Palette, Settings, Sun, Moon, Monitor, Building, Image, RefreshCw, X, Eye, Globe, AlertCircle, Check, Languages } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, isValidEmail } from '@/lib/utils'
 import toast from 'react-hot-toast'
 
 type Tab = 'profile' | 'security' | 'notifications' | 'appearance' | 'system'
@@ -536,6 +536,7 @@ function SystemTab() {
   const saveGeneral = async () => {
     const errors: Record<string, string> = {}
     if (!supportEmail.trim()) errors.supportEmail = t('required')
+    else if (!isValidEmail(supportEmail)) errors.supportEmail = t('invalid_email_format')
     setGeneralErrors(errors)
     if (Object.keys(errors).length > 0) return
     setSaving('general')

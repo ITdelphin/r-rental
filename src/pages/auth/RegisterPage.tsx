@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { BrandLogo } from '@/components/ui/brand-logo'
 import { supabase } from '@/lib/supabase'
+import { isValidEmail } from '@/lib/utils'
 import { sendWelcomeEmail } from '@/lib/email'
 import toast from 'react-hot-toast'
 
@@ -20,33 +21,12 @@ export function RegisterPage() {
     e.preventDefault()
     const email = form.email.trim().toLowerCase()
 
-    // Strict RFC 5322 regex check
-    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
-    if (!emailRegex.test(email)) {
+    if (!isValidEmail(email)) {
       toast.error(t('invalid_email_format'))
       return
     }
 
-    // Ensure the domain structure is valid with a proper TLD (e.g. at least 2 characters)
-    const domainPart = email.split('@')[1] || ''
-    const domainDots = domainPart.split('.')
-    const tld = domainDots[domainDots.length - 1] || ''
-    if (domainDots.length < 2 || tld.length < 2) {
-      toast.error(t('invalid_email_format'))
-      return
-    }
-
-    // List of known disposable/temporary email domains to block
-    const disposableDomains = [
-      'yopmail.com', 'tempmail.com', 'mailinator.com', '10minutemail.com',
-      'guerrillamail.com', 'throwawaymail.com', 'temp-mail.org', 'dispostable.com',
-      'trashmail.com', 'getairmail.com', 'sharklasers.com', 'guerrillamailblock.com',
-      'guerrillamail.net', 'guerrillamail.org', 'guerrillamail.biz', 'spam4.me',
-      'mailinator.net', 'mailinator.org', 'mailinator.co', 'mailinator.space',
-      'boun.cr', 'temp-mail.com', 'tempmailaddress.com', 'generator.email'
-    ]
-
-    if (disposableDomains.includes(domainPart)) {
+    if (!isValidEmail(email)) {
       toast.error(t('disposable_email_blocked') !== 'disposable_email_blocked' ? t('disposable_email_blocked') : 'Disposable or temporary email domains are not allowed.')
       return
     }

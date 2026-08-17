@@ -10,7 +10,7 @@ import {
 import { supabase } from '@/lib/supabase'
 import toast from 'react-hot-toast'
 import { useAuth } from '@/hooks/useAuth'
-import { formatDate } from '@/lib/utils'
+import { formatDate, isValidEmail } from '@/lib/utils'
 
 type Section = 'general' | 'operations' | 'localization' | 'history'
 
@@ -199,6 +199,7 @@ export function SuperAdminSettings() {
   const saveGeneral = async () => {
     const errors: Record<string, string> = {}
     if (!supportEmail.trim()) errors.supportEmail = t('required')
+    else if (!isValidEmail(supportEmail)) errors.supportEmail = t('invalid_email_format')
     setGeneralErrors(errors)
     if (Object.keys(errors).length > 0) return
 

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { BrandLogo } from '@/components/ui/brand-logo'
 import { authApi } from '@/lib/api'
+import { isValidEmail } from '@/lib/utils'
 import toast from 'react-hot-toast'
 
 export function LoginPage() {
@@ -20,6 +21,10 @@ export function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!isValidEmail(email)) {
+      toast.error(t('invalid_email_format'))
+      return
+    }
     setLoading(true)
     try {
       await authApi.login(email, password)

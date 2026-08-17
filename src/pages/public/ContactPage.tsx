@@ -8,6 +8,7 @@ import { SEO } from '@/components/SEO'
 import { breadcrumbLD } from '@/lib/seo-data'
 import { useContact } from '@/hooks/useContact'
 import { sendContactForm } from '@/lib/email'
+import { isValidEmail } from '@/lib/utils'
 import toast from 'react-hot-toast'
 
 export function ContactPage() {
@@ -18,6 +19,10 @@ export function ContactPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!isValidEmail(form.email)) {
+      toast.error(t('invalid_email_format'))
+      return
+    }
     setSending(true)
     try {
       const { success } = await sendContactForm(form.name, form.email, form.subject, form.message)

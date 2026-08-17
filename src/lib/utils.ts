@@ -49,3 +49,32 @@ export function formatRelativeTime(date: string | Date) {
 export function slugify(str: string) {
   return str.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '')
 }
+
+const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
+
+const DISPOSABLE_DOMAINS = new Set([
+  'yopmail.com', 'tempmail.com', 'mailinator.com', '10minutemail.com',
+  'guerrillamail.com', 'throwawaymail.com', 'temp-mail.org', 'dispostable.com',
+  'trashmail.com', 'getairmail.com', 'sharklasers.com', 'guerrillamailblock.com',
+  'guerrillamail.net', 'guerrillamail.org', 'guerrillamail.biz', 'spam4.me',
+  'mailinator.net', 'mailinator.org', 'mailinator.co', 'mailinator.space',
+  'boun.cr', 'temp-mail.com', 'tempmailaddress.com', 'generator.email',
+  'maildrop.cc', 'emailfake.com', 'mailnesia.com', 'fakeinbox.com',
+  'dropmail.me', 'inboxkitten.com', 'luxusmail.org', 'mohmal.com',
+])
+
+/**
+ * Validates an email address: strict RFC 5322 format, a real domain with a
+ * proper TLD (>= 2 chars), and blocks known disposable/temporary domains.
+ */
+export function isValidEmail(value: string): boolean {
+  const email = value.trim().toLowerCase()
+  if (!EMAIL_REGEX.test(email)) return false
+
+  const domain = email.split('@')[1] || ''
+  const parts = domain.split('.')
+  const tld = parts[parts.length - 1] || ''
+  if (parts.length < 2 || tld.length < 2) return false
+
+  return !DISPOSABLE_DOMAINS.has(domain)
+}
