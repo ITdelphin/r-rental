@@ -23,6 +23,95 @@ function escapeHtml(value: string): string {
     .replace(/"/g, '&quot;')
 }
 
+const EASY_RENT_LOGO_URL = 'https://rwanda-easyrent.vercel.app/easyrent-logo.jpg'
+
+export function buildNewsletterAdminHtml(email: string): string {
+  return `<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="x-apple-disable-message-reformatting">
+  <title>New Newsletter Subscriber</title>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
+  <style>
+    @media only screen and (max-width:620px){
+      .container{width:100% !important;max-width:100% !important;}
+      .header{padding:32px 20px !important;}
+      .content{padding:32px 22px !important;}
+      .footer{padding:24px 20px !important;}
+      .stack{display:block !important;width:100% !important;}
+    }
+  </style>
+</head>
+<body style="margin:0;padding:0;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;background-color:#eef1f6;font-family:Arial,Helvetica,sans-serif;">
+  <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;font-family:sans-serif;">
+    A new user has subscribed to the EasyRent newsletter.
+  </div>
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#eef1f6;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <table role="presentation" class="container" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 12px 36px rgba(15,23,42,0.10);">
+
+          <!-- Header -->
+          <tr>
+            <td class="header" align="center" style="background:linear-gradient(135deg,#2563eb 0%,#1d4ed8 55%,#1e40af 100%);padding:38px 40px;">
+              <img src="${EASY_RENT_LOGO_URL}" width="96" height="96" alt="EasyRent" style="display:inline-block;border:0;outline:none;text-decoration:none;border-radius:18px;width:96px;height:96px;" />
+              <div style="color:#ffffff;font-size:26px;font-weight:800;letter-spacing:-0.4px;margin-top:14px;">EasyRent</div>
+              <div style="color:#dbeafe;font-size:13px;letter-spacing:0.4px;margin-top:4px;">Rwanda&rsquo;s Trusted Property Platform</div>
+            </td>
+          </tr>
+
+          <!-- Dark content -->
+          <tr>
+            <td class="content" style="background:#0f172a;padding:42px 46px;">
+              <h1 style="margin:0 0 22px;font-size:27px;line-height:1.3;font-weight:800;color:#ffffff;letter-spacing:-0.4px;">New Newsletter Subscriber</h1>
+              <hr style="border:none;border-top:1px solid #334155;margin:0 0 26px;width:64px;text-align:left;margin-left:0;">
+              <p style="margin:0 0 10px;font-size:15px;line-height:1.7;color:#cbd5e1;">Hi Admin,</p>
+              <p style="margin:0 0 24px;font-size:15px;line-height:1.7;color:#94a3b8;">A new user has subscribed to the newsletter:</p>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#1e293b;border:1px solid #334155;border-radius:14px;">
+                <tr>
+                  <td style="padding:18px 22px;">
+                    <span style="color:#60a5fa;font-size:12px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;">Subscriber Email</span>
+                    <div style="color:#f8fafc;font-size:19px;font-weight:700;line-height:1.4;margin-top:6px;word-break:break-all;">${escapeHtml(email)}</div>
+                  </td>
+                </tr>
+              </table>
+              <hr style="border:none;border-top:1px solid #334155;margin:30px 0 22px;">
+              <p style="margin:0;font-size:13px;line-height:1.7;color:#94a3b8;">If you have any questions, reply to this email or contact our support team.</p>
+              <p style="margin:24px 0 0;font-size:14px;line-height:1.7;color:#cbd5e1;">Best regards,<br><span style="color:#ffffff;font-weight:700;">The EasyRent Team</span></p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td class="footer" align="center" style="background:#0b1220;padding:28px 32px;">
+              <p style="margin:0 0 6px;font-size:12px;color:#94a3b8;">&copy; 2026 EasyRent. All rights reserved.</p>
+              <p style="margin:0 0 6px;font-size:12px;color:#94a3b8;">Gisenyi, Rwanda</p>
+              <p style="margin:0;font-size:12px;color:#94a3b8;">
+                <a href="mailto:delphinngarambe@gmail.com" style="color:#94a3b8;text-decoration:none;">delphinngarambe@gmail.com</a>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+}
+
 function renderButton(button: EmailButton, variant: 'primary' | 'secondary'): string {
   const primary = variant === 'primary'
   const bg = primary ? '#0e7490' : '#ffffff'

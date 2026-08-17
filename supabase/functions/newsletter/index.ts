@@ -1,7 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js'
 import { corsHeaders, handleCors } from '../_shared/cors.ts'
 import { createTransporter, getFromEmail, getAdminEmail } from '../_shared/smtp.ts'
-import { buildEmailHtml } from '../_shared/templates.ts'
+import { buildEmailHtml, buildNewsletterAdminHtml } from '../_shared/templates.ts'
 
 Deno.serve(async (req: Request) => {
   const corsResponse = handleCors(req)
@@ -57,11 +57,7 @@ Deno.serve(async (req: Request) => {
     }) } catch { /* non-critical */ }
 
     // Notify admin
-    const adminHtml = buildEmailHtml({
-      title: 'New Newsletter Subscriber',
-      greeting: 'Hi Admin,',
-      paragraphs: [`A new user has subscribed to the newsletter: <strong>${email}</strong>.`],
-    })
+    const adminHtml = buildNewsletterAdminHtml(email)
     await transporter.sendMail({
       from: `"EasyRent" <${fromEmail}>`,
       to: adminEmail,
