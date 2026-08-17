@@ -188,6 +188,8 @@
   "failed_to_change_role": "Échec du changement de rôle",
   "failed_to_create_request": "Échec de l'envoi de la demande. Veuillez réessayer.",
   "failed_to_delete": "Échec de la suppression",
+  "super_admin_only": "Seul un super administrateur peut gérer ce compte",
+  "change_role": "Changer le rôle",
   "failed_to_delete_notification": "Failed to delete notification",
   "failed_to_delete_property": "Échec de la suppression de la propriété",
   "failed_to_generate_contract": "Impossible de générer le bail. Veuillez réessayer.",

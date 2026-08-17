@@ -36,6 +36,11 @@ Deno.serve(async (req: Request) => {
       return new Response(JSON.stringify({ error: 'Profile not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
+    // Only a super_admin may delete another admin or a super_admin.
+    if (caller.role !== 'super_admin' && ['admin', 'super_admin'].includes(profile.role)) {
+      return new Response(JSON.stringify({ error: 'Forbidden: only a super admin can delete admin accounts' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+
     const { error } = await supabase.auth.admin.deleteUser(user_id)
     if (error) throw error
 

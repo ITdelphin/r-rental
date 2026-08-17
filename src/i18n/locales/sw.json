@@ -188,6 +188,8 @@
   "failed_to_change_role": "Imeshindwa kubadilisha wajibu",
   "failed_to_create_request": "Imeshindikana kuwasilisha ombi. Tafadhali jaribu tena.",
   "failed_to_delete": "Imeshindwa kufuta",
+  "super_admin_only": "Ni msimamizi mkuu pekee anayeweza kusimamia akaunti hii",
+  "change_role": "Badilisha jukumu",
   "failed_to_delete_notification": "Failed to delete notification",
   "failed_to_delete_property": "Imeshindwa kufuta nyumba",
   "failed_to_generate_contract": "Imeshindikana kutengeneza mkataba. Tafadhali jaribu tena.",

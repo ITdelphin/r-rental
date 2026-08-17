@@ -188,6 +188,8 @@
   "failed_to_change_role": "Guhindura uruhare ntabwo byakunze",
   "failed_to_create_request": "Gusaba gusanirwa byanze. Ongera ugerageze.",
   "failed_to_delete": "Gusiba ntabwo byakunze",
+  "super_admin_only": "Ubuyobozi bukuru gusa ni bwo bushobora gucunga iyi konti",
+  "change_role": "Hindura uruhare",
   "failed_to_delete_notification": "Failed to delete notification",
   "failed_to_delete_property": "Gusiba inzu ntabwo byakunze",
   "failed_to_generate_contract": "Gukora amasezerano byanze. Ongera ugerageze.",

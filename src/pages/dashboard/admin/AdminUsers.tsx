@@ -22,6 +22,13 @@ const ROLE_COLORS: Record<string, string> = {
   tenant: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
 }
 
+function canManageUser(user: Profile | null, viewerRole: string | undefined): boolean {
+  if (!user) return false
+  if (viewerRole === 'super_admin') return true
+  // A regular admin cannot manage admins or super_admins.
+  return !['admin', 'super_admin'].includes(user.role)
+}
+
 function UserProfileModal({ user, open, onClose, onSuspend, onVerify, onDelete, onRoleChange, currentUserRole }: {
   user: Profile | null
   open: boolean
@@ -140,7 +147,8 @@ function UserProfileModal({ user, open, onClose, onSuspend, onVerify, onDelete, 
             <select
               value={user.role}
               onChange={e => onRoleChange(user, e.target.value)}
-              className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              disabled={!canManageUser(user, currentUserRole)}
+              className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
             >
               <option value="tenant">{t('tenant')}</option>
               <option value="owner">{t('owner')}</option>
@@ -155,6 +163,7 @@ function UserProfileModal({ user, open, onClose, onSuspend, onVerify, onDelete, 
             <Button
               variant="outline"
               size="sm"
+              disabled={!canManageUser(user, currentUserRole)}
               className={`flex-1 ${user.is_verified ? 'text-gray-600' : 'text-blue-600 border-blue-300'}`}
               onClick={() => onVerify(user)}
             >
@@ -164,6 +173,7 @@ function UserProfileModal({ user, open, onClose, onSuspend, onVerify, onDelete, 
             <Button
               variant="outline"
               size="sm"
+              disabled={!canManageUser(user, currentUserRole)}
               className={`flex-1 ${user.is_suspended ? 'text-green-600 border-green-300' : 'text-orange-600 border-orange-300'}`}
               onClick={() => onSuspend(user)}
             >
@@ -182,6 +192,9 @@ function UserProfileModal({ user, open, onClose, onSuspend, onVerify, onDelete, 
               </Button>
             )}
           </div>
+          {!canManageUser(user, currentUserRole) && (
+            <p className="mt-3 text-xs text-gray-400">{t('super_admin_only')}</p>
+          )}
         </div>
       </DialogContent>
     </Dialog>
@@ -363,7 +376,8 @@ export function AdminUsers() {
                         <select
                           value={user.role}
                           onChange={e => changeRole(user, e.target.value)}
-                          className="rounded border border-gray-300 bg-white px-2 py-1 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                          disabled={!canManageUser(user, currentUser?.role)}
+                          className="rounded border border-gray-300 bg-white px-2 py-1 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 disabled:opacity-50"
                         >
                           <option value="tenant">{t('tenant')}</option>
                           <option value="owner">{t('owner')}</option>
@@ -398,12 +412,14 @@ export function AdminUsers() {
                             size="icon"
                             className={user.is_suspended ? 'text-green-500' : 'text-red-500'}
                             onClick={() => toggleSuspend(user)}
+                            disabled={!canManageUser(user, currentUser?.role)}
                             title={user.is_suspended ? t('reinstate_user') : t('suspend_user')}
                           >
                             {user.is_suspended ? <UserCheck className="h-4 w-4" /> : <UserX className="h-4 w-4" />}
                           </Button>
                           <Button variant="ghost" size="icon" className="text-blue-500" title={t('verify_user')}
                             onClick={() => toggleVerify(user)}
+                            disabled={!canManageUser(user, currentUser?.role)}
                           >
                             <Shield className="h-4 w-4" />
                           </Button>
