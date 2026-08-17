@@ -21,6 +21,7 @@ const LoginPage = lazy(() => import('@/pages/auth/LoginPage').then(m => ({ defau
 const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage').then(m => ({ default: m.RegisterPage })))
 const AuthCallbackPage = lazy(() => import('@/pages/auth/AuthCallbackPage').then(m => ({ default: m.AuthCallbackPage })))
 const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })))
+const ResetPasswordPage = lazy(() => import('@/pages/auth/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })))
 const DashboardHome = lazy(() => import('@/pages/dashboard/DashboardHome').then(m => ({ default: m.DashboardHome })))
 const BookingsPage = lazy(() => import('@/pages/dashboard/BookingsPage').then(m => ({ default: m.BookingsPage })))
 const ApplicationsPage = lazy(() => import('@/pages/dashboard/ApplicationsPage').then(m => ({ default: m.ApplicationsPage })))
@@ -87,6 +88,7 @@ function AppRoutes() {
           <Route path="/auth/login" element={<LoginPage />} />
           <Route path="/auth/register" element={<RegisterPage />} />
           <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
+<Route path="/auth/reset-password" element={<ResetPasswordPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
           {/* Protected dashboard routes */}
