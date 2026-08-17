@@ -64,11 +64,16 @@ export const propertyApi = {
     return (data || []) as unknown as Property[]
   },
   get: async (id: string) => {
-    const { data, error } = await supabase.from('properties').select('*, images:property_images(*), reviews(*, user:profiles(*))').eq('id', id).single()
+    const safeProfileCols = 'id, user_id, full_name, avatar_url, is_verified, province, district, sector, created_at'
+    const { data, error } = await supabase
+      .from('properties')
+      .select(`*, images:property_images(*), reviews(*, user:profiles(${safeProfileCols}))`)
+      .eq('id', id)
+      .single()
     if (error) throw error
     const property = data as unknown as Property
     if (property.owner_id) {
-      const { data: owner } = await supabase.from('profiles').select('*').eq('user_id', property.owner_id).single()
+      const { data: owner } = await supabase.from('profiles').select(safeProfileCols).eq('user_id', property.owner_id).single()
       property.owner = owner as unknown as Profile | undefined
     }
     return property
