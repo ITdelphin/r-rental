@@ -65,41 +65,41 @@ export function buildNewsletterAdminHtml(email: string): string {
 
           <!-- Header -->
           <tr>
-            <td class="header" align="center" style="background:linear-gradient(135deg,#2563eb 0%,#1d4ed8 55%,#1e40af 100%);padding:38px 40px;">
-              <img src="${EASY_RENT_LOGO_URL}" width="96" height="96" alt="EasyRent" style="display:inline-block;border:0;outline:none;text-decoration:none;border-radius:18px;width:96px;height:96px;" />
-              <div style="color:#ffffff;font-size:26px;font-weight:800;letter-spacing:-0.4px;margin-top:14px;">EasyRent</div>
-              <div style="color:#dbeafe;font-size:13px;letter-spacing:0.4px;margin-top:4px;">Rwanda&rsquo;s Trusted Property Platform</div>
+            <td class="header" align="center" style="background:linear-gradient(135deg,#0e7490 0%,#0f766e 100%);padding:30px 40px 26px;">
+              <img src="${EASY_RENT_LOGO_URL}" width="60" height="60" alt="EasyRent" style="display:inline-block;border:0;outline:none;text-decoration:none;border-radius:12px;width:60px;height:60px;" />
+              <div style="color:#ffffff;font-size:22px;font-weight:800;letter-spacing:-0.4px;margin-top:10px;">EasyRent</div>
+              <div style="color:#cffafe;font-size:12px;letter-spacing:0.4px;margin-top:3px;">Rwanda&rsquo;s Trusted Property Platform</div>
             </td>
           </tr>
 
           <!-- Dark content -->
           <tr>
-            <td class="content" style="background:#0f172a;padding:42px 46px;">
-              <h1 style="margin:0 0 22px;font-size:27px;line-height:1.3;font-weight:800;color:#ffffff;letter-spacing:-0.4px;">New Newsletter Subscriber</h1>
-              <hr style="border:none;border-top:1px solid #334155;margin:0 0 26px;width:64px;text-align:left;margin-left:0;">
-              <p style="margin:0 0 10px;font-size:15px;line-height:1.7;color:#cbd5e1;">Hi Admin,</p>
-              <p style="margin:0 0 24px;font-size:15px;line-height:1.7;color:#94a3b8;">A new user has subscribed to the newsletter:</p>
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#1e293b;border:1px solid #334155;border-radius:14px;">
+            <td class="content" style="background:#0f172a;padding:32px 42px;">
+              <h1 style="margin:0 0 16px;font-size:24px;line-height:1.3;font-weight:800;color:#ffffff;letter-spacing:-0.3px;">New Newsletter Subscriber</h1>
+              <hr style="border:none;border-top:2px solid #0e7490;margin:0 0 22px;width:56px;text-align:left;margin-left:0;">
+              <p style="margin:0 0 8px;font-size:14px;line-height:1.7;color:#cbd5e1;">Hi Admin,</p>
+              <p style="margin:0 0 20px;font-size:14px;line-height:1.7;color:#94a3b8;">A new user has subscribed to the newsletter:</p>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#1e293b;border:1px solid #334155;border-radius:12px;">
                 <tr>
-                  <td style="padding:18px 22px;">
-                    <span style="color:#60a5fa;font-size:12px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;">Subscriber Email</span>
-                    <div style="color:#f8fafc;font-size:19px;font-weight:700;line-height:1.4;margin-top:6px;word-break:break-all;">${escapeHtml(email)}</div>
+                  <td style="padding:14px 20px;">
+                    <span style="color:#2dd4bf;font-size:11px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;">Subscriber Email</span>
+                    <div style="color:#f8fafc;font-size:17px;font-weight:700;line-height:1.4;margin-top:4px;word-break:break-all;">${escapeHtml(email)}</div>
                   </td>
                 </tr>
               </table>
-              <hr style="border:none;border-top:1px solid #334155;margin:30px 0 22px;">
-              <p style="margin:0;font-size:13px;line-height:1.7;color:#94a3b8;">If you have any questions, reply to this email or contact our support team.</p>
-              <p style="margin:24px 0 0;font-size:14px;line-height:1.7;color:#cbd5e1;">Best regards,<br><span style="color:#ffffff;font-weight:700;">The EasyRent Team</span></p>
+              <hr style="border:none;border-top:1px solid #334155;margin:24px 0 18px;">
+              <p style="margin:0;font-size:12px;line-height:1.7;color:#94a3b8;">If you have any questions, reply to this email or contact our support team.</p>
+              <p style="margin:20px 0 0;font-size:13px;line-height:1.7;color:#cbd5e1;">Best regards,<br><span style="color:#2dd4bf;font-weight:700;">The EasyRent Team</span></p>
             </td>
           </tr>
 
           <!-- Footer -->
           <tr>
-            <td class="footer" align="center" style="background:#0b1220;padding:28px 32px;">
-              <p style="margin:0 0 6px;font-size:12px;color:#94a3b8;">&copy; 2026 EasyRent. All rights reserved.</p>
-              <p style="margin:0 0 6px;font-size:12px;color:#94a3b8;">Gisenyi, Rwanda</p>
-              <p style="margin:0;font-size:12px;color:#94a3b8;">
-                <a href="mailto:delphinngarambe@gmail.com" style="color:#94a3b8;text-decoration:none;">delphinngarambe@gmail.com</a>
+            <td class="footer" align="center" style="background:#0b1220;padding:22px 28px;">
+              <p style="margin:0 0 4px;font-size:11px;color:#94a3b8;">&copy; 2026 EasyRent. All rights reserved.</p>
+              <p style="margin:0 0 4px;font-size:11px;color:#94a3b8;">Gisenyi, Rwanda</p>
+              <p style="margin:0;font-size:11px;color:#94a3b8;">
+                <a href="mailto:delphinngarambe@gmail.com" style="color:#2dd4bf;text-decoration:none;">delphinngarambe@gmail.com</a>
               </p>
             </td>
           </tr>
