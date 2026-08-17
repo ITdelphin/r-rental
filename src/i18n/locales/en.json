@@ -117,6 +117,7 @@
   "agent": "Agent",
   "admin": "Admin",
   "super_admin": "Super Admin",
+  "cannot_change_own_role": "You cannot change your own role",
   "upload_image": "Upload Image",
   "upload_images": "Upload Images",
   "drag_drop": "Drag & drop images here",

@@ -266,6 +266,15 @@ export function AdminUsers() {
 
   const changeRole = async (user: Profile, role: string) => {
     try {
+      // Defense in depth: only a super_admin may assign the super_admin role.
+      if (role === 'super_admin' && currentUser?.role !== 'super_admin') {
+        toast.error(t('super_admin_only'))
+        return
+      }
+      if (user.user_id === currentUser?.user_id) {
+        toast.error(t('cannot_change_own_role'))
+        return
+      }
       const { error } = await supabase.from('profiles').update({ role } as never).eq('user_id', user.user_id)
       if (error) {
         console.error('changeRole RLS error:', error)
