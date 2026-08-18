@@ -28,7 +28,7 @@ export function ProtectedRoute({ allowedRoles, showAccessDenied = true }: Protec
     return <Navigate to="/auth/login" replace state={{ from: location }} />
   }
 
-  if (allowedRoles && profile && !allowedRoles.includes(profile.role)) {
+  if (allowedRoles && (!profile || !allowedRoles.includes(profile.role))) {
     if (!showAccessDenied) {
       return <Navigate to="/dashboard" replace />
     }
