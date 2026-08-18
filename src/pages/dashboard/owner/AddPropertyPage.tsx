@@ -148,6 +148,7 @@ export function AddPropertyPage() {
   const [imageErrors, setImageErrors] = useState<string[]>([])
   const [uploadProgress, setUploadProgress] = useState<string | null>(null)
   const [whatsappCode, setWhatsappCode] = useState('+250')
+  const [videoUrl, setVideoUrl] = useState('')
 
   const {
     register,
@@ -271,6 +272,17 @@ export function AddPropertyPage() {
         if (imgError) {
           console.error('Failed to save image metadata:', imgError)
           toast.error(t('property_created_image_issue'))
+        }
+      }
+
+      if (videoUrl.trim() && created?.id) {
+        const { error: videoError } = await supabase.from('property_videos').insert({
+          property_id: created.id,
+          url: videoUrl.trim(),
+        } as never)
+        if (videoError) {
+          console.error('Failed to save video metadata:', videoError)
+          toast.error(t('property_created_video_issue'))
         }
       }
 
@@ -562,6 +574,20 @@ export function AddPropertyPage() {
                 </div>
               </div>
             )}
+
+            <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                {t('property_video_url')}
+              </label>
+              <input
+                type="url"
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                placeholder={t('property_video_url_placeholder')}
+                className="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-xs transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+              />
+              <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">{t('property_video_url_hint')}</p>
+            </div>
           </div>
         </FormSection>
 

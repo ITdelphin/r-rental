@@ -15,6 +15,7 @@ import {
   MapPin, DollarSign, Home, Sparkles, Loader2, DoorOpen
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { resolveVideoUrl } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { useProperty, useUpdateProperty } from '@/hooks/useProperties'
 import { UnitsManager } from '@/components/property/UnitsManager'
@@ -116,6 +117,8 @@ export function EditPropertyPage() {
   const [uploadProgress, setUploadProgress] = useState<string | null>(null)
   const [initialized, setInitialized] = useState(false)
   const [whatsappCode, setWhatsappCode] = useState('+250')
+  const [existingVideo, setExistingVideo] = useState<{ id: string; url: string } | null>(null)
+  const [videoUrl, setVideoUrl] = useState('')
 
   const {
     register,
@@ -146,6 +149,10 @@ export function EditPropertyPage() {
         url: img.url,
       }))
     )
+
+    const existingVideoRow = (property.videos || [])[0]
+    setExistingVideo(existingVideoRow ? { id: existingVideoRow.id, url: existingVideoRow.url } : null)
+    setVideoUrl(existingVideoRow?.url || '')
 
     reset({
       title: property.title || '',
@@ -295,6 +302,32 @@ export function EditPropertyPage() {
         if (imgError) {
           console.error('Failed to save image metadata:', imgError)
           toast.error(t('property_updated_image_issue'))
+        }
+      }
+
+      const trimmedVideo = videoUrl.trim()
+      if (existingVideo) {
+        if (trimmedVideo) {
+          const { error: videoUpdateError } = await supabase.from('property_videos').update({ url: trimmedVideo }).eq('id', existingVideo.id)
+          if (videoUpdateError) {
+            console.error('Failed to update video metadata:', videoUpdateError)
+            toast.error(t('property_updated_video_issue'))
+          }
+        } else {
+          const { error: videoDeleteError } = await supabase.from('property_videos').delete().eq('id', existingVideo.id)
+          if (videoDeleteError) {
+            console.error('Failed to delete video metadata:', videoDeleteError)
+            toast.error(t('property_updated_video_issue'))
+          }
+        }
+      } else if (trimmedVideo) {
+        const { error: videoInsertError } = await supabase.from('property_videos').insert({
+          property_id: id,
+          url: trimmedVideo,
+        } as never)
+        if (videoInsertError) {
+          console.error('Failed to save video metadata:', videoInsertError)
+          toast.error(t('property_updated_video_issue'))
         }
       }
 
@@ -573,6 +606,38 @@ export function EditPropertyPage() {
                 </div>
               </div>
             )}
+
+            <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                {t('property_video_url')}
+              </label>
+              <input
+                type="url"
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                placeholder={t('property_video_url_placeholder')}
+                className="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-xs transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+              />
+              <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">{t('property_video_url_hint')}</p>
+              {existingVideo && (() => {
+                const video = resolveVideoUrl(existingVideo.url)
+                if (video.kind === 'invalid') return (
+                  <div className="mt-3 flex items-center gap-2">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">{t('current_video')}: {existingVideo.url}</span>
+                  </div>
+                )
+                return (
+                  <div className="mt-3 flex items-center gap-2">
+                    {video.kind === 'embed' ? (
+                      <iframe src={video.url} title={t('current_video')} className="h-20 w-36 rounded-lg bg-black" />
+                    ) : (
+                      <video src={video.url} controls className="h-20 w-32 rounded-lg bg-black object-cover" />
+                    )}
+                    <span className="text-xs text-gray-500 dark:text-gray-400">{t('current_video')}</span>
+                  </div>
+                )
+              })()}
+            </div>
           </div>
         </FormSection>
 

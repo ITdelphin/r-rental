@@ -78,3 +78,36 @@ export function isValidEmail(value: string): boolean {
 
   return !DISPOSABLE_DOMAINS.has(domain)
 }
+
+/**
+ * Converts a YouTube / Vimeo / direct video URL into a playable source.
+ * Returns an object describing how to render it:
+ *  - { kind: 'embed', url }   -> iframe embed (YouTube, Vimeo)
+ *  - { kind: 'file', url }    -> native <video> src (direct .mp4/.webm/.mov)
+ *  - { kind: 'invalid' }      -> unrecognized URL
+ */
+export function resolveVideoUrl(value: string): { kind: 'embed' | 'file' | 'invalid'; url: string } {
+  const url = value.trim()
+  if (!url) return { kind: 'invalid', url: '' }
+
+  try {
+    const parsed = new URL(url)
+    const host = parsed.hostname.replace(/^www\./, '').toLowerCase()
+
+    if (host === 'youtube.com' || host === 'youtu.be' || host === 'm.youtube.com') {
+      const v = parsed.searchParams.get('v') || (parsed.pathname.split('/').filter(Boolean).pop() || '')
+      if (v) return { kind: 'embed', url: `https://www.youtube.com/embed/${v}` }
+    }
+
+    if (host === 'vimeo.com') {
+      const id = parsed.pathname.split('/').filter(Boolean)[0]
+      if (id && /^\d+$/.test(id)) return { kind: 'embed', url: `https://player.vimeo.com/video/${id}` }
+    }
+
+    if (/\.(mp4|webm|mov|ogg)$/i.test(parsed.pathname)) return { kind: 'file', url }
+  } catch {
+    return { kind: 'invalid', url: '' }
+  }
+
+  return { kind: 'invalid', url: '' }
+}

@@ -10,7 +10,7 @@ import { propertyLD, breadcrumbLD } from '@/lib/seo-data'
 import { useProperty } from '@/hooks/useProperties'
 import { useAuth } from '@/hooks/useAuth'
 import { propertyApi } from '@/lib/api'
-import { formatPrice } from '@/lib/utils'
+import { formatPrice, resolveVideoUrl } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { sendBookingNotification } from '@/lib/email'
 import { notifyBookingCreated } from '@/lib/notifications'
@@ -321,6 +321,29 @@ export function PropertyDetailPage() {
               ))}
             </div>
           )}
+
+          {/* Property Video */}
+          {property.videos && property.videos.length > 0 && (() => {
+            const video = resolveVideoUrl(property.videos[0].url)
+            if (video.kind === 'invalid') return null
+            return (
+              <div className="overflow-hidden rounded-xl bg-gray-950">
+                {video.kind === 'embed' ? (
+                  <iframe
+                    src={video.url}
+                    title={property.title}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                    className="aspect-video w-full"
+                  />
+                ) : (
+                  <video src={video.url} controls preload="metadata" className="aspect-video w-full">
+                    {t('video_not_supported')}
+                  </video>
+                )}
+              </div>
+            )
+          })()}
 
           {/* Property Info */}
           <div>

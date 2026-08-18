@@ -53,7 +53,7 @@ export const profileApi = {
 
 export const propertyApi = {
   list: async (filters?: Record<string, string | number | boolean>) => {
-    let query = supabase.from('properties').select('*, images:property_images(*), reviews(*)')
+    let query = supabase.from('properties').select('*, images:property_images(*), reviews(*), videos:property_videos(*)')
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
         if (value) query = query.eq(key, value)
@@ -67,7 +67,7 @@ export const propertyApi = {
     const safeProfileCols = 'id, user_id, full_name, avatar_url, is_verified, province, district, sector, created_at'
     const { data, error } = await supabase
       .from('properties')
-      .select(`*, images:property_images(*), reviews(*, user:profiles(${safeProfileCols}))`)
+      .select(`*, images:property_images(*), videos:property_videos(*), reviews(*, user:profiles(${safeProfileCols}))`)
       .eq('id', id)
       .single()
     if (error) throw error
