@@ -104,7 +104,7 @@ export function EditPropertyPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const { data: property, isLoading: loadingProperty } = useProperty(id || '')
   const updateProperty = useUpdateProperty()
   const [submitting, setSubmitting] = useState(false)
@@ -133,7 +133,7 @@ export function EditPropertyPage() {
   useEffect(() => {
     if (property && !initialized) {
       const isOwner = property.owner_id === user?.id
-      const isAdmin = false
+      const isAdmin = profile?.role === 'admin' || profile?.role === 'super_admin'
       if (!isOwner && !isAdmin) {
         toast.error(t('no_permission_to_edit'))
         navigate('/dashboard/properties')

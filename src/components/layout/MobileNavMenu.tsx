@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { useSettings } from '@/hooks/useSettings'
+import { getNavItems } from '@/components/layout/nav-items'
 import logoImg from '/images/easyrentlogo.jpeg'
 
 const languages = [
@@ -86,6 +87,41 @@ export function MobileNavMenu({ open, dark, onClose, onToggleTheme }: MobileNavM
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-5 py-6">
+        {user && (
+          <div className="space-y-2">
+            <p className="px-1 text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">{t('dashboard')}</p>
+            {getNavItems(profile?.role).map(({ icon: Icon, to, key }) => {
+              const active = isActive(to)
+              return (
+                <Link
+                  key={to}
+                  to={to}
+                  onClick={onClose}
+                  className={cn(
+                    'flex items-center gap-4 rounded-2xl px-5 py-3 transition-colors',
+                    active ? 'bg-primary-100' : 'hover:bg-gray-50 dark:hover:bg-gray-800'
+                  )}
+                >
+                  <Icon
+                    className={cn(
+                      'h-5 w-5',
+                      active ? 'text-primary-600 fill-primary-600' : 'text-primary-400'
+                    )}
+                    strokeWidth={2.2}
+                  />
+                  <span className={cn(
+                    'text-base font-semibold',
+                    active ? 'text-primary-700' : 'text-gray-900 dark:text-gray-100'
+                  )}>
+                    {t(key)}
+                  </span>
+                </Link>
+              )
+            })}
+            <div className="my-3 border-t border-gray-100 dark:border-gray-800" />
+          </div>
+        )}
+
         <div className="space-y-2">
           {navItems.map(({ icon: Icon, to, key }) => {
             const active = isActive(to)
