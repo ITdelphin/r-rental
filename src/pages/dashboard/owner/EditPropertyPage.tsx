@@ -104,7 +104,7 @@ export function EditPropertyPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
-  const { user, profile } = useAuth()
+  const { user, profile, loading: authLoading } = useAuth()
   const { data: property, isLoading: loadingProperty } = useProperty(id || '')
   const updateProperty = useUpdateProperty()
   const [submitting, setSubmitting] = useState(false)
@@ -131,60 +131,59 @@ export function EditPropertyPage() {
   const formValues = watch()
 
   useEffect(() => {
-    if (property && !initialized) {
-      const isOwner = property.owner_id === user?.id
-      const isAdmin = profile?.role === 'admin' || profile?.role === 'super_admin'
-      if (!isOwner && !isAdmin) {
-        toast.error(t('no_permission_to_edit'))
-        navigate('/dashboard/properties')
-        return
-      }
-
-      setExistingImages(
-        (property.images || []).map((img: { id: string; url: string }) => ({
-          id: img.id,
-          url: img.url,
-        }))
-      )
-
-      reset({
-        title: property.title || '',
-        description: property.description || '',
-        category: (property.category as EditFormData['category']) || 'Rent',
-        property_type: (property.property_type as EditFormData['property_type']) || 'Apartment',
-        bedrooms: property.bedrooms || 1,
-        bathrooms: property.bathrooms || 1,
-        kitchen: property.kitchen || 1,
-        price: property.price || 0,
-        deposit: property.deposit,
-        province: property.province || 'Kigali',
-        district: property.district || '',
-        sector: property.sector || '',
-        cell: property.cell || '',
-        village: property.village || '',
-        whatsapp_number: (() => {
-          const full = property.whatsapp_number || ''
-          const matched = countryCodes.find((cc) => full.startsWith(cc.code))
-          if (matched) {
-            setWhatsappCode(matched.code)
-            return full.slice(matched.code.length)
-          }
-          return full
-        })(),
-        parking: property.parking || false,
-        balcony: property.balcony || false,
-        garden: property.garden || false,
-        swimming_pool: property.swimming_pool || false,
-        security: property.security ?? true,
-        internet: property.internet ?? true,
-        water: property.water ?? true,
-        electricity: property.electricity ?? true,
-        furnished: property.furnished || false,
-        status: property.status || 'draft',
-      })
-      setInitialized(true)
+    if (!property || initialized || authLoading) return
+    const isOwner = property.owner_id === user?.id
+    const isAdmin = profile?.role === 'admin' || profile?.role === 'super_admin'
+    if (!isOwner && !isAdmin) {
+      toast.error(t('no_permission_to_edit'))
+      navigate('/dashboard/properties')
+      return
     }
-  }, [property, initialized, reset, user, navigate])
+
+    setExistingImages(
+      (property.images || []).map((img: { id: string; url: string }) => ({
+        id: img.id,
+        url: img.url,
+      }))
+    )
+
+    reset({
+      title: property.title || '',
+      description: property.description || '',
+      category: (property.category as EditFormData['category']) || 'Rent',
+      property_type: (property.property_type as EditFormData['property_type']) || 'Apartment',
+      bedrooms: property.bedrooms || 1,
+      bathrooms: property.bathrooms || 1,
+      kitchen: property.kitchen || 1,
+      price: property.price || 0,
+      deposit: property.deposit,
+      province: property.province || 'Kigali',
+      district: property.district || '',
+      sector: property.sector || '',
+      cell: property.cell || '',
+      village: property.village || '',
+      whatsapp_number: (() => {
+        const full = property.whatsapp_number || ''
+        const matched = countryCodes.find((cc) => full.startsWith(cc.code))
+        if (matched) {
+          setWhatsappCode(matched.code)
+          return full.slice(matched.code.length)
+        }
+        return full
+      })(),
+      parking: property.parking || false,
+      balcony: property.balcony || false,
+      garden: property.garden || false,
+      swimming_pool: property.swimming_pool || false,
+      security: property.security ?? true,
+      internet: property.internet ?? true,
+      water: property.water ?? true,
+      electricity: property.electricity ?? true,
+      furnished: property.furnished || false,
+      status: property.status || 'draft',
+    })
+    setInitialized(true)
+  }, [property, initialized, reset, user, navigate, profile, authLoading])
 
   const handleImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
