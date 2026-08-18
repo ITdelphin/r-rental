@@ -44,65 +44,67 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md dark:bg-gray-900/80">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
-        <BrandLogo variant="header" />
+    <>
+      <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md dark:bg-gray-900/80">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
+          <BrandLogo variant="header" />
 
-        <nav className="hidden md:flex items-center gap-6">
-          {navLinks.map((link) => (
-            <Link key={link.to} to={link.to} className="text-sm font-medium text-gray-700 hover:text-primary-600 dark:text-gray-300">
-              {link.label}
-            </Link>
-          ))}
-        </nav>
+          <nav className="hidden md:flex items-center gap-6">
+            {navLinks.map((link) => (
+              <Link key={link.to} to={link.to} className="text-sm font-medium text-gray-700 hover:text-primary-600 dark:text-gray-300">
+                {link.label}
+              </Link>
+            ))}
+          </nav>
 
-        <div className="flex items-center gap-2">
-          <button onClick={toggleTheme} className="p-2 text-gray-700 hover:text-primary-600 dark:text-gray-300 cursor-pointer" title={t('theme')}>
-            {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </button>
-          <div className="relative hidden sm:block">
-            <button onClick={() => setLangOpen(!langOpen)} className="flex items-center gap-1 p-2 text-sm text-gray-700 hover:text-primary-600 dark:text-gray-300 cursor-pointer">
-              <Globe className="h-4 w-4" />
-              {i18n.language.toUpperCase()}
+          <div className="flex items-center gap-2">
+            <button onClick={toggleTheme} className="p-2 text-gray-700 hover:text-primary-600 dark:text-gray-300 cursor-pointer" title={t('theme')}>
+              {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
-            {langOpen && (
-              <div className="absolute right-0 mt-1 w-36 rounded-lg border bg-white shadow-lg dark:bg-gray-800 dark:border-gray-700">
-                {languages.map((lang) => (
-                  <button key={lang.code} onClick={() => { i18n.changeLanguage(lang.code); setLangOpen(false) }} className="block w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
-                    {lang.label}
-                  </button>
-                ))}
+            <div className="relative hidden sm:block">
+              <button onClick={() => setLangOpen(!langOpen)} className="flex items-center gap-1 p-2 text-sm text-gray-700 hover:text-primary-600 dark:text-gray-300 cursor-pointer">
+                <Globe className="h-4 w-4" />
+                {i18n.language.toUpperCase()}
+              </button>
+              {langOpen && (
+                <div className="absolute right-0 mt-1 w-36 rounded-lg border bg-white shadow-lg dark:bg-gray-800 dark:border-gray-700">
+                  {languages.map((lang) => (
+                    <button key={lang.code} onClick={() => { i18n.changeLanguage(lang.code); setLangOpen(false) }} className="block w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
+                      {lang.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {user ? (
+              <div className="flex items-center gap-2">
+                <button onClick={() => navigate('/dashboard')} className="flex items-center gap-2 rounded-lg p-1 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer">
+                  <Avatar className="h-8 w-8">
+                    {profile?.avatar_url ? <AvatarImage src={profile.avatar_url} /> : null}
+                    <AvatarFallback className="text-xs">{profile?.full_name?.charAt(0) || 'U'}</AvatarFallback>
+                  </Avatar>
+                  <span className="hidden sm:inline text-sm font-medium text-gray-700 dark:text-gray-300">{profile?.full_name || t('dashboard')}</span>
+                </button>
+                <Button variant="ghost" size="icon" onClick={handleLogout}>
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <div className="hidden sm:flex items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={() => navigate('/auth/login')}>{t('login')}</Button>
+                <Button size="sm" onClick={() => navigate('/auth/register')}>{t('register')}</Button>
               </div>
             )}
+
+            <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2 cursor-pointer">
+              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
           </div>
-
-          {user ? (
-            <div className="flex items-center gap-2">
-              <button onClick={() => navigate('/dashboard')} className="flex items-center gap-2 rounded-lg p-1 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer">
-                <Avatar className="h-8 w-8">
-                  {profile?.avatar_url ? <AvatarImage src={profile.avatar_url} /> : null}
-                  <AvatarFallback className="text-xs">{profile?.full_name?.charAt(0) || 'U'}</AvatarFallback>
-                </Avatar>
-                <span className="hidden sm:inline text-sm font-medium text-gray-700 dark:text-gray-300">{profile?.full_name || t('dashboard')}</span>
-              </button>
-              <Button variant="ghost" size="icon" onClick={handleLogout}>
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </div>
-          ) : (
-            <div className="hidden sm:flex items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={() => navigate('/auth/login')}>{t('login')}</Button>
-              <Button size="sm" onClick={() => navigate('/auth/register')}>{t('register')}</Button>
-            </div>
-          )}
-
-          <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2 cursor-pointer">
-            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
         </div>
-      </div>
+      </header>
 
       <MobileNavMenu open={mobileOpen} dark={dark} onToggleTheme={toggleTheme} onClose={() => setMobileOpen(false)} />
-    </header>
+    </>
   )
 }
