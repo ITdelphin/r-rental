@@ -159,6 +159,7 @@ export function AddPropertyPage() {
   const [paymentMethod, setPaymentMethod] = useState<'mtn_momo' | 'airtel_money' | 'card'>('mtn_momo')
   const [paymentPhone, setPaymentPhone] = useState(profile?.phone || '')
   const [processingPayment, setProcessingPayment] = useState(false)
+  const [feeId, setFeeId] = useState<string | null>(null)
 
   // Verify if a user has a valid listing fee available
   useEffect(() => {
@@ -167,17 +168,19 @@ export function AddPropertyPage() {
       try {
         const { data, error } = await supabase
           .from('listing_fees')
-          .select('id, expires_at')
+          .select('id')
           .eq('user_id', user.id)
           .eq('status', 'completed')
-          .gte('expires_at', new Date().toISOString())
+          .eq('is_used', false)
           .order('created_at', { ascending: false })
           .limit(1)
 
         if (!error && data && data.length > 0) {
+          setFeeId((data[0] as { id: string }).id)
           setHasPaidFee(true)
           setIsPaymentModalOpen(false)
         } else {
+          setFeeId(null)
           setHasPaidFee(false)
           setIsPaymentModalOpen(true)
         }
@@ -291,6 +294,10 @@ export function AddPropertyPage() {
 
       if (error) throw error
 
+      if (data && data.length > 0) {
+        setFeeId((data[0] as { id: string }).id)
+      }
+
       toast.success(t('payment_successful_msg', 'Payment processed successfully!'))
       setHasPaidFee(true)
       setIsPaymentModalOpen(false)
@@ -364,6 +371,16 @@ export function AddPropertyPage() {
         }
       }
 
+      if (created?.id && feeId) {
+        const { error: feeUpdateError } = await supabase
+          .from('listing_fees')
+          .update({ is_used: true, property_id: created.id } as never)
+          .eq('id', feeId)
+        if (feeUpdateError) {
+          console.error('Failed to mark fee as used:', feeUpdateError)
+        }
+      }
+
       toast.success(t('property_published_successfully'))
       if (created?.id && user) {
         notifyPropertyAdded(created.id, profile?.full_name || 'Owner', created.title || 'Property', user.id)
@@ -426,8 +443,8 @@ export function AddPropertyPage() {
                     type="button"
                     onClick={() => setPaymentMethod('mtn_momo')}
                     className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 font-semibold transition-colors cursor-pointer ${paymentMethod === 'mtn_momo'
-                        ? 'border-yellow-400 bg-yellow-50 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
-                        : 'border-gray-200 bg-white text-gray-500 hover:border-yellow-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400'
+                      ? 'border-yellow-400 bg-yellow-50 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+                      : 'border-gray-200 bg-white text-gray-500 hover:border-yellow-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400'
                       }`}
                   >
                     MTN MoMo
@@ -436,8 +453,8 @@ export function AddPropertyPage() {
                     type="button"
                     onClick={() => setPaymentMethod('airtel_money')}
                     className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 font-semibold transition-colors cursor-pointer ${paymentMethod === 'airtel_money'
-                        ? 'border-red-400 bg-red-50 text-red-800 dark:bg-red-900/20 dark:text-red-400'
-                        : 'border-gray-200 bg-white text-gray-500 hover:border-red-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400'
+                      ? 'border-red-400 bg-red-50 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                      : 'border-gray-200 bg-white text-gray-500 hover:border-red-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400'
                       }`}
                   >
                     Airtel Money
@@ -446,8 +463,8 @@ export function AddPropertyPage() {
                     type="button"
                     onClick={() => setPaymentMethod('card')}
                     className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 font-semibold transition-colors cursor-pointer ${paymentMethod === 'card'
-                        ? 'border-blue-400 bg-blue-50 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
-                        : 'border-gray-200 bg-white text-gray-500 hover:border-blue-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400'
+                      ? 'border-blue-400 bg-blue-50 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
+                      : 'border-gray-200 bg-white text-gray-500 hover:border-blue-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400'
                       }`}
                   >
                     Card
