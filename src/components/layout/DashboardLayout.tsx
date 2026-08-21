@@ -100,7 +100,20 @@ export function DashboardLayout() {
       setActiveNotif(notif)
       setModalOpen(true)
 
+      if (!user) return
+
       try {
+        // Move to archive in localStorage
+        const archiveKey = `deleted_notifs_${user.id}`
+        const currentArchive = JSON.parse(localStorage.getItem(archiveKey) || '[]')
+        if (!currentArchive.some((n: any) => n.id === notif.id)) {
+          const archivedItem = {
+            ...notif,
+            deleted_at: new Date().toISOString()
+          }
+          localStorage.setItem(archiveKey, JSON.stringify([archivedItem, ...currentArchive]))
+        }
+
         await supabase.from('notifications').delete().eq('id', notif.id)
         fetchUnreadCount()
         window.dispatchEvent(new CustomEvent('notification-changed'))
@@ -109,11 +122,13 @@ export function DashboardLayout() {
       }
     }
 
-    window.addEventListener('open-notification', handleOpenNotif)
+    if (user) {
+      window.addEventListener('open-notification', handleOpenNotif)
+    }
     return () => {
       window.removeEventListener('open-notification', handleOpenNotif)
     }
-  }, [fetchUnreadCount])
+  }, [user, fetchUnreadCount])
 
   const navItems = getNavItems(profile?.role)
 
