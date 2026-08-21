@@ -43,6 +43,12 @@ export function NotificationsPage() {
 
   useEffect(() => {
     fetchNotifications()
+
+    const handleNotifReload = () => fetchNotifications()
+    window.addEventListener('notification-changed', handleNotifReload)
+    return () => {
+      window.removeEventListener('notification-changed', handleNotifReload)
+    }
   }, [fetchNotifications])
 
   useEffect(() => {
@@ -116,23 +122,27 @@ export function NotificationsPage() {
             return (
               <Card
                 key={notif.id}
-                className={`transition-colors ${
-                  notif.is_read
+                className={`transition-all hover:border-primary-400 dark:hover:border-primary-600 ${notif.is_read
                     ? ''
                     : 'border-primary-300 bg-primary-50/50 dark:border-primary-700 dark:bg-primary-900/10'
-                }`}
+                  }`}
               >
-                <CardContent className="flex items-start justify-between p-4">
-                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                <CardContent className="flex items-start justify-between p-4 gap-4">
+                  <div
+                    className="flex items-start gap-3 flex-1 min-w-0 cursor-pointer"
+                    onClick={() => {
+                      window.dispatchEvent(new CustomEvent('open-notification', { detail: notif }))
+                    }}
+                  >
                     <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${cfg.color}`}>
                       <TypeIcon className="h-5 w-5" />
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">{notif.title}</h3>
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{notif.title}</h3>
                         {!notif.is_read && <div className="h-2 w-2 shrink-0 rounded-full bg-primary-600" />}
                       </div>
-                      <p className="mt-0.5 text-sm text-gray-500">{notif.body}</p>
+                      <p className="mt-0.5 text-sm text-gray-600 dark:text-gray-400 line-clamp-1">{notif.body}</p>
                       <p className="mt-1 text-xs text-gray-400">{new Date(notif.created_at).toLocaleDateString()}</p>
                     </div>
                   </div>
@@ -148,3 +158,4 @@ export function NotificationsPage() {
     </div>
   )
 }
+

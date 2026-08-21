@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Home, Bell, LogOut, Menu, X, ChevronRight, MessageSquare } from 'lucide-react'
+import { Home, Bell, LogOut, Menu, X, ChevronRight, MessageSquare, Info, CheckCircle, AlertTriangle, XCircle } from 'lucide-react'
 import { useState, useEffect, useCallback } from 'react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
@@ -8,7 +8,9 @@ import { supabase } from '@/lib/supabase'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { BrandLogo } from '@/components/ui/brand-logo'
 import { getNavItems } from '@/components/layout/nav-items'
-
+import toast from 'react-hot-toast'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 
 export function DashboardLayout() {
   const { t } = useTranslation()
@@ -17,25 +19,101 @@ export function DashboardLayout() {
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [unreadNotifs, setUnreadNotifs] = useState(0)
+  const [activeNotif, setActiveNotif] = useState<any | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
 
   const fetchUnreadCount = useCallback(async () => {
     if (!user) return
-    const { count } = await supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', user.id).is('is_read', false)
+    const { count } = await supabase
+      .from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .is('is_read', false)
     setUnreadNotifs(count ?? 0)
   }, [user])
 
   useEffect(() => {
+    if (!user) return
     fetchUnreadCount()
-    const sub = supabase.channel('notif-count').on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => {
-      fetchUnreadCount()
-    }).subscribe()
+
+    const channel = supabase.channel(`notifs-${user.id}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${user.id}`
+      }, (payload) => {
+        fetchUnreadCount()
+        window.dispatchEvent(new CustomEvent('notification-changed'))
+
+        if (payload.eventType === 'INSERT') {
+          const newNotif = payload.new;
+          toast.custom((t) => (
+            <div
+              className={cn(
+                t.visible ? 'animate-in fade-in slide-in-from-top-5 duration-300' : 'animate-out fade-out slide-out-to-top-5 duration-200',
+                'max-w-md w-full bg-white dark:bg-gray-800 shadow-xl rounded-xl pointer-events-auto flex border border-gray-105 dark:border-gray-700 overflow-hidden cursor-pointer'
+              )}
+              onClick={() => {
+                toast.dismiss(t.id)
+                window.dispatchEvent(new CustomEvent('open-notification', { detail: newNotif }))
+              }}
+            >
+              <div className="flex-1 p-4">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 pt-0.5">
+                    <div className="h-10 w-10 rounded-lg bg-primary-105 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400 font-semibold">
+                      <Bell className="h-5 w-5 animate-pulse" />
+                    </div>
+                  </div>
+                  <div className="ml-3 flex-1">
+                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 animate-pulse">
+                      {newNotif.title}
+                    </p>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
+                      {newNotif.body}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ), { duration: 10000 })
+        }
+      })
+      .subscribe()
+
     const handleNotifChange = () => fetchUnreadCount()
     window.addEventListener('notification-changed', handleNotifChange)
+
     return () => {
-      supabase.removeChannel(sub)
+      supabase.removeChannel(channel)
       window.removeEventListener('notification-changed', handleNotifChange)
     }
   }, [user, fetchUnreadCount])
+
+  useEffect(() => {
+    const handleOpenNotif = async (e: Event) => {
+      const customEvent = e as CustomEvent
+      const notif = customEvent.detail
+      if (!notif) return
+
+      setActiveNotif(notif)
+      setModalOpen(true)
+
+      try {
+        await supabase.from('notifications').delete().eq('id', notif.id)
+        fetchUnreadCount()
+        window.dispatchEvent(new CustomEvent('notification-changed'))
+      } catch (err) {
+        console.error('Failed to delete notification:', err)
+      }
+    }
+
+    window.addEventListener('open-notification', handleOpenNotif)
+    return () => {
+      window.removeEventListener('open-notification', handleOpenNotif)
+    }
+  }, [fetchUnreadCount])
 
   const navItems = getNavItems(profile?.role)
 
@@ -124,6 +202,43 @@ export function DashboardLayout() {
       </div>
 
       {sidebarOpen && <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} />}
+
+      {/* Notification Detail Dialog */}
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className={cn(
+                'p-2.5 rounded-xl flex items-center justify-center shrink-0',
+                activeNotif?.type === 'success' ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' :
+                  activeNotif?.type === 'warning' ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400' :
+                    activeNotif?.type === 'error' ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' :
+                      'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
+              )}>
+                {activeNotif?.type === 'success' ? <CheckCircle className="h-5 w-5" /> :
+                  activeNotif?.type === 'warning' ? <AlertTriangle className="h-5 w-5" /> :
+                    activeNotif?.type === 'error' ? <XCircle className="h-5 w-5" /> :
+                      <Info className="h-5 w-5" />}
+              </div>
+              <DialogTitle className="text-base font-bold text-gray-900 dark:text-gray-50">{activeNotif?.title}</DialogTitle>
+            </div>
+          </DialogHeader>
+          <div className="py-4 text-sm text-gray-600 dark:text-gray-305 whitespace-pre-wrap leading-relaxed">
+            {activeNotif?.body}
+            {activeNotif?.created_at && (
+              <p className="mt-3 text-xs text-gray-400">
+                {new Date(activeNotif.created_at).toLocaleString()}
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setModalOpen(false)} className="w-full sm:w-auto">
+              {t('close')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
+
