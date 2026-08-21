@@ -17,6 +17,7 @@ const TermsPage = lazy(() => import('@/pages/public/TermsPage').then(m => ({ def
 const PropertiesPage = lazy(() => import('@/pages/public/PropertiesPage').then(m => ({ default: m.PropertiesPage })))
 const PropertyDetailPage = lazy(() => import('@/pages/public/PropertyDetailPage').then(m => ({ default: m.PropertyDetailPage })))
 const ComparePage = lazy(() => import('@/components/ui/compare-properties').then(m => ({ default: m.ComparePage })))
+const CmsPage = lazy(() => import('@/pages/public/CmsPage').then(m => ({ default: m.CmsPage })))
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage').then(m => ({ default: m.LoginPage })))
 const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage').then(m => ({ default: m.RegisterPage })))
 const AuthCallbackPage = lazy(() => import('@/pages/auth/AuthCallbackPage').then(m => ({ default: m.AuthCallbackPage })))
@@ -82,13 +83,14 @@ function AppRoutes() {
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/compare" element={<ComparePage />} />
+            <Route path="/p/:slug" element={<CmsPage />} />
           </Route>
 
           {/* Auth routes */}
           <Route path="/auth/login" element={<LoginPage />} />
           <Route path="/auth/register" element={<RegisterPage />} />
           <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
-<Route path="/auth/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
           {/* Protected dashboard routes */}

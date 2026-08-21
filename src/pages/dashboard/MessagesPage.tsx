@@ -52,6 +52,8 @@ export function MessagesPage() {
   const inputRef = useRef<HTMLInputElement>(null)
   const userSearchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set())
+
   const fetchMessages = useCallback(async () => {
     if (!user) return
     try {
@@ -83,7 +85,7 @@ export function MessagesPage() {
     }
   }, [searchParams, user, setSearchParams, t])
 
-  // Real-time subscription
+  // Real-time subscription & presence
   useEffect(() => {
     if (!user) return
     const channel = supabase
@@ -101,7 +103,27 @@ export function MessagesPage() {
         filter: `receiver_id=eq.${user.id}`,
       }, () => fetchMessages())
       .subscribe()
-    return () => { supabase.removeChannel(channel) }
+
+    const presenceChannel = supabase.channel('online_presence', {
+      config: { presence: { key: user.id } },
+    })
+
+    presenceChannel
+      .on('presence', { event: 'sync' }, () => {
+        const state = presenceChannel.presenceState()
+        const onlineIds = new Set(Object.keys(state))
+        setOnlineUserIds(onlineIds)
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await presenceChannel.track({ user_id: user.id, online_at: new Date().toISOString() })
+        }
+      })
+
+    return () => {
+      supabase.removeChannel(channel)
+      supabase.removeChannel(presenceChannel)
+    }
   }, [user, fetchMessages])
 
   useEffect(() => {
@@ -164,7 +186,7 @@ export function MessagesPage() {
           lastMessageTimestamp: msgTimestamp,
           unreadCount: isUnread ? 1 : 0,
           lastSenderId: msg.sender_id,
-          isOnline: false,
+          isOnline: onlineUserIds.has(otherUserId),
         })
       } else {
         // Messages come sorted descending, so first encountered is the latest
@@ -177,16 +199,16 @@ export function MessagesPage() {
   // Filter conversations by search
   const filteredConversations = searchQuery.trim()
     ? conversations.filter(c =>
-        c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        c.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
+    )
     : conversations
 
   const chatMessages = messages
     .filter(m => {
       if (!activeChatUser) return false
       return (m.sender_id === user?.id && m.receiver_id === activeChatUser) ||
-             (m.receiver_id === user?.id && m.sender_id === activeChatUser)
+        (m.receiver_id === user?.id && m.sender_id === activeChatUser)
     })
     .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
 
@@ -201,7 +223,7 @@ export function MessagesPage() {
     setEditingId(null)
     // Mark all as read
     const unread = messages.filter(m => m.sender_id === userId && m.receiver_id === user?.id && !m.is_read)
-    unread.forEach(m => messageApi.markAsRead(m.id).catch(() => {}))
+    unread.forEach(m => messageApi.markAsRead(m.id).catch(() => { }))
     // Update local state immediately for better UX
     if (unread.length > 0) {
       setMessages(prev => prev.map(m =>
@@ -329,37 +351,37 @@ export function MessagesPage() {
       <Card className={`w-full sm:w-80 flex-shrink-0 ${showMobileChat ? 'hidden sm:block' : 'block'}`}>
         <CardContent className="p-0 flex flex-col h-full">
           <div className="border-b p-3 dark:border-gray-700">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('messages')}</h2>
-                  {totalUnread > 0 && (
-                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary-600 px-1.5 text-xs text-white font-medium">
-                      {totalUnread}
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-1">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-8 px-2 text-xs"
-                    onClick={handleContactSupport}
-                    disabled={contactingSupport}
-                    title={t('contact_support')}
-                  >
-                    <MessageSquare className="h-3.5 w-3.5 mr-1" /> {t('contact_support')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-8 w-8 p-0"
-                    onClick={() => setShowNewMessageDialog(true)}
-                    title={t('new_message')}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('messages')}</h2>
+                {totalUnread > 0 && (
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary-600 px-1.5 text-xs text-white font-medium">
+                    {totalUnread}
+                  </span>
+                )}
               </div>
+              <div className="flex items-center gap-1">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 px-2 text-xs"
+                  onClick={handleContactSupport}
+                  disabled={contactingSupport}
+                  title={t('contact_support')}
+                >
+                  <MessageSquare className="h-3.5 w-3.5 mr-1" /> {t('contact_support')}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 w-8 p-0"
+                  onClick={() => setShowNewMessageDialog(true)}
+                  title={t('new_message')}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <input
@@ -400,9 +422,8 @@ export function MessagesPage() {
                 <button
                   key={conv.userId}
                   onClick={() => handleSelectChat(conv.userId)}
-                  className={`flex w-full items-start gap-3 p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer ${
-                    activeChatUser === conv.userId ? 'bg-primary-50 dark:bg-primary-900/20 border-l-3 border-l-primary-600' : ''
-                  }`}
+                  className={`flex w-full items-start gap-3 p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer ${activeChatUser === conv.userId ? 'bg-primary-50 dark:bg-primary-900/20 border-l-3 border-l-primary-600' : ''
+                    }`}
                 >
                   <div className="relative">
                     <Avatar>
@@ -515,11 +536,10 @@ export function MessagesPage() {
                               </div>
                             ) : (
                               <div
-                                className={`rounded-2xl px-4 py-2.5 text-sm shadow-sm ${
-                                  isMine
+                                className={`rounded-2xl px-4 py-2.5 text-sm shadow-sm ${isMine
                                     ? 'bg-primary-600 text-white rounded-br-md'
                                     : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-bl-md'
-                                }`}
+                                  }`}
                               >
                                 <p className="whitespace-pre-wrap break-words">{msg.content}</p>
                                 <div className={`mt-1 flex items-center gap-1 text-xs ${isMine ? 'text-primary-200 justify-end' : 'text-gray-400'}`}>

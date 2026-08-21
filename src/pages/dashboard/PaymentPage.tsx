@@ -5,12 +5,14 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { TableSkeleton } from '@/components/ui/loading'
 import { EmptyState } from '@/components/ui/empty-state'
-import { Search, CreditCard, CheckCircle, XCircle, Clock, ArrowUpRight, Download, FileText } from 'lucide-react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog'
+import { Search, CreditCard, CheckCircle, XCircle, Clock, ArrowUpRight, Download, FileText, Plus, Phone, ShieldCheck, Loader2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { formatPrice } from '@/lib/utils'
 import { Link } from 'react-router-dom'
 import jsPDF from 'jspdf'
+import toast from 'react-hot-toast'
 
 const statusConfig: Record<string, { label: string; variant: 'warning' | 'success' | 'danger' | 'secondary' | 'default'; icon: typeof Clock }> = {
   pending: { label: 'pending', variant: 'warning', icon: Clock },
@@ -34,7 +36,19 @@ interface PaymentWithBooking {
   booking?: {
     id: string
     status: string
-    property?: { title: string; district: string; province: string }
+    property?: { title: string; district: string; province: string; price: number; owner_id: string }
+  }
+}
+
+interface ApprovedBooking {
+  id: string
+  property_id: string
+  total_price: number
+  property: {
+    id: string
+    title: string
+    owner_id: string
+    price: number
   }
 }
 
@@ -111,6 +125,14 @@ export function PaymentPage() {
   const [payments, setPayments] = useState<PaymentWithBooking[]>([])
   const [search, setSearch] = useState('')
 
+  // New Payment Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [approvedBookings, setApprovedBookings] = useState<ApprovedBooking[]>([])
+  const [selectedBookingId, setSelectedBookingId] = useState('')
+  const [paymentMethod, setPaymentMethod] = useState<'mtn_momo' | 'airtel_money' | 'card'>('mtn_momo')
+  const [phoneNumber, setPhoneNumber] = useState(profile?.phone || '')
+  const [processing, setProcessing] = useState(false)
+
   const fetchPayments = useCallback(async () => {
     if (!user || !profile) return
     setLoading(true)
@@ -118,7 +140,7 @@ export function PaymentPage() {
       const column = profile.role === 'owner' || profile.role === 'agent' ? 'payee_id' : 'payer_id'
       const { data, error } = await supabase
         .from('payments')
-        .select('*, booking:bookings(id, status, property:properties(title, district, province))')
+        .select('*, booking:bookings(id, status, property:properties(title, district, province, price, owner_id))')
         .eq(column, user.id)
         .order('created_at', { ascending: false })
       if (error) throw error
@@ -130,9 +152,73 @@ export function PaymentPage() {
     }
   }, [user, profile])
 
+  const fetchApprovedBookings = useCallback(async () => {
+    if (!user) return
+    try {
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('id, property_id, total_price, property:properties(id, title, owner_id, price)')
+        .eq('tenant_id', user.id)
+        .in('status', ['approved', 'pending'])
+      if (!error && data) {
+        setApprovedBookings(data as unknown as ApprovedBooking[])
+      }
+    } catch {
+      setApprovedBookings([])
+    }
+  }, [user])
+
   useEffect(() => {
-    if (user && profile) fetchPayments()
-  }, [fetchPayments, user, profile])
+    if (user && profile) {
+      fetchPayments()
+      fetchApprovedBookings()
+    }
+  }, [fetchPayments, fetchApprovedBookings, user, profile])
+
+  const handleMakePayment = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const booking = approvedBookings.find(b => b.id === selectedBookingId)
+    if (!booking || !user) {
+      toast.error(t('select_booking_required', 'Please select a booking to pay'))
+      return
+    }
+
+    if ((paymentMethod === 'mtn_momo' || paymentMethod === 'airtel_money') && !phoneNumber.trim()) {
+      toast.error(t('phone_number_required', 'Phone number is required for Mobile Money'))
+      return
+    }
+
+    setProcessing(true)
+    try {
+      // Simulate Mobile Money Prompt/Gateway push
+      await new Promise(res => setTimeout(res, 1500))
+
+      const transactionId = `${paymentMethod.toUpperCase()}-${Date.now().toString().slice(-8)}`
+      const amount = booking.total_price || booking.property.price || 50000
+
+      const { error } = await supabase.from('payments').insert({
+        booking_id: booking.id,
+        payer_id: user.id,
+        payee_id: booking.property.owner_id || user.id,
+        amount,
+        currency: 'RWF',
+        method: paymentMethod,
+        status: 'completed',
+        transaction_id: transactionId,
+      } as never)
+
+      if (error) throw error
+
+      toast.success(t('payment_successful_msg', 'Payment processed successfully!'))
+      setIsModalOpen(false)
+      setSelectedBookingId('')
+      fetchPayments()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('payment_failed_msg', 'Payment processing failed'))
+    } finally {
+      setProcessing(false)
+    }
+  }
 
   const filtered = payments.filter(p =>
     !search ||
@@ -141,6 +227,8 @@ export function PaymentPage() {
     p.method.toLowerCase().includes(search.toLowerCase())
   )
 
+  const isTenant = profile?.role === 'tenant'
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -148,11 +236,126 @@ export function PaymentPage() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('payment_history')}</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">{t('manage_your_payments')}</p>
         </div>
-        {payments.length > 0 && (
-          <Button variant="outline" size="sm" onClick={() => exportAllCSV(payments, `payments-${new Date().toISOString().slice(0, 10)}.csv`)}>
-            <Download className="h-4 w-4 mr-1.5" /> Export CSV
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {isTenant && (
+            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="cursor-pointer">
+                  <Plus className="h-4 w-4 mr-1.5" /> {t('make_payment', 'Make Payment')}
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <ShieldCheck className="h-5 w-5 text-green-600" />
+                    {t('pay_rent_momo', 'Pay Rent via Mobile Money / Card')}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {t('pay_rent_desc', 'Select your booking and preferred payment channel.')}
+                  </DialogDescription>
+                </DialogHeader>
+
+                <form onSubmit={handleMakePayment} className="space-y-4 pt-2">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      {t('select_booking', 'Select Booking / Property')}
+                    </label>
+                    <select
+                      value={selectedBookingId}
+                      onChange={e => setSelectedBookingId(e.target.value)}
+                      required
+                      className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white p-2.5 text-sm dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary-500"
+                    >
+                      <option value="">-- {t('select_booking', 'Select Booking')} --</option>
+                      {approvedBookings.map(b => (
+                        <option key={b.id} value={b.id}>
+                          {b.property?.title} ({formatPrice(b.total_price || b.property?.price || 0)})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      {t('payment_method', 'Payment Method')}
+                    </label>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod('mtn_momo')}
+                        className={`flex flex-col items-center justify-center p-3 rounded-lg border text-xs font-semibold cursor-pointer transition-colors ${paymentMethod === 'mtn_momo'
+                            ? 'border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300'
+                            : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50'
+                          }`}
+                      >
+                        MTN MoMo
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod('airtel_money')}
+                        className={`flex flex-col items-center justify-center p-3 rounded-lg border text-xs font-semibold cursor-pointer transition-colors ${paymentMethod === 'airtel_money'
+                            ? 'border-red-500 bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300'
+                            : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50'
+                          }`}
+                      >
+                        Airtel Money
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod('card')}
+                        className={`flex flex-col items-center justify-center p-3 rounded-lg border text-xs font-semibold cursor-pointer transition-colors ${paymentMethod === 'card'
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300'
+                            : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50'
+                          }`}
+                      >
+                        Visa / Card
+                      </button>
+                    </div>
+                  </div>
+
+                  {(paymentMethod === 'mtn_momo' || paymentMethod === 'airtel_money') && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">
+                        <Phone className="h-3.5 w-3.5" />
+                        {t('mobile_money_number', 'Mobile Money Phone Number')}
+                      </label>
+                      <input
+                        type="tel"
+                        value={phoneNumber}
+                        onChange={e => setPhoneNumber(e.target.value)}
+                        placeholder="0788123456"
+                        required
+                        className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white p-2.5 text-sm dark:bg-gray-800 dark:text-gray-100"
+                      />
+                    </div>
+                  )}
+
+                  <DialogFooter className="pt-2">
+                    <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
+                      {t('cancel')}
+                    </Button>
+                    <Button type="submit" disabled={processing} className="min-w-[120px]">
+                      {processing ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          {t('processing', 'Processing...')}
+                        </>
+                      ) : (
+                        t('pay_now', 'Pay Now')
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+          )}
+
+          {payments.length > 0 && (
+            <Button variant="outline" size="sm" onClick={() => exportAllCSV(payments, `payments-${new Date().toISOString().slice(0, 10)}.csv`)}>
+              <Download className="h-4 w-4 mr-1.5" /> Export CSV
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="relative max-w-md">
