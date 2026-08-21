@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useForm } from 'react-hook-form'
@@ -14,12 +14,14 @@ import { notifyPropertyAdded } from '@/lib/notifications'
 import { sendNewPropertyNotification } from '@/lib/email'
 import {
   ChevronLeft, Save, Upload, Check, X, AlertCircle, ImageIcon,
-  MapPin, DollarSign, Home, Sparkles, Loader2, Trash2
+  MapPin, DollarSign, Home, Sparkles, Loader2, Trash2,
+  CreditCard, Phone, Shield, CheckCircle2, Banknote
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { useCreateProperty } from '@/hooks/useProperties'
 import toast from 'react-hot-toast'
+
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024
 const ACCEPTED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/jpg', 'image/jfif', 'image/vnd.microsoft.icon']
@@ -150,6 +152,44 @@ export function AddPropertyPage() {
   const [whatsappCode, setWhatsappCode] = useState('+250')
   const [videoUrl, setVideoUrl] = useState('')
 
+  // Listing Fee Payment Gate
+  const [checkingFee, setCheckingFee] = useState(true)
+  const [hasPaidFee, setHasPaidFee] = useState(false)
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(true)
+  const [paymentMethod, setPaymentMethod] = useState<'mtn_momo' | 'airtel_money' | 'card'>('mtn_momo')
+  const [paymentPhone, setPaymentPhone] = useState(profile?.phone || '')
+  const [processingPayment, setProcessingPayment] = useState(false)
+
+  // Verify if a user has a valid listing fee available
+  useEffect(() => {
+    if (!user) return
+    const verifyFee = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('listing_fees')
+          .select('id, expires_at')
+          .eq('user_id', user.id)
+          .eq('status', 'completed')
+          .gte('expires_at', new Date().toISOString())
+          .order('created_at', { ascending: false })
+          .limit(1)
+
+        if (!error && data && data.length > 0) {
+          setHasPaidFee(true)
+          setIsPaymentModalOpen(false)
+        } else {
+          setHasPaidFee(false)
+          setIsPaymentModalOpen(true)
+        }
+      } catch (err) {
+        console.error('Failed to verify listing fee:', err)
+      } finally {
+        setCheckingFee(false)
+      }
+    }
+    verifyFee()
+  }, [user])
+
   const {
     register,
     handleSubmit,
@@ -221,6 +261,44 @@ export function AddPropertyPage() {
 
   const removeAllImages = () => {
     setUploadedImages([])
+  }
+
+  const handleListingPayment = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!user) return
+
+    if ((paymentMethod === 'mtn_momo' || paymentMethod === 'airtel_money') && !paymentPhone.trim()) {
+      toast.error(t('phone_number_required', 'Phone number is required for Mobile Money'))
+      return
+    }
+
+    setProcessingPayment(true)
+    try {
+      // Simulate Payment Gateway call / Push to MoMo
+      await new Promise(resolve => setTimeout(resolve, 2000))
+
+      const transactionId = `LIST-${paymentMethod.toUpperCase()}-${Date.now().toString().slice(-8)}`
+
+      const { data, error } = await supabase.from('listing_fees').insert({
+        user_id: user.id,
+        amount: 10000,
+        currency: 'RWF',
+        method: paymentMethod,
+        phone_number: paymentPhone || null,
+        transaction_id: transactionId,
+        status: 'completed'
+      } as never).select()
+
+      if (error) throw error
+
+      toast.success(t('payment_successful_msg', 'Payment processed successfully!'))
+      setHasPaidFee(true)
+      setIsPaymentModalOpen(false)
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : t('payment_failed_msg', 'Payment processing failed'))
+    } finally {
+      setProcessingPayment(false)
+    }
   }
 
   const onSubmit = async (formData: PropertyFormData) => {
@@ -308,6 +386,116 @@ export function AddPropertyPage() {
     }
   }
 
+  if (checkingFee) {
+    return (
+      <div className="flex min-h-[400px] flex-col items-center justify-center space-y-4">
+        <Loader2 className="h-8 w-8 animate-spin text-primary-500" />
+        <p className="text-sm text-gray-500 dark:text-gray-400">{t('checking_listing_fee', 'Verifying listing status...')}</p>
+      </div>
+    )
+  }
+
+  if (!hasPaidFee) {
+    return (
+      <div className="mx-auto max-w-lg pt-12">
+        <Card className="overflow-hidden border-2 border-primary-100 shadow-xl dark:border-primary-900/50">
+          <CardHeader className="bg-primary-50 dark:bg-primary-900/20 text-center pb-8 pt-8">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary-100 dark:bg-primary-900/50">
+              <Banknote className="h-8 w-8 text-primary-600 dark:text-primary-400" />
+            </div>
+            <CardTitle className="text-2xl">{t('listing_fee_required', 'Listing Fee Required')}</CardTitle>
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+              {t('listing_fee_description', 'To publish a new property on Rwanda EasyRent, a one-time listing fee of 10,000 RWF is required. Your listing will be visible for 24 hours (or pending rules setup).')}
+            </p>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="mb-6 rounded-lg bg-gray-50 dark:bg-gray-800 p-4 border border-gray-100 dark:border-gray-700">
+              <div className="flex items-center justify-between font-semibold text-lg text-gray-900 dark:text-gray-100">
+                <span>{t('listing_fee', 'Listing Fee')}</span>
+                <span>10,000 RWF</span>
+              </div>
+            </div>
+
+            <form onSubmit={handleListingPayment} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                  {t('select_payment_method', 'Select Payment Method')}
+                </label>
+                <div className="grid grid-cols-3 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('mtn_momo')}
+                    className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 font-semibold transition-colors cursor-pointer ${paymentMethod === 'mtn_momo'
+                        ? 'border-yellow-400 bg-yellow-50 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+                        : 'border-gray-200 bg-white text-gray-500 hover:border-yellow-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400'
+                      }`}
+                  >
+                    MTN MoMo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('airtel_money')}
+                    className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 font-semibold transition-colors cursor-pointer ${paymentMethod === 'airtel_money'
+                        ? 'border-red-400 bg-red-50 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                        : 'border-gray-200 bg-white text-gray-500 hover:border-red-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400'
+                      }`}
+                  >
+                    Airtel Money
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('card')}
+                    className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 font-semibold transition-colors cursor-pointer ${paymentMethod === 'card'
+                        ? 'border-blue-400 bg-blue-50 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
+                        : 'border-gray-200 bg-white text-gray-500 hover:border-blue-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400'
+                      }`}
+                  >
+                    Card
+                  </button>
+                </div>
+              </div>
+
+              {(paymentMethod === 'mtn_momo' || paymentMethod === 'airtel_money') && (
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                    <Phone className="h-4 w-4 text-gray-400" />
+                    {t('mobile_money_number', 'Mobile Money Phone Number')}
+                  </label>
+                  <Input
+                    type="tel"
+                    value={paymentPhone}
+                    onChange={e => setPaymentPhone(e.target.value)}
+                    placeholder="0781234567"
+                    required
+                    className="h-11"
+                  />
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <Button type="button" variant="outline" className="flex-1" onClick={() => navigate(-1)}>
+                  <ChevronLeft className="mr-2 h-4 w-4" /> {t('back')}
+                </Button>
+                <Button type="submit" disabled={processingPayment} className="flex-2 w-full text-base font-bold bg-primary-600 hover:bg-primary-700">
+                  {processingPayment ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      {t('processing', 'Processing...')}
+                    </>
+                  ) : (
+                    <>
+                      {t('pay_and_continue', 'Pay 10,000 RWF to Continue')}
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -352,7 +540,7 @@ export function AddPropertyPage() {
                 placeholder={t('description_placeholder')}
                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
-                {errors.description?.message && (
+              {errors.description?.message && (
                 <p className="mt-1 text-sm text-red-500">{t(errors.description.message)}</p>
               )}
             </div>
@@ -440,9 +628,9 @@ export function AddPropertyPage() {
               onChange={(field, value) => setValue(field as keyof PropertyFormData, value, { shouldValidate: true })}
             />
             {errors.district?.message && (
-                <p className="text-sm text-red-500 flex items-center gap-1">
-                  <AlertCircle className="h-3.5 w-3.5" /> {t(errors.district.message)}
-                </p>
+              <p className="text-sm text-red-500 flex items-center gap-1">
+                <AlertCircle className="h-3.5 w-3.5" /> {t(errors.district.message)}
+              </p>
             )}
             <div>
               <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{t('whatsapp_number_optional')}</label>
@@ -474,15 +662,13 @@ export function AddPropertyPage() {
                   key={key}
                   type="button"
                   onClick={() => setValue(key as keyof PropertyFormData, !isOn, { shouldDirty: true })}
-                  className={`flex items-center justify-center gap-2 rounded-lg border px-4 py-3 text-sm font-medium transition-all cursor-pointer ${
-                    isOn
-                      ? 'border-primary-500 bg-primary-50 text-primary-700 shadow-sm dark:bg-primary-900/30 dark:text-primary-300 dark:border-primary-600'
-                      : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:border-gray-600'
-                  }`}
+                  className={`flex items-center justify-center gap-2 rounded-lg border px-4 py-3 text-sm font-medium transition-all cursor-pointer ${isOn
+                    ? 'border-primary-500 bg-primary-50 text-primary-700 shadow-sm dark:bg-primary-900/30 dark:text-primary-300 dark:border-primary-600'
+                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:border-gray-600'
+                    }`}
                 >
-                  <span className={`flex h-5 w-5 items-center justify-center rounded-full text-xs transition-colors ${
-                    isOn ? 'bg-primary-500 text-white' : 'border border-gray-300 dark:border-gray-600'
-                  }`}>
+                  <span className={`flex h-5 w-5 items-center justify-center rounded-full text-xs transition-colors ${isOn ? 'bg-primary-500 text-white' : 'border border-gray-300 dark:border-gray-600'
+                    }`}>
                     {isOn ? <Check className="h-3 w-3" /> : null}
                   </span>
                   {t(key)}
