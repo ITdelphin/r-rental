@@ -560,6 +560,7 @@ function SystemTab() {
       toast.success(t('settings_saved'))
       setLocalizationDirty(false)
       await i18n.changeLanguage(defaultLanguage)
+      localStorage.setItem('i18nextLng', defaultLanguage)
     } catch (err: unknown) { toast.error(err instanceof Error ? err.message : t('failed_to_save')) }
     setSaving(null)
   }

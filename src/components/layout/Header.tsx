@@ -69,7 +69,7 @@ export function Header() {
               {langOpen && (
                 <div className="absolute right-0 mt-1 w-36 rounded-lg border bg-white shadow-lg dark:bg-gray-800 dark:border-gray-700">
                   {languages.map((lang) => (
-                    <button key={lang.code} onClick={() => { i18n.changeLanguage(lang.code); setLangOpen(false) }} className="block w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
+                    <button key={lang.code} onClick={() => { i18n.changeLanguage(lang.code); localStorage.setItem('i18nextLng', lang.code); setLangOpen(false) }} className="block w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
                       {lang.label}
                     </button>
                   ))}

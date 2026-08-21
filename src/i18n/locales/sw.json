@@ -922,5 +922,15 @@
   "discussion": "Mjadala",
   "hide": "Ficha",
   "comments": "Maoni",
-  "no_rented_properties": "Hakuna upangaji wa sasa uliopo. Lazima uwe na uhifadhi ulioafikiwa ili uweze kuwasilisha ombi."
+  "no_rented_properties": "Hakuna upangaji wa sasa uliopo. Lazima uwe na uhifadhi ulioafikiwa ili uweze kuwasilisha ombi.",
+  "trash_empty": "Jalada la takataka ni tupu",
+  "trash_empty_desc": "Arifa zilizofutwa zitaonekana hapa. Unaweza kuzikagua au kuzirejesha.",
+  "original_date": "Iliyotumwa",
+  "deleted_at": "Iliyofutwa",
+  "restore": "Rejesha",
+  "delete_permanently": "Futa kabisa",
+  "notification_moved_trash": "Arifa imehamishiwa kwenye jalada la takataka",
+  "notification_restored": "Arifa imerejeshwa kwenye kisanduku cha barua",
+  "trash_emptied": "Takataka zimefutwa kikamilifu",
+  "permanent_delete_success": "Arifa imefutwa kabisa"
 }

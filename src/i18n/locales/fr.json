@@ -922,5 +922,15 @@
   "discussion": "Discussion",
   "hide": "Masquer",
   "comments": "Commentaires",
-  "no_rented_properties": "Aucune location active trouvée. Vous devez avoir une réservation approuvée pour soumettre une demande."
+  "no_rented_properties": "Aucune location active trouvée. Vous devez avoir une réservation approuvée pour soumettre une demande.",
+  "trash_empty": "La corbeille est vide",
+  "trash_empty_desc": "Les notifications supprimées apparaîtront ici. Vous pouvez les consulter ou les restaurer.",
+  "original_date": "Envoyé",
+  "deleted_at": "Supprimé",
+  "restore": "Restaurer",
+  "delete_permanently": "Supprimer définitivement",
+  "notification_moved_trash": "Notification déplacée dans la corbeille",
+  "notification_restored": "Notification restaurée dans la boîte de réception",
+  "trash_emptied": "Corbeille vidée avec succès",
+  "permanent_delete_success": "Notification supprimée définitivement"
 }

@@ -922,5 +922,15 @@
   "discussion": "Ikiganiro",
   "hide": "Hisha",
   "comments": "Amagambo",
-  "no_rented_properties": "Nta nzu ukodesha ubu. Ugomba kuba ufite ubukode bwemejwe kugira ngo usabe gusanirwa."
+  "no_rented_properties": "Nta nzu ukodesha ubu. Ugomba kuba ufite ubukode bwemejwe kugira ngo usabe gusanirwa.",
+  "trash_empty": "Gushyira mu myanda birakutse",
+  "trash_empty_desc": "Ubutumwa bwakuweho buzagaragara hano. Urashobora kubureba cyangwa kubugarura.",
+  "original_date": "Byoherejwe",
+  "deleted_at": "Byakuweho",
+  "restore": "Garura",
+  "delete_permanently": "Siba burundu",
+  "notification_moved_trash": "Ubutumwa bwoherejwe mu myanda",
+  "notification_restored": "Ubutumwa bwagaruwe mu gakarani",
+  "trash_emptied": "Imyanda yasibwe neza",
+  "permanent_delete_success": "Ubutumwa bwakuweho burundu"
 }

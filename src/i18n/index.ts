@@ -7,7 +7,7 @@ import sw from './locales/sw.json'
 
 i18n.use(initReactI18next).init({
   resources: { en: { translation: en }, rw: { translation: rw }, fr: { translation: fr }, sw: { translation: sw } },
-  lng: 'en',
+  lng: localStorage.getItem('i18nextLng') || 'en',
   fallbackLng: 'en',
   interpolation: { escapeValue: false },
 })

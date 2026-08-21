@@ -173,7 +173,7 @@ export function MobileNavMenu({ open, dark, onClose, onToggleTheme }: MobileNavM
                 {languages.map((lang) => (
                   <button
                     key={lang.code}
-                    onClick={() => { i18n.changeLanguage(lang.code); setLangOpen(false) }}
+                    onClick={() => { i18n.changeLanguage(lang.code); localStorage.setItem('i18nextLng', lang.code); setLangOpen(false) }}
                     className={cn(
                       'block w-full cursor-pointer px-4 py-3 text-left text-base font-medium transition-colors hover:bg-primary-50 dark:hover:bg-gray-700',
                       i18n.language === lang.code ? 'text-primary-600' : 'text-gray-700 dark:text-gray-200'

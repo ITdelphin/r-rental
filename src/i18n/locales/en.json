@@ -922,5 +922,15 @@
   "discussion": "Discussion",
   "hide": "Hide",
   "comments": "Comments",
-  "no_rented_properties": "No active rentals found. You must have an approved booking to submit a request."
+  "no_rented_properties": "No active rentals found. You must have an approved booking to submit a request.",
+  "trash_empty": "Trash is Empty",
+  "trash_empty_desc": "Deleted notifications will appear here. You can inspect or restore them.",
+  "original_date": "Sent",
+  "deleted_at": "Deleted",
+  "restore": "Restore",
+  "delete_permanently": "Delete Permanently",
+  "notification_moved_trash": "Notification moved to Trash",
+  "notification_restored": "Notification restored to Inbox",
+  "trash_emptied": "Trash emptied successfully",
+  "permanent_delete_success": "Notification deleted permanently"
 }
