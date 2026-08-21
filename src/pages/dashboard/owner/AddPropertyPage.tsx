@@ -159,6 +159,7 @@ export function AddPropertyPage() {
   const [paymentMethod, setPaymentMethod] = useState<'mtn_momo' | 'airtel_money' | 'card'>('mtn_momo')
   const [paymentPhone, setPaymentPhone] = useState(profile?.phone || '')
   const [processingPayment, setProcessingPayment] = useState(false)
+  const [skippedPayment, setSkippedPayment] = useState(false)
   const [feeId, setFeeId] = useState<string | null>(null)
 
   // Verify if a user has a valid listing fee available
@@ -339,7 +340,7 @@ export function AddPropertyPage() {
         water: formData.water,
         electricity: formData.electricity,
         furnished: formData.furnished,
-        status: 'published',
+        status: skippedPayment ? 'pending_approval' : 'published',
         is_featured: false,
         views_count: 0,
       }
@@ -412,7 +413,7 @@ export function AddPropertyPage() {
     )
   }
 
-  if (!hasPaidFee) {
+  if (!hasPaidFee && !skippedPayment) {
     return (
       <div className="mx-auto max-w-lg pt-12">
         <Card className="overflow-hidden border-2 border-primary-100 shadow-xl dark:border-primary-900/50">
@@ -489,11 +490,8 @@ export function AddPropertyPage() {
                 </div>
               )}
 
-              <div className="flex gap-3 pt-2">
-                <Button type="button" variant="outline" className="flex-1" onClick={() => navigate(-1)}>
-                  <ChevronLeft className="mr-2 h-4 w-4" /> {t('back')}
-                </Button>
-                <Button type="submit" disabled={processingPayment} className="flex-2 w-full text-base font-bold bg-primary-600 hover:bg-primary-700">
+              <div className="flex flex-col gap-3 pt-2">
+                <Button type="submit" disabled={processingPayment} className="w-full text-base font-bold bg-primary-600 hover:bg-primary-700">
                   {processingPayment ? (
                     <>
                       <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -505,6 +503,23 @@ export function AddPropertyPage() {
                     </>
                   )}
                 </Button>
+
+                <div className="flex gap-3">
+                  <Button type="button" variant="outline" className="flex-1" onClick={() => navigate(-1)}>
+                    <ChevronLeft className="mr-2 h-4 w-4" /> {t('back')}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex-2 text-primary-600 hover:text-primary-700 hover:bg-primary-50 dark:hover:bg-primary-900/20"
+                    onClick={() => {
+                      setSkippedPayment(true)
+                      setIsPaymentModalOpen(false)
+                    }}
+                  >
+                    {t('request_admin_approval', 'Skip & Request Admin Approval')}
+                  </Button>
+                </div>
               </div>
             </form>
           </CardContent>
