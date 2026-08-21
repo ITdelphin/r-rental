@@ -932,5 +932,16 @@
   "notification_moved_trash": "Ubutumwa bwoherejwe mu myanda",
   "notification_restored": "Ubutumwa bwagaruwe mu gakarani",
   "trash_emptied": "Imyanda yasibwe neza",
-  "permanent_delete_success": "Ubutumwa bwakuweho burundu"
+  "permanent_delete_success": "Ubutumwa bwakuweho burundu",
+  "checking_listing_fee": "Kugenzura amakuru yo gushyira ahagaragara...",
+  "listing_fee_required": "Hishyurwa Amafaranga yo Gushyiraho Inzu",
+  "listing_fee_description": "Kugira ngo ushyire inzu nshya kuri Rwanda EasyRent, usabwa kwishyura inshuro imwe amafaranga 10,000 RWF. Inzu yawe izagaragara amasaha 24 (cyangwa bitewe n'amabwiriza).",
+  "listing_fee": "Ikiguzi cyo Gushyiraho inzu",
+  "select_payment_method": "Hitamo Uburyo bwo Kwishyura",
+  "mobile_money_number": "Nimero ya Mobile Money",
+  "pay_and_continue": "Kwishyura 10,000 RWF ngo ukomeze",
+  "payment_successful_msg": "Kwishyura byagenze neza!",
+  "payment_failed_msg": "Kwishyura ntabwo byakunze",
+  "phone_number_required": "Nimero ya telefoni irakenewe kuri Mobile Money",
+  "processing": "Kugenzura..."
 }

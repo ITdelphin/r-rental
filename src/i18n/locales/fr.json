@@ -932,5 +932,16 @@
   "notification_moved_trash": "Notification déplacée dans la corbeille",
   "notification_restored": "Notification restaurée dans la boîte de réception",
   "trash_emptied": "Corbeille vidée avec succès",
-  "permanent_delete_success": "Notification supprimée définitivement"
+  "permanent_delete_success": "Notification supprimée définitivement",
+  "checking_listing_fee": "Vérification de l'état de la publication...",
+  "listing_fee_required": "Frais de publication requis",
+  "listing_fee_description": "Pour publier une nouvelle propriété sur Rwanda EasyRent, des frais uniques de 10 000 RWF sont requis. Votre publication sera visible pendant 24 heures (ou selon la configuration).",
+  "listing_fee": "Frais de publication",
+  "select_payment_method": "Sélectionnez le mode de paiement",
+  "mobile_money_number": "Numéro de téléphone Mobile Money",
+  "pay_and_continue": "Payer 10 000 RWF pour continuer",
+  "payment_successful_msg": "Paiement traité avec succès !",
+  "payment_failed_msg": "Le traitement du paiement a échoué",
+  "phone_number_required": "Le numéro de téléphone est requis pour Mobile Money",
+  "processing": "Traitement..."
 }

@@ -932,5 +932,16 @@
   "notification_moved_trash": "Arifa imehamishiwa kwenye jalada la takataka",
   "notification_restored": "Arifa imerejeshwa kwenye kisanduku cha barua",
   "trash_emptied": "Takataka zimefutwa kikamilifu",
-  "permanent_delete_success": "Arifa imefutwa kabisa"
+  "permanent_delete_success": "Arifa imefutwa kabisa",
+  "checking_listing_fee": "Kuthibitisha hali ya barua...",
+  "listing_fee_required": "Ada ya Kuweka Mali Inahitajika",
+  "listing_fee_description": "Ili kuweka mali mpya kwenye Rwanda EasyRent, ada ya mara moja ya RWF 10,000 inahitajika. Tangazo lako litaonekana kwa saa 24.",
+  "listing_fee": "Ada ya Tangazo",
+  "select_payment_method": "Chagua Njia ya Malipo",
+  "mobile_money_number": "Nambari ya Simu ya Mobile Money",
+  "pay_and_continue": "Lipa RWF 10,000 ili kuendelea",
+  "payment_successful_msg": "Malipo yamefanikiwa!",
+  "payment_failed_msg": "Usindikaji wa malipo umefeli",
+  "phone_number_required": "Nambari ya simu inahitajika kwa Mobile Money",
+  "processing": "Inashughulika..."
 }
