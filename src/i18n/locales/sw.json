@@ -914,7 +914,13 @@
   "report_listing": "Report listing",
   "report_details_placeholder": "Tell us what is wrong with this listing",
   "submit_report": "Submit report",
-  "submitted": "Submitted",
-  "acknowledged": "Acknowledged",
-  "assigned": "Assigned"
+  "submitted": "Imewasilishwa",
+  "acknowledged": "Imetambuliwa",
+  "assigned": "Imegawiwa",
+  "no_comments_yet": "Hakuna maoni bado — kuwa wa kwanza kuongeza.",
+  "add_comment": "Ongeza maoni...",
+  "discussion": "Mjadala",
+  "hide": "Ficha",
+  "comments": "Maoni",
+  "no_rented_properties": "Hakuna upangaji wa sasa uliopo. Lazima uwe na uhifadhi ulioafikiwa ili uweze kuwasilisha ombi."
 }

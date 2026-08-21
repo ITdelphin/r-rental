@@ -914,7 +914,13 @@
   "report_listing": "Report listing",
   "report_details_placeholder": "Tell us what is wrong with this listing",
   "submit_report": "Submit report",
-  "submitted": "Submitted",
-  "acknowledged": "Acknowledged",
-  "assigned": "Assigned"
+  "submitted": "Soumis",
+  "acknowledged": "Pris en compte",
+  "assigned": "Assigné",
+  "no_comments_yet": "Aucun commentaire pour l'instant — soyez le premier à en ajouter un.",
+  "add_comment": "Ajouter un commentaire...",
+  "discussion": "Discussion",
+  "hide": "Masquer",
+  "comments": "Commentaires",
+  "no_rented_properties": "Aucune location active trouvée. Vous devez avoir une réservation approuvée pour soumettre une demande."
 }

@@ -914,7 +914,13 @@
   "report_listing": "Report listing",
   "report_details_placeholder": "Tell us what is wrong with this listing",
   "submit_report": "Submit report",
-  "submitted": "Submitted",
-  "acknowledged": "Acknowledged",
-  "assigned": "Assigned"
+  "submitted": "Yoherejwe",
+  "acknowledged": "Yakiriwe",
+  "assigned": "Yahawe",
+  "no_comments_yet": "Nta magambo arahari — banza uhaguruke.",
+  "add_comment": "Ongeraho igitekerezo...",
+  "discussion": "Ikiganiro",
+  "hide": "Hisha",
+  "comments": "Amagambo",
+  "no_rented_properties": "Nta nzu ukodesha ubu. Ugomba kuba ufite ubukode bwemejwe kugira ngo usabe gusanirwa."
 }

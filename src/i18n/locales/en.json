@@ -916,5 +916,11 @@
   "units_section_hint": "Add individual units such as apartments to this property.",
   "unverify": "Unverify",
   "verify": "Verify",
-  "view_profile": "View profile"
+  "view_profile": "View profile",
+  "no_comments_yet": "No comments yet — be the first to add one.",
+  "add_comment": "Add a comment...",
+  "discussion": "Discussion",
+  "hide": "Hide",
+  "comments": "Comments",
+  "no_rented_properties": "No active rentals found. You must have an approved booking to submit a request."
 }
