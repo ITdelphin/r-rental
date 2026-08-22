@@ -56,7 +56,13 @@ export const propertyApi = {
     let query = supabase.from('properties').select('*, images:property_images(*), reviews(*), videos:property_videos(*)')
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
-        if (value) query = query.eq(key, value)
+        if (value === undefined || value === null || value === '') return
+        // Handle bedrooms "5+" as gte(5) — eq("5+") is invalid for integer column and causes 400
+        if (key === 'bedrooms' && String(value) === '5+') {
+          query = query.gte(key, 5)
+        } else {
+          query = query.eq(key, value)
+        }
       })
     }
     const { data, error } = await query.order('created_at', { ascending: false })
