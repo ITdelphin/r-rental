@@ -2,7 +2,7 @@ import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
 
 const SITE_URL = 'https://rwanda-easyrent.vercel.app'
-const DEFAULT_IMAGE = '/images/easyrentlogo.jpeg'
+const DEFAULT_IMAGE = '/images/og-image.jpg'
 
 interface SEOProps {
   title?: string

@@ -15,7 +15,7 @@ export const BRANDING = {
 
   // Logo paths (relative to public/)
   logo: '/images/easyrentlogo.jpeg',
-  favicon: '/favicon.svg',
+  favicon: '/favicon.ico',
   icon: '/icons.svg',
 
   // Authentication page branding
