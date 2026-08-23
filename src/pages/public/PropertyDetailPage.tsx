@@ -56,9 +56,9 @@ export function PropertyDetailPage() {
   const [reportReason, setReportReason] = useState('fake_listing')
   const [reportDetails, setReportDetails] = useState('')
   const whatsappNumber = property?.whatsapp_number
-  // Booking fee (1000 RWF) — replaces listing fee
+  // Booking fee (1000 RWF) — replaces listing fee — pay to MTN 0782680268 / Airtel 0738576592 / Equity 4006101118966
   const [showBookingFeeModal, setShowBookingFeeModal] = useState(false)
-  const [bookingPaymentMethod, setBookingPaymentMethod] = useState<'mtn_momo' | 'airtel_money' | 'card'>('mtn_momo')
+  const [bookingPaymentMethod, setBookingPaymentMethod] = useState<'mtn_momo' | 'airtel_money' | 'equity_bank'>('mtn_momo')
   const [bookingPaymentPhone, setBookingPaymentPhone] = useState('')
   const [processingBookingPayment, setProcessingBookingPayment] = useState(false)
 
@@ -739,7 +739,7 @@ export function PropertyDetailPage() {
           )}
         </div>
       </div>
-      {/* Booking Fee Modal — 1000 RWF replaces listing fee */}
+      {/* Booking Fee Modal — 1000 RWF — MTN 0782680268 / Airtel 0738576592 / Equity 4006101118966 */}
       <Dialog open={showBookingFeeModal} onOpenChange={setShowBookingFeeModal}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -748,26 +748,44 @@ export function PropertyDetailPage() {
             </div>
             <DialogTitle className="text-center">{t('booking_fee_required', 'Booking Fee Required')}</DialogTitle>
             <DialogDescription className="text-center">
-              {t('booking_fee_description', 'A one-time booking fee of 1,000 RWF is required to confirm your booking. This fee secures your request and is processed securely.')}
+              {t('booking_fee_description', 'A one-time booking fee of 1,000 RWF is required to confirm your booking. Send to one of the accounts below, then confirm.')}
             </DialogDescription>
           </DialogHeader>
           <div className="my-3 rounded-lg bg-gray-50 dark:bg-gray-800 p-3 border flex items-center justify-between">
             <span className="font-medium text-gray-700 dark:text-gray-300">{t('booking_fee', 'Booking Fee')}</span>
             <span className="font-bold text-gray-900 dark:text-gray-100">1,000 RWF</span>
           </div>
+          <div className="rounded-lg border border-blue-100 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800 p-3 text-sm space-y-1">
+            <p className="font-semibold text-blue-900 dark:text-blue-300">Pay to:</p>
+            <div className="flex items-center justify-between"><span className="font-medium">MTN MoMo</span><span className="font-mono font-bold select-all">0782680268</span></div>
+            <div className="flex items-center justify-between"><span className="font-medium">Airtel Money</span><span className="font-mono font-bold select-all">0738576592</span></div>
+            <div className="flex items-center justify-between"><span className="font-medium">Equity Bank</span><span className="font-mono font-bold select-all">4006101118966</span></div>
+          </div>
           <form onSubmit={handleConfirmBookingPayment} className="space-y-4">
             <div>
               <label className="mb-2 block text-sm font-medium">{t('select_payment_method', 'Select Payment Method')}</label>
               <div className="grid grid-cols-3 gap-2">
-                <button type="button" onClick={() => setBookingPaymentMethod('mtn_momo')} className={`rounded-lg border-2 p-2 text-xs font-semibold ${bookingPaymentMethod === 'mtn_momo' ? 'border-yellow-400 bg-yellow-50 text-yellow-800' : 'border-gray-200 bg-white text-gray-500'}`}>MTN MoMo</button>
-                <button type="button" onClick={() => setBookingPaymentMethod('airtel_money')} className={`rounded-lg border-2 p-2 text-xs font-semibold ${bookingPaymentMethod === 'airtel_money' ? 'border-red-400 bg-red-50 text-red-800' : 'border-gray-200 bg-white text-gray-500'}`}>Airtel Money</button>
-                <button type="button" onClick={() => setBookingPaymentMethod('card')} className={`rounded-lg border-2 p-2 text-xs font-semibold ${bookingPaymentMethod === 'card' ? 'border-blue-400 bg-blue-50 text-blue-800' : 'border-gray-200 bg-white text-gray-500'}`}><CreditCard className="mx-auto h-4 w-4 mb-1" /> Card</button>
+                <button type="button" onClick={() => setBookingPaymentMethod('mtn_momo')} className={`rounded-lg border-2 p-2 text-xs font-semibold ${bookingPaymentMethod === 'mtn_momo' ? 'border-yellow-400 bg-yellow-50 text-yellow-800' : 'border-gray-200 bg-white text-gray-500'}`}>
+                  <div className="font-bold">MTN MoMo</div><div className="text-[10px] font-mono">0782680268</div>
+                </button>
+                <button type="button" onClick={() => setBookingPaymentMethod('airtel_money')} className={`rounded-lg border-2 p-2 text-xs font-semibold ${bookingPaymentMethod === 'airtel_money' ? 'border-red-400 bg-red-50 text-red-800' : 'border-gray-200 bg-white text-gray-500'}`}>
+                  <div className="font-bold">Airtel Money</div><div className="text-[10px] font-mono">0738576592</div>
+                </button>
+                <button type="button" onClick={() => setBookingPaymentMethod('equity_bank')} className={`rounded-lg border-2 p-2 text-xs font-semibold ${bookingPaymentMethod === 'equity_bank' ? 'border-blue-400 bg-blue-50 text-blue-800' : 'border-gray-200 bg-white text-gray-500'}`}>
+                  <div className="font-bold flex items-center justify-center gap-1"><CreditCard className="h-3 w-3" /> Equity</div><div className="text-[10px] font-mono">4006101118966</div>
+                </button>
               </div>
             </div>
             {(bookingPaymentMethod === 'mtn_momo' || bookingPaymentMethod === 'airtel_money') && (
               <div>
-                <label className="mb-1.5 block text-sm font-medium flex items-center gap-1"><Phone className="h-3.5 w-3.5" /> {t('mobile_money_number', 'Mobile Money Phone Number')}</label>
-                <Input type="tel" value={bookingPaymentPhone} onChange={(e) => setBookingPaymentPhone(e.target.value)} placeholder="0781234567" required />
+                <label className="mb-1.5 block text-sm font-medium flex items-center gap-1"><Phone className="h-3.5 w-3.5" /> {t('your_payment_phone', 'Your payment phone number')}</label>
+                <Input type="tel" value={bookingPaymentPhone} onChange={(e) => setBookingPaymentPhone(e.target.value)} placeholder={bookingPaymentMethod === 'mtn_momo' ? '0782680268' : '0738576592'} required />
+                <p className="mt-1 text-xs text-gray-500">You will send 1,000 RWF to <span className="font-mono font-medium">{bookingPaymentMethod === 'mtn_momo' ? '0782680268' : '0738576592'}</span></p>
+              </div>
+            )}
+            {bookingPaymentMethod === 'equity_bank' && (
+              <div className="rounded-lg bg-amber-50 dark:bg-amber-900/20 p-2 text-xs text-amber-800 dark:text-amber-300">
+                {t('equity_hint', 'Transfer 1,000 RWF to Equity Bank 4006101118966 and enter your phone as reference.')}
               </div>
             )}
             <div className="flex gap-2 pt-2">
