@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { useCompareStore } from '@/store/compareStore'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import L from 'leaflet'
 delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl as unknown as string
@@ -36,7 +35,6 @@ export function PropertiesPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid')
   const pageSize = 6
   const { data: properties, isLoading } = useProperties({ ...filters, status: 'published' })
-  const { toggleItem: toggleCompare, isInCompare, items: compareItems } = useCompareStore()
 
   // Sync search from URL (homepage hero search -> /properties?q=...)
   useEffect(() => {
@@ -211,10 +209,7 @@ export function PropertiesPage() {
         </Card>
       )}
 
-      <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <p className="text-sm text-gray-600 dark:text-gray-400">
-          {filteredSorted.length} {t('properties_found')}
-        </p>
+      <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-end gap-3">
         <div className="flex items-center gap-2">
           <div className="flex rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden">
             <button onClick={() => setViewMode('grid')} className={`px-3 py-1.5 text-sm ${viewMode === 'grid' ? 'bg-primary-600 text-white' : 'bg-white dark:bg-gray-800 hover:bg-gray-100'}`}>{t('grid', 'Grid')}</button>
@@ -270,9 +265,7 @@ export function PropertiesPage() {
         ) : filteredProperties && filteredProperties.length > 0 ? (
           <>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredProperties.map((property) => {
-                const inCompare = isInCompare(property.id)
-                return (
+              {filteredProperties.map((property) => (
                 <Link key={property.id} to={`/properties/${property.id}`}>
                   <Card className="overflow-hidden transition-shadow hover:shadow-md h-full group">
                     <div className="aspect-[16/10] bg-gray-200 dark:bg-gray-700 relative">
@@ -283,12 +276,6 @@ export function PropertiesPage() {
                       )}
                       <Badge className="absolute left-3 top-3 bg-black/60 text-white border-0">{property.category}</Badge>
                       {property.is_featured && <Badge className="absolute right-3 top-3 bg-amber-500 text-white border-0">{t('featured')}</Badge>}
-                      <button
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (!inCompare && compareItems.length >= 4) return; toggleCompare(property) }}
-                        className={`absolute bottom-2 right-2 rounded-full px-2.5 py-1 text-xs font-medium shadow backdrop-blur-sm border ${inCompare ? 'bg-primary-600 text-white border-primary-600' : 'bg-white/90 text-gray-800 border-gray-200 hover:bg-white'}`}
-                      >
-                        {inCompare ? '✓ ' + t('selected', 'Selected') : '+ ' + t('compare', 'Compare')}
-                      </button>
                     </div>
                     <CardContent className="p-4">
                       <h3 className="font-semibold text-gray-900 dark:text-gray-100">{property.title}</h3>
@@ -303,7 +290,7 @@ export function PropertiesPage() {
                     </CardContent>
                   </Card>
                 </Link>
-                )})}
+              ))}
             </div>
             {filteredSorted.length > pageSize && (
               <div className="mt-8 flex items-center justify-center gap-2">

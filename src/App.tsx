@@ -16,7 +16,6 @@ const PrivacyPage = lazy(() => import('@/pages/public/PrivacyPage').then(m => ({
 const TermsPage = lazy(() => import('@/pages/public/TermsPage').then(m => ({ default: m.TermsPage })))
 const PropertiesPage = lazy(() => import('@/pages/public/PropertiesPage').then(m => ({ default: m.PropertiesPage })))
 const PropertyDetailPage = lazy(() => import('@/pages/public/PropertyDetailPage').then(m => ({ default: m.PropertyDetailPage })))
-const ComparePage = lazy(() => import('@/components/ui/compare-properties').then(m => ({ default: m.ComparePage })))
 const CmsPage = lazy(() => import('@/pages/public/CmsPage').then(m => ({ default: m.CmsPage })))
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage').then(m => ({ default: m.LoginPage })))
 const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage').then(m => ({ default: m.RegisterPage })))
@@ -82,7 +81,6 @@ function AppRoutes() {
             <Route path="/faq" element={<FaqPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/terms" element={<TermsPage />} />
-            <Route path="/compare" element={<ComparePage />} />
             <Route path="/p/:slug" element={<CmsPage />} />
           </Route>
 

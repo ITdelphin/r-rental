@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Menu, X, LogOut, Globe, Sun, Moon, BarChart3 } from 'lucide-react'
+import { Menu, X, LogOut, Globe, Sun, Moon } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
@@ -8,7 +8,6 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { BrandLogo } from '@/components/ui/brand-logo'
 import { MobileNavMenu } from '@/components/layout/MobileNavMenu'
 import { supabase } from '@/lib/supabase'
-import { useCompareStore } from '@/store/compareStore'
 
 const languages = [
   { code: 'en', label: 'English' },
@@ -24,7 +23,6 @@ export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [langOpen, setLangOpen] = useState(false)
   const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'))
-  const { items: compareItems } = useCompareStore()
 
   const navLinks = [
     { to: '/', label: t('home') },
@@ -60,12 +58,6 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-2">
-            {user && (
-              <button onClick={() => navigate('/compare')} className="relative p-2 text-gray-700 hover:text-primary-600 dark:text-gray-300 cursor-pointer" title={t('compare', 'Compare')}>
-                <BarChart3 className="h-4 w-4" />
-                {compareItems.length > 0 && <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary-600 text-[10px] font-bold text-white">{compareItems.length}</span>}
-              </button>
-            )}
             <button onClick={toggleTheme} className="p-2 text-gray-700 hover:text-primary-600 dark:text-gray-300 cursor-pointer" title={t('theme')}>
               {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
