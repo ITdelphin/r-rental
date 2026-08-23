@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatsSkeleton } from '@/components/ui/loading'
-import { Building2, Calendar, Heart, MessageSquare, Star, DollarSign, Users, TrendingUp, Activity, Settings, FileText, AlertTriangle, Eye, Zap, Plus } from 'lucide-react'
+import { Building2, Calendar, Bookmark, MessageSquare, Star, DollarSign, Users, TrendingUp, Activity, Settings, FileText, AlertTriangle, Eye, Zap, Plus } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 interface DashboardStats {
@@ -151,7 +151,7 @@ export function DashboardHome() {
 
   const tenantCards = [
     { icon: Calendar, label: t('active_bookings'), value: stats?.totalBookings ?? 0, style: CARD_STYLES.bookings },
-    { icon: Heart, label: t('saved_properties'), value: stats?.savedProperties ?? 0, style: CARD_STYLES.views },
+    { icon: Bookmark, label: t('saved_properties'), value: stats?.savedProperties ?? 0, style: CARD_STYLES.views },
     { icon: MessageSquare, label: t('unread_messages'), value: stats?.unreadMessages ?? 0, style: CARD_STYLES.complaints },
     { icon: Star, label: t('reviews_given'), value: stats?.reviewsGiven ?? 0, style: CARD_STYLES.pending },
   ]

@@ -1,4 +1,4 @@
-import { LayoutDashboard, Building2, Calendar, Heart, MessageSquare, Settings, Plus, Wrench, BarChart3, Star, Users, Shield, Activity } from 'lucide-react'
+import { LayoutDashboard, Building2, Calendar, Bookmark, MessageSquare, Settings, Plus, Wrench, BarChart3, Star, Users, Shield, Activity } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 export interface NavItem {
@@ -11,7 +11,7 @@ export interface NavItem {
 export const tenantNav: NavItem[] = [
   { to: '/dashboard', key: 'dashboard', icon: LayoutDashboard },
   { to: '/dashboard/bookings', key: 'my_bookings', icon: Calendar },
-  { to: '/dashboard/favorites', key: 'my_favorites', icon: Heart },
+  { to: '/dashboard/favorites', key: 'my_favorites', icon: Bookmark },
   { to: '/dashboard/maintenance', key: 'maintenance', icon: Wrench },
   { to: '/dashboard/messages', key: 'messages', icon: MessageSquare },
   { to: '/dashboard/reviews', key: 'reviews', icon: Star },

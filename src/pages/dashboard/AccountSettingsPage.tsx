@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
-import { Camera, Save, Key, Trash2, Loader2, AlertTriangle, Upload, FileDown, ShieldCheck, UserX } from 'lucide-react'
+import { Save, Key, Trash2, Loader2, AlertTriangle, Upload, FileDown, ShieldCheck, UserX } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
 import type { DataRequest, ConsentRecord } from '@/types'
@@ -371,7 +371,7 @@ export function AccountSettingsPage() {
                   disabled={uploading}
                   className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-primary-600 text-white shadow hover:bg-primary-700 disabled:opacity-50 cursor-pointer"
                 >
-                  {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+                  {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
                 </button>
                 <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
               </div>

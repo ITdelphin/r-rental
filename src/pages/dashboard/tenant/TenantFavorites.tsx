@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { ListSkeleton } from '@/components/ui/loading'
 import { Button } from '@/components/ui/button'
-import { Heart, Home, MapPin, Trash2 } from 'lucide-react'
+import { Bookmark, Home, MapPin, Trash2 } from 'lucide-react'
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
@@ -64,7 +64,7 @@ export function TenantFavorites() {
         <ListSkeleton items={2} />
       ) : favorites.length === 0 ? (
         <EmptyState
-          icon={Heart}
+          icon={Bookmark}
           title={t('no_favorites_yet')}
           description={t('no_favorites_description')}
           actionLabel={t('browse_properties')}

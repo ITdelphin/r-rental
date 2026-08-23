@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { CardSkeleton } from '@/components/ui/loading'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
-import { Camera, Save, Key, Trash2, Loader2, AlertTriangle, Upload, User, Shield, Bell, Palette, Settings, Sun, Moon, Monitor, Building, Image, RefreshCw, X, Eye, Globe, AlertCircle, Check, Languages } from 'lucide-react'
+import { Save, Key, Trash2, Loader2, AlertTriangle, Upload, User, Shield, Bell, Palette, Settings, Sun, Moon, Monitor, Building, Image, RefreshCw, X, Eye, Globe, AlertCircle, Check, Languages } from 'lucide-react'
 import { cn, isValidEmail } from '@/lib/utils'
 import toast from 'react-hot-toast'
 
@@ -217,7 +217,7 @@ function ProfileTab() {
       </div>
 
       <div className="space-y-6">
-        <SectionCard title={t('profile_photo')} description={t('profile_photo_description')} icon={Camera}>
+        <SectionCard title={t('profile_photo')} description={t('profile_photo_description')} icon={Image}>
           <div className="flex flex-col items-center gap-4">
             <div onDrop={handleDrop} onDragOver={handleDragOver} onDragLeave={handleDragLeave} className="relative">
               <Avatar className={cn('h-24 w-24 ring-2 transition-shadow', dragOver ? 'ring-primary-500 shadow-lg shadow-primary-200 dark:shadow-primary-900' : 'ring-transparent')}>
@@ -230,7 +230,7 @@ function ProfileTab() {
                 </div>
               )}
               <button onClick={() => fileInputRef.current?.click()} disabled={uploading} className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-primary-600 text-white shadow hover:bg-primary-700 disabled:opacity-50 cursor-pointer">
-                {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+                {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
               </button>
               <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
             </div>
