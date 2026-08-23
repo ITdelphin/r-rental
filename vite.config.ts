@@ -10,12 +10,12 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          supabase: ['@supabase/supabase-js', '@supabase/ssr'],
-          charts: ['recharts'],
-          pdf: ['jspdf', 'jspdf-autotable'],
-          map: ['leaflet', 'react-leaflet'],
+        manualChunks(id) {
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-router') || id.includes('node_modules/react-dom')) return 'vendor'
+          if (id.includes('node_modules/@supabase')) return 'supabase'
+          if (id.includes('node_modules/recharts')) return 'charts'
+          if (id.includes('node_modules/jspdf')) return 'pdf'
+          if (id.includes('node_modules/leaflet')) return 'map'
         },
       },
     },

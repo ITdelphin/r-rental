@@ -512,7 +512,16 @@ export function AddPropertyPage() {
                     type="button"
                     variant="outline"
                     className="flex-2 text-primary-600 hover:text-primary-700 hover:bg-primary-50 dark:hover:bg-primary-900/20"
-                    onClick={() => {
+                    onClick={async () => {
+                      // limit pending_approval spam: max 3 pending per owner
+                      try {
+                        if (!user?.id) return
+                        const { count } = await supabase.from('properties').select('id', { count: 'exact', head: true }).eq('owner_id', user.id).eq('status', 'pending_approval')
+                        if ((count || 0) >= 3) {
+                          toast.error(t('pending_limit_reached', 'You have 3 properties pending approval. Please wait for admin review.'))
+                          return
+                        }
+                      } catch {}
                       setSkippedPayment(true)
                       setIsPaymentModalOpen(false)
                     }}
