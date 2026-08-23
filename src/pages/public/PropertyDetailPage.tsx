@@ -14,6 +14,7 @@ import { formatPrice, resolveVideoUrl } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { sendBookingNotification } from '@/lib/email'
 import { notifyBookingCreated } from '@/lib/notifications'
+import { createAuditLog } from '@/lib/audit'
 import toast from 'react-hot-toast'
 import type { PropertyUnit, PropertyVerification } from '@/types'
 
@@ -165,6 +166,7 @@ export function PropertyDetailPage() {
         message: bookingMessage,
       } as never).select().single()
       if (error) throw error
+      createAuditLog('booking_created', 'booking', (newBooking as { id: string })?.id, { property_id: property.id, check_in: checkIn, check_out: checkOut })
       toast.success(t('booking_sent'))
       setBookingMessage('')
       setCheckIn('')
@@ -198,10 +200,12 @@ export function PropertyDetailPage() {
       if (isFavorited) {
         await supabase.from('favorites').delete().eq('user_id', user.id).eq('property_id', property.id)
         setIsFavorited(false)
+        createAuditLog('favorite_removed', 'property', property.id)
         toast.success(t('removed_from_favorites'))
       } else {
         await supabase.from('favorites').insert({ user_id: user.id, property_id: property.id } as never)
         setIsFavorited(true)
+        createAuditLog('favorite_added', 'property', property.id)
         toast.success(t('added_to_favorites'))
       }
     } catch {
@@ -236,6 +240,7 @@ export function PropertyDetailPage() {
         message: bookingMessage,
       } as never)
       if (error) throw error
+      createAuditLog('application_submitted', 'rental_application', undefined, { property_id: property.id, unit_id: unitId })
       toast.success(t('application_submitted'))
       setBookingMessage('')
       setReportOpen(false)
@@ -259,6 +264,7 @@ export function PropertyDetailPage() {
         status: 'reported',
       } as never)
       if (error) throw error
+      createAuditLog('property_reported', 'property', property.id, { reason: reportReason })
       toast.success(t('report_submitted'))
       setReportOpen(false)
       setReportDetails('')

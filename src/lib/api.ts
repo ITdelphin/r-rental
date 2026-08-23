@@ -68,7 +68,8 @@ export const propertyApi = {
         }
       })
     }
-    const { data, error } = await query.order('created_at', { ascending: false })
+    // explicit limit to avoid silent 1000-row truncation
+    const { data, error } = await query.order('created_at', { ascending: false }).limit(1000)
     if (error) throw error
     return (data || []) as unknown as Property[]
   },
