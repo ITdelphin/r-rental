@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import type { Property } from '@/types'
 
 const MAX_COMPARE = 4
@@ -13,18 +13,13 @@ function emitChange() {
 export function useCompareStore() {
   const [, setTick] = useState(0)
 
-  const subscribe = useCallback(() => {
-    const listener = () => setTick(t => t + 1)
+  useEffect(() => {
+    const listener = () => setTick((t) => t + 1)
     listeners.push(listener)
     return () => {
-      listeners = listeners.filter(l => l !== listener)
+      listeners = listeners.filter((l) => l !== listener)
     }
   }, [])
-
-  useState(() => {
-    const unsub = subscribe()
-    return unsub
-  })
 
   const addItem = useCallback((property: Property) => {
     if (globalState.length >= MAX_COMPARE) return

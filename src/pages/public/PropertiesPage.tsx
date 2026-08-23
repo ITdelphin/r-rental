@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { useCompareStore } from '@/store/compareStore'
 import { useTranslation } from 'react-i18next'
 import { MapPin, Home, SlidersHorizontal } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
@@ -20,7 +21,13 @@ export function PropertiesPage() {
   const [filters, setFilters] = useState<Record<string, string>>({})
   const [searchQuery, setSearchQuery] = useState(() => searchParams.get('q') || searchParams.get('search') || searchParams.get('query') || '')
   const [showFilters, setShowFilters] = useState(false)
+  const [priceMin, setPriceMin] = useState<string>('')
+  const [priceMax, setPriceMax] = useState<string>('')
+  const [sortBy, setSortBy] = useState<'newest' | 'price_asc' | 'price_desc' | 'beds_desc'>('newest')
+  const [page, setPage] = useState(1)
+  const pageSize = 6
   const { data: properties, isLoading } = useProperties({ ...filters, status: 'published' })
+  const { toggleItem: toggleCompare, isInCompare, items: compareItems } = useCompareStore()
 
   // Sync search from URL (homepage hero search -> /properties?q=...)
   useEffect(() => {
@@ -54,13 +61,19 @@ export function PropertiesPage() {
   const clearFilters = () => {
     setFilters({})
     setSearchQuery('')
+    setPriceMin('')
+    setPriceMax('')
+    setSortBy('newest')
+    setPage(1)
     const next = new URLSearchParams(searchParams)
     next.delete('q'); next.delete('search'); next.delete('query')
     setSearchParams(next, { replace: true })
   }
 
   const q = searchQuery.trim().toLowerCase()
-  const filteredProperties = properties?.filter((p) => {
+  const min = priceMin ? Number(priceMin) : null
+  const max = priceMax ? Number(priceMax) : null
+  const filteredSorted = (properties?.filter((p) => {
     if (!q) return true
     const haystack = [
       p.title,
@@ -79,9 +92,28 @@ export function PropertiesPage() {
       .filter(Boolean)
       .join(' ')
       .toLowerCase()
-    // support multi-word search: every word must be found somewhere
     return q.split(/\s+/).every((word) => haystack.includes(word))
-  })
+  }) || [])
+    .filter((p) => {
+      if (min !== null && p.price < min) return false
+      if (max !== null && p.price > max) return false
+      return true
+    })
+    .sort((a, b) => {
+      if (sortBy === 'price_asc') return a.price - b.price
+      if (sortBy === 'price_desc') return b.price - a.price
+      if (sortBy === 'beds_desc') return b.bedrooms - a.bedrooms
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    })
+
+  useEffect(() => {
+    setPage(1)
+  }, [q, filters, priceMin, priceMax, sortBy])
+
+  const totalPages = Math.max(1, Math.ceil(filteredSorted.length / pageSize))
+  const currentPage = Math.min(page, totalPages)
+  const paginated = filteredSorted.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+  const filteredProperties = paginated
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
@@ -96,7 +128,7 @@ export function PropertiesPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('properties')}</h1>
-          <p className="mt-1 text-gray-600 dark:text-gray-400">{filteredProperties?.length || 0} {t('properties_found')}</p>
+          <p className="mt-1 text-gray-600 dark:text-gray-400">{filteredSorted.length} {t('properties_found')}</p>
         </div>
         <div className="flex items-center gap-2">
           <div className="relative flex-1 sm:w-80">
@@ -154,10 +186,36 @@ export function PropertiesPage() {
                   ))}
                 </div>
               </div>
+              <div className="sm:col-span-2 lg:col-span-4">
+                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">{t('price_range', 'Price range (RWF)')} </label>
+                <div className="flex items-center gap-2">
+                  <input type="number" min={0} placeholder={t('min_price', 'Min')} value={priceMin} onChange={(e) => setPriceMin(e.target.value)} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800" />
+                  <span className="text-gray-400">—</span>
+                  <input type="number" min={0} placeholder={t('max_price', 'Max')} value={priceMax} onChange={(e) => setPriceMax(e.target.value)} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800" />
+                  {(priceMin || priceMax) && (
+                    <button onClick={() => { setPriceMin(''); setPriceMax('') }} className="text-xs text-primary-600 hover:underline whitespace-nowrap">{t('clear', 'Clear')}</button>
+                  )}
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
       )}
+
+      <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          {filteredSorted.length} {t('properties_found')} {totalPages > 1 ? `— ${t('page', 'Page')} ${currentPage}/${totalPages}` : ''}
+        </p>
+        <div className="flex items-center gap-2">
+          <label className="text-sm text-gray-600 dark:text-gray-400">{t('sort_by', 'Sort by')}:</label>
+          <select value={sortBy} onChange={(e) => setSortBy(e.target.value as never)} className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-800">
+            <option value="newest">{t('newest', 'Newest')}</option>
+            <option value="price_asc">{t('price_low_high', 'Price: Low to High')}</option>
+            <option value="price_desc">{t('price_high_low', 'Price: High to Low')}</option>
+            <option value="beds_desc">{t('most_bedrooms', 'Most Bedrooms')}</option>
+          </select>
+        </div>
+      </div>
 
       <div className="mt-8">
         {isLoading ? (
@@ -174,34 +232,60 @@ export function PropertiesPage() {
             ))}
           </div>
         ) : filteredProperties && filteredProperties.length > 0 ? (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredProperties.map((property) => (
-              <Link key={property.id} to={`/properties/${property.id}`}>
-                <Card className="overflow-hidden transition-shadow hover:shadow-md h-full">
-                  <div className="aspect-[16/10] bg-gray-200 dark:bg-gray-700 relative">
-                    {property.images?.[0] ? (
-                      <img src={property.images[0].url} alt={property.title} className="h-full w-full object-cover" loading="lazy" />
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-gray-400"><Home className="h-12 w-12" /></div>
-                    )}
-                    <Badge className="absolute left-3 top-3 bg-black/60 text-white border-0">{property.category}</Badge>
-                    {property.is_featured && <Badge className="absolute right-3 top-3 bg-amber-500 text-white border-0">{t('featured')}</Badge>}
-                  </div>
-                  <CardContent className="p-4">
-                    <h3 className="font-semibold text-gray-900 dark:text-gray-100">{property.title}</h3>
-                    <p className="mt-1 flex items-center gap-1 text-sm text-gray-500"><MapPin className="h-3 w-3" /> {property.district}, {property.province}</p>
-                    <div className="mt-3 flex items-center justify-between">
-                      <span className="text-lg font-bold text-gray-900 dark:text-gray-100">{formatPrice(property.price)}/{t('mo')}</span>
-                      <div className="flex items-center gap-3 text-sm text-gray-500">
-                        <span>{property.bedrooms} {t('bed')}</span>
-                        <span>{property.bathrooms} {t('bath')}</span>
-                      </div>
+          <>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {filteredProperties.map((property) => {
+                const inCompare = isInCompare(property.id)
+                return (
+                <Link key={property.id} to={`/properties/${property.id}`}>
+                  <Card className="overflow-hidden transition-shadow hover:shadow-md h-full group">
+                    <div className="aspect-[16/10] bg-gray-200 dark:bg-gray-700 relative">
+                      {property.images?.[0] ? (
+                        <img src={property.images[0].url} alt={property.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-gray-400"><Home className="h-12 w-12" /></div>
+                      )}
+                      <Badge className="absolute left-3 top-3 bg-black/60 text-white border-0">{property.category}</Badge>
+                      {property.is_featured && <Badge className="absolute right-3 top-3 bg-amber-500 text-white border-0">{t('featured')}</Badge>}
+                      <button
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (!inCompare && compareItems.length >= 4) return; toggleCompare(property) }}
+                        className={`absolute bottom-2 right-2 rounded-full px-2.5 py-1 text-xs font-medium shadow backdrop-blur-sm border ${inCompare ? 'bg-primary-600 text-white border-primary-600' : 'bg-white/90 text-gray-800 border-gray-200 hover:bg-white'}`}
+                      >
+                        {inCompare ? '✓ ' + t('selected', 'Selected') : '+ ' + t('compare', 'Compare')}
+                      </button>
                     </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
+                    <CardContent className="p-4">
+                      <h3 className="font-semibold text-gray-900 dark:text-gray-100">{property.title}</h3>
+                      <p className="mt-1 flex items-center gap-1 text-sm text-gray-500"><MapPin className="h-3 w-3" /> {property.district}, {property.province}</p>
+                      <div className="mt-3 flex items-center justify-between">
+                        <span className="text-lg font-bold text-gray-900 dark:text-gray-100">{formatPrice(property.price)}/{t('mo')}</span>
+                        <div className="flex items-center gap-3 text-sm text-gray-500">
+                          <span>{property.bedrooms} {t('bed')}</span>
+                          <span>{property.bathrooms} {t('bath')}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+                )})}
+            </div>
+            {filteredSorted.length > pageSize && (
+              <div className="mt-8 flex items-center justify-center gap-2">
+                <Button variant="outline" size="sm" disabled={currentPage <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>{t('previous', 'Previous')}</Button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).slice(0, 7).map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => setPage(n)}
+                    className={`h-8 w-8 rounded-lg text-sm font-medium ${n === currentPage ? 'bg-primary-600 text-white' : 'border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                  >
+                    {n}
+                  </button>
+                ))}
+                {totalPages > 7 && <span className="text-sm text-gray-400">…{totalPages}</span>}
+                <Button variant="outline" size="sm" disabled={currentPage >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>{t('next', 'Next')}</Button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="py-20 text-center">
             <Home className="mx-auto h-12 w-12 text-gray-300" />
