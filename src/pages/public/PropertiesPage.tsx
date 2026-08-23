@@ -213,7 +213,7 @@ export function PropertiesPage() {
 
       <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          {filteredSorted.length} {t('properties_found')} {totalPages > 1 && viewMode === 'grid' ? `— ${t('page', 'Page')} ${currentPage}/${totalPages}` : ''}
+          {filteredSorted.length} {t('properties_found')}
         </p>
         <div className="flex items-center gap-2">
           <div className="flex rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden">
