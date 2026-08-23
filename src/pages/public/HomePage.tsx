@@ -42,6 +42,13 @@ export function HomePage() {
   const navigate = useNavigate()
   const { data: properties } = useProperties({ status: 'published', is_featured: true })
   const [heroBg, setHeroBg] = useState('/images/1.jpg')
+  const [heroSearch, setHeroSearch] = useState('')
+
+  const handleHeroSearch = () => {
+    const q = heroSearch.trim()
+    if (q) navigate(`/properties?q=${encodeURIComponent(q)}`)
+    else navigate('/properties')
+  }
 
   useEffect(() => {
     getSettings().then(s => {
@@ -66,9 +73,16 @@ export function HomePage() {
           <div className="mx-auto mt-10 flex max-w-xl items-center gap-2 rounded-full bg-white p-1 shadow-lg">
             <div className="flex flex-1 items-center gap-2 px-4">
               <Search className="h-5 w-5 text-gray-400" />
-              <input type="text" placeholder={t('search_properties')} className="w-full border-0 bg-transparent py-2 text-sm text-gray-900 outline-none placeholder:text-gray-400" />
+              <input
+                type="text"
+                value={heroSearch}
+                onChange={(e) => setHeroSearch(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleHeroSearch() }}
+                placeholder={t('search_properties')}
+                className="w-full border-0 bg-transparent py-2 text-sm text-gray-900 outline-none placeholder:text-gray-400"
+              />
             </div>
-            <Button onClick={() => navigate('/properties')} className="rounded-full px-8">{t('search')}</Button>
+            <Button onClick={handleHeroSearch} className="rounded-full px-8">{t('search')}</Button>
           </div>
           <div className="mt-8 flex justify-center gap-4 text-sm text-primary-200">
             <span>{t('kigali')}</span> <span>{t('musanze')}</span> <span>{t('rubavu')}</span> <span>{t('huye')}</span> <span>{t('nyagatare')}</span>
@@ -118,39 +132,16 @@ export function HomePage() {
                 const rating = property.reviews?.length
                   ? (property.reviews.reduce((sum: number, r: any) => sum + (r.rating || 0), 0) / property.reviews.length).toFixed(1)
                   : null
-                const imgs = property.images || []
-                const displayImgs: (typeof imgs[number] | null)[] = [...imgs.slice(0, 4)]
-                while (displayImgs.length < 4) displayImgs.push(null)
-                const extraCount = imgs.length > 4 ? imgs.length - 4 : 0
                 return (
                 <Link key={property.id} to={`/properties/${property.id}`} className="group block">
                   <Card className="overflow-hidden border-0 shadow-sm transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-2 rounded-2xl">
-                    <div className="relative overflow-hidden aspect-[4/3] bg-gray-200 dark:bg-gray-700">
-                      {/* 4-image mosaic grid */}
-                      <div className="grid h-full w-full grid-cols-2 grid-rows-2 gap-1 bg-gray-200 dark:bg-gray-700">
-                        {displayImgs.map((img, idx) => (
-                          <div key={idx} className="relative overflow-hidden bg-gray-100 dark:bg-gray-800">
-                            {img ? (
-                              <img
-                                src={img.url}
-                                alt={`${property.title} ${idx + 1}`}
-                                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                loading="lazy"
-                              />
-                            ) : (
-                              <div className="flex h-full w-full items-center justify-center bg-gray-100 dark:bg-gray-800 text-gray-400">
-                                <Home className="h-6 w-6 opacity-50" />
-                              </div>
-                            )}
-                            {idx === 3 && extraCount > 0 && (
-                              <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-[1px]">
-                                <span className="text-lg font-bold text-white">+{extraCount}</span>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-black/5 to-transparent" />
+                    <div className="aspect-[4/3] bg-gray-200 dark:bg-gray-700 relative overflow-hidden">
+                      {property.images?.[0] ? (
+                        <img src={property.images[0].url} alt={property.title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-gray-400"><Home className="h-12 w-12" /></div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
                       <Badge className="absolute left-3 top-3 bg-white/90 text-gray-800 backdrop-blur-sm border-0 shadow-sm">
                         {property.category}
                       </Badge>
@@ -158,13 +149,6 @@ export function HomePage() {
                         <Badge className="absolute right-3 top-3 bg-amber-500 text-white border-0 shadow-lg">
                           {t('featured')}
                         </Badge>
-                      )}
-                      {/* image count badge */}
-                      {imgs.length > 1 && (
-                        <span className="absolute left-3 bottom-12 flex items-center gap-1 rounded-full bg-black/55 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm">
-                          <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" strokeWidth="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                          {imgs.length}
-                        </span>
                       )}
                       <div className="absolute bottom-3 left-3 right-3">
                         <span className="text-xl font-bold text-white drop-shadow-lg">

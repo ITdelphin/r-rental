@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { MapPin, Home, SlidersHorizontal } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
@@ -16,10 +16,30 @@ const categories = ['rent', 'sale', 'short_term']
 
 export function PropertiesPage() {
   const { t } = useTranslation()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [filters, setFilters] = useState<Record<string, string>>({})
-  const [searchQuery, setSearchQuery] = useState('')
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get('q') || searchParams.get('search') || searchParams.get('query') || '')
   const [showFilters, setShowFilters] = useState(false)
   const { data: properties, isLoading } = useProperties({ ...filters, status: 'published' })
+
+  // Sync search from URL (homepage hero search -> /properties?q=...)
+  useEffect(() => {
+    const q = searchParams.get('q') || searchParams.get('search') || searchParams.get('query') || ''
+    if (q !== searchQuery) setSearchQuery(q)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
+
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value)
+    const next = new URLSearchParams(searchParams)
+    if (value.trim()) next.set('q', value.trim())
+    else {
+      next.delete('q')
+      next.delete('search')
+      next.delete('query')
+    }
+    setSearchParams(next, { replace: true })
+  }
 
   const toggleFilter = (key: string, value: string) => {
     setFilters((prev) => {
@@ -34,12 +54,19 @@ export function PropertiesPage() {
   const clearFilters = () => {
     setFilters({})
     setSearchQuery('')
+    const next = new URLSearchParams(searchParams)
+    next.delete('q'); next.delete('search'); next.delete('query')
+    setSearchParams(next, { replace: true })
   }
 
+  const q = searchQuery.trim().toLowerCase()
   const filteredProperties = properties?.filter((p) =>
-    !searchQuery || p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.district.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.province.toLowerCase().includes(searchQuery.toLowerCase())
+    !q ||
+    p.title.toLowerCase().includes(q) ||
+    p.description?.toLowerCase().includes(q) ||
+    p.district.toLowerCase().includes(q) ||
+    p.province.toLowerCase().includes(q) ||
+    p.sector?.toLowerCase().includes(q)
   )
 
   return (
@@ -62,7 +89,7 @@ export function PropertiesPage() {
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               placeholder={t('search_properties')}
               className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-4 pr-10 text-sm dark:border-gray-600 dark:bg-gray-800"
             />
