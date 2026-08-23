@@ -60,14 +60,28 @@ export function PropertiesPage() {
   }
 
   const q = searchQuery.trim().toLowerCase()
-  const filteredProperties = properties?.filter((p) =>
-    !q ||
-    p.title.toLowerCase().includes(q) ||
-    p.description?.toLowerCase().includes(q) ||
-    p.district.toLowerCase().includes(q) ||
-    p.province.toLowerCase().includes(q) ||
-    p.sector?.toLowerCase().includes(q)
-  )
+  const filteredProperties = properties?.filter((p) => {
+    if (!q) return true
+    const haystack = [
+      p.title,
+      p.description,
+      p.district,
+      p.province,
+      p.sector,
+      p.cell,
+      p.village,
+      p.category,
+      p.property_type,
+      String(p.bedrooms),
+      String(p.bathrooms),
+      String(p.price),
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase()
+    // support multi-word search: every word must be found somewhere
+    return q.split(/\s+/).every((word) => haystack.includes(word))
+  })
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
