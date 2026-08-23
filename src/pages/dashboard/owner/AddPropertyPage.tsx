@@ -152,47 +152,7 @@ export function AddPropertyPage() {
   const [whatsappCode, setWhatsappCode] = useState('+250')
   const [videoUrl, setVideoUrl] = useState('')
 
-  // Listing Fee Payment Gate
-  const [checkingFee, setCheckingFee] = useState(true)
-  const [hasPaidFee, setHasPaidFee] = useState(false)
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(true)
-  const [paymentMethod, setPaymentMethod] = useState<'mtn_momo' | 'airtel_money' | 'card'>('mtn_momo')
-  const [paymentPhone, setPaymentPhone] = useState(profile?.phone || '')
-  const [processingPayment, setProcessingPayment] = useState(false)
-  const [skippedPayment, setSkippedPayment] = useState(false)
-  const [feeId, setFeeId] = useState<string | null>(null)
 
-  // Verify if a user has a valid listing fee available
-  useEffect(() => {
-    if (!user) return
-    const verifyFee = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('listing_fees')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('status', 'completed')
-          .eq('is_used', false)
-          .order('created_at', { ascending: false })
-          .limit(1)
-
-        if (!error && data && data.length > 0) {
-          setFeeId((data[0] as { id: string }).id)
-          setHasPaidFee(true)
-          setIsPaymentModalOpen(false)
-        } else {
-          setFeeId(null)
-          setHasPaidFee(false)
-          setIsPaymentModalOpen(true)
-        }
-      } catch (err) {
-        console.error('Failed to verify listing fee:', err)
-      } finally {
-        setCheckingFee(false)
-      }
-    }
-    verifyFee()
-  }, [user])
 
   const {
     register,
@@ -267,48 +227,6 @@ export function AddPropertyPage() {
     setUploadedImages([])
   }
 
-  const handleListingPayment = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!user) return
-
-    if ((paymentMethod === 'mtn_momo' || paymentMethod === 'airtel_money') && !paymentPhone.trim()) {
-      toast.error(t('phone_number_required', 'Phone number is required for Mobile Money'))
-      return
-    }
-
-    setProcessingPayment(true)
-    try {
-      // Simulate Payment Gateway call / Push to MoMo
-      await new Promise(resolve => setTimeout(resolve, 2000))
-
-      const transactionId = `LIST-${paymentMethod.toUpperCase()}-${Date.now().toString().slice(-8)}`
-
-      const { data, error } = await supabase.from('listing_fees').insert({
-        user_id: user.id,
-        amount: 10000,
-        currency: 'RWF',
-        method: paymentMethod,
-        phone_number: paymentPhone || null,
-        transaction_id: transactionId,
-        status: 'completed'
-      } as never).select()
-
-      if (error) throw error
-
-      if (data && data.length > 0) {
-        setFeeId((data[0] as { id: string }).id)
-      }
-
-      toast.success(t('payment_successful_msg', 'Payment processed successfully!'))
-      setHasPaidFee(true)
-      setIsPaymentModalOpen(false)
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : t('payment_failed_msg', 'Payment processing failed'))
-    } finally {
-      setProcessingPayment(false)
-    }
-  }
-
   const onSubmit = async (formData: PropertyFormData) => {
     if (!user) return
 
@@ -340,7 +258,7 @@ export function AddPropertyPage() {
         water: formData.water,
         electricity: formData.electricity,
         furnished: formData.furnished,
-        status: skippedPayment ? 'pending_approval' : 'published',
+        status: 'published',
         is_featured: false,
         views_count: 0,
       }
@@ -372,16 +290,6 @@ export function AddPropertyPage() {
         }
       }
 
-      if (created?.id && feeId) {
-        const { error: feeUpdateError } = await supabase
-          .from('listing_fees')
-          .update({ is_used: true, property_id: created.id } as never)
-          .eq('id', feeId)
-        if (feeUpdateError) {
-          console.error('Failed to mark fee as used:', feeUpdateError)
-        }
-      }
-
       toast.success(t('property_published_successfully'))
       if (created?.id && user) {
         notifyPropertyAdded(created.id, profile?.full_name || 'Owner', created.title || 'Property', user.id)
@@ -402,139 +310,6 @@ export function AddPropertyPage() {
     } else {
       navigate(-1)
     }
-  }
-
-  if (checkingFee) {
-    return (
-      <div className="flex min-h-[400px] flex-col items-center justify-center space-y-4">
-        <Loader2 className="h-8 w-8 animate-spin text-primary-500" />
-        <p className="text-sm text-gray-500 dark:text-gray-400">{t('checking_listing_fee', 'Verifying listing status...')}</p>
-      </div>
-    )
-  }
-
-  if (!hasPaidFee && !skippedPayment) {
-    return (
-      <div className="mx-auto max-w-lg pt-12">
-        <Card className="overflow-hidden border-2 border-primary-100 shadow-xl dark:border-primary-900/50">
-          <CardHeader className="bg-primary-50 dark:bg-primary-900/20 text-center pb-8 pt-8">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary-100 dark:bg-primary-900/50">
-              <Banknote className="h-8 w-8 text-primary-600 dark:text-primary-400" />
-            </div>
-            <CardTitle className="text-2xl">{t('listing_fee_required', 'Listing Fee Required')}</CardTitle>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-              {t('listing_fee_description', 'To publish a new property on Rwanda EasyRent, a one-time listing fee of 10,000 RWF is required. Your listing will be visible for 24 hours (or pending rules setup).')}
-            </p>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="mb-6 rounded-lg bg-gray-50 dark:bg-gray-800 p-4 border border-gray-100 dark:border-gray-700">
-              <div className="flex items-center justify-between font-semibold text-lg text-gray-900 dark:text-gray-100">
-                <span>{t('listing_fee', 'Listing Fee')}</span>
-                <span>10,000 RWF</span>
-              </div>
-            </div>
-
-            <form onSubmit={handleListingPayment} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                  {t('select_payment_method', 'Select Payment Method')}
-                </label>
-                <div className="grid grid-cols-3 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod('mtn_momo')}
-                    className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 font-semibold transition-colors cursor-pointer ${paymentMethod === 'mtn_momo'
-                      ? 'border-yellow-400 bg-yellow-50 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
-                      : 'border-gray-200 bg-white text-gray-500 hover:border-yellow-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400'
-                      }`}
-                  >
-                    MTN MoMo
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod('airtel_money')}
-                    className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 font-semibold transition-colors cursor-pointer ${paymentMethod === 'airtel_money'
-                      ? 'border-red-400 bg-red-50 text-red-800 dark:bg-red-900/20 dark:text-red-400'
-                      : 'border-gray-200 bg-white text-gray-500 hover:border-red-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400'
-                      }`}
-                  >
-                    Airtel Money
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod('card')}
-                    className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 font-semibold transition-colors cursor-pointer ${paymentMethod === 'card'
-                      ? 'border-blue-400 bg-blue-50 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
-                      : 'border-gray-200 bg-white text-gray-500 hover:border-blue-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400'
-                      }`}
-                  >
-                    Card
-                  </button>
-                </div>
-              </div>
-
-              {(paymentMethod === 'mtn_momo' || paymentMethod === 'airtel_money') && (
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
-                    <Phone className="h-4 w-4 text-gray-400" />
-                    {t('mobile_money_number', 'Mobile Money Phone Number')}
-                  </label>
-                  <Input
-                    type="tel"
-                    value={paymentPhone}
-                    onChange={e => setPaymentPhone(e.target.value)}
-                    placeholder="0781234567"
-                    required
-                    className="h-11"
-                  />
-                </div>
-              )}
-
-              <div className="flex flex-col gap-3 pt-2">
-                <Button type="submit" disabled={processingPayment} className="w-full text-base font-bold bg-primary-600 hover:bg-primary-700">
-                  {processingPayment ? (
-                    <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      {t('processing', 'Processing...')}
-                    </>
-                  ) : (
-                    <>
-                      {t('pay_and_continue', 'Pay 10,000 RWF to Continue')}
-                    </>
-                  )}
-                </Button>
-
-                <div className="flex gap-3">
-                  <Button type="button" variant="outline" className="flex-1" onClick={() => navigate(-1)}>
-                    <ChevronLeft className="mr-2 h-4 w-4" /> {t('back')}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="flex-2 text-primary-600 hover:text-primary-700 hover:bg-primary-50 dark:hover:bg-primary-900/20"
-                    onClick={async () => {
-                      // limit pending_approval spam: max 3 pending per owner
-                      try {
-                        if (!user?.id) return
-                        const { count } = await supabase.from('properties').select('id', { count: 'exact', head: true }).eq('owner_id', user.id).eq('status', 'pending_approval')
-                        if ((count || 0) >= 3) {
-                          toast.error(t('pending_limit_reached', 'You have 3 properties pending approval. Please wait for admin review.'))
-                          return
-                        }
-                      } catch {}
-                      setSkippedPayment(true)
-                      setIsPaymentModalOpen(false)
-                    }}
-                  >
-                    {t('request_admin_approval', 'Skip & Request Admin Approval')}
-                  </Button>
-                </div>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    )
   }
 
   return (

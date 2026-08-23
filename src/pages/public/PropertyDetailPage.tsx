@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { MapPin, Bed, Bath, Square, Wifi, Shield, Car, TreePine, Waves, Zap, Droplets, Heart, MessageCircle, Calendar, Star, ChevronLeft, ChevronRight, Share2, CookingPot, Sun, Eye, DoorOpen, Flag, BadgeCheck } from 'lucide-react'
+import { MapPin, Bed, Bath, Square, Wifi, Shield, Car, TreePine, Waves, Zap, Droplets, Heart, MessageCircle, Calendar, Star, ChevronLeft, ChevronRight, Share2, CookingPot, Sun, Eye, DoorOpen, Flag, BadgeCheck, CreditCard, Phone, Banknote, Loader2 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import L from 'leaflet'
@@ -15,6 +15,8 @@ L.Icon.Default.mergeOptions({
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
 import { SEO } from '@/components/SEO'
 import { propertyLD, breadcrumbLD } from '@/lib/seo-data'
 import { useProperty } from '@/hooks/useProperties'
@@ -54,6 +56,11 @@ export function PropertyDetailPage() {
   const [reportReason, setReportReason] = useState('fake_listing')
   const [reportDetails, setReportDetails] = useState('')
   const whatsappNumber = property?.whatsapp_number
+  // Booking fee (1000 RWF) — replaces listing fee
+  const [showBookingFeeModal, setShowBookingFeeModal] = useState(false)
+  const [bookingPaymentMethod, setBookingPaymentMethod] = useState<'mtn_momo' | 'airtel_money' | 'card'>('mtn_momo')
+  const [bookingPaymentPhone, setBookingPaymentPhone] = useState('')
+  const [processingBookingPayment, setProcessingBookingPayment] = useState(false)
 
   useEffect(() => {
     if (property) {
@@ -130,11 +137,22 @@ export function PropertyDetailPage() {
       toast.error(t('check_out_after_check_in'))
       return
     }
+    // Show 1000 RWF booking fee modal instead of direct booking (replaces listing fee)
+    setBookingPaymentPhone(profile?.phone || '')
+    setShowBookingFeeModal(true)
+  }
+
+  const handleConfirmBookingPayment = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!user || !property) return
+    if ((bookingPaymentMethod === 'mtn_momo' || bookingPaymentMethod === 'airtel_money') && !bookingPaymentPhone.trim()) {
+      toast.error(t('phone_number_required', 'Phone number is required for Mobile Money'))
+      return
+    }
+    setProcessingBookingPayment(true)
     setBookingLoading(true)
     setDateError('')
     try {
-      // Prefer DB function for correct overlap (check_in < desiredCheckOut && check_out > desiredCheckIn)
-      // Falls back to direct select if function not yet migrated
       let isAvailable: boolean | null = null
       try {
         const { data: avail, error: availError } = await (supabase.rpc as unknown as (fn: string, params: Record<string, unknown>) => Promise<{ data: boolean; error: unknown }>)('is_property_available', {
@@ -143,29 +161,34 @@ export function PropertyDetailPage() {
           p_check_out: checkOut,
         })
         if (!availError && typeof avail === 'boolean') isAvailable = avail
-      } catch {
-        // ignore rpc errors, fallback
-      }
+      } catch {}
       if (isAvailable === false) {
         toast.error(t('property_unavailable_dates'))
-        setBookingLoading(false)
         return
       }
       if (isAvailable === null) {
-        const { data: overlapping } = await supabase
-          .from('bookings')
-          .select('id')
-          .eq('property_id', property.id)
-          .in('status', ['pending', 'approved'])
-          .lt('check_in', checkOut)
-          .gt('check_out', checkIn)
-          .limit(1)
+        const { data: overlapping } = await supabase.from('bookings').select('id').eq('property_id', property.id).in('status', ['pending', 'approved']).lt('check_in', checkOut).gt('check_out', checkIn).limit(1)
         if (overlapping && overlapping.length > 0) {
           toast.error(t('property_unavailable_dates'))
-          setBookingLoading(false)
           return
         }
       }
+      // Simulate 1000 RWF booking fee payment
+      await new Promise((r) => setTimeout(r, 2000))
+      const transactionId = `BOOK-${bookingPaymentMethod.toUpperCase()}-${Date.now().toString().slice(-8)}`
+      // Record booking fee payment (1000 RWF)
+      const { error: payError } = await supabase.from('payments').insert({
+        booking_id: null as unknown as string, // will update after booking created if needed
+        payer_id: user.id,
+        payee_id: property.owner_id,
+        amount: 1000,
+        currency: 'RWF',
+        method: bookingPaymentMethod,
+        status: 'completed',
+        transaction_id: transactionId,
+      } as never)
+      if (payError) console.warn('booking fee payment log failed', payError)
+
       const { data: newBooking, error } = await supabase.from('bookings').insert({
         property_id: property.id,
         tenant_id: user.id,
@@ -176,26 +199,27 @@ export function PropertyDetailPage() {
         message: bookingMessage,
       } as never).select().single()
       if (error) throw error
-      createAuditLog('booking_created', 'booking', (newBooking as { id: string })?.id, { property_id: property.id, check_in: checkIn, check_out: checkOut })
-      toast.success(t('booking_sent'))
-      setBookingMessage('')
-      setCheckIn('')
-      setCheckOut('')
+      // Update payment with booking_id if available
       if (newBooking) {
-        sendBookingNotification((newBooking as { id: string }).id, 'created')
         const bookingId = (newBooking as { id: string }).id
-        const sellerId = property?.owner_id || ''
-        notifyBookingCreated(bookingId, user.id, sellerId, property?.title || t('property'), bookingMessage)
+        // try to link payment to booking (best effort)
+        await supabase.from('payments').update({ booking_id: bookingId } as never).eq('transaction_id', transactionId).then(() => {})
+        createAuditLog('booking_created', 'booking', bookingId, { property_id: property.id, check_in: checkIn, check_out: checkOut, fee: 1000 })
+        toast.success(t('booking_sent') + ' — ' + t('booking_fee_paid', 'Booking fee 1,000 RWF paid'))
+        setBookingMessage('')
+        setCheckIn('')
+        setCheckOut('')
+        setShowBookingForm(false)
+        setShowBookingFeeModal(false)
+        sendBookingNotification(bookingId, 'created')
+        notifyBookingCreated(bookingId, user.id, property.owner_id, property.title || t('property'), bookingMessage)
       }
     } catch (err: unknown) {
       const raw = err instanceof Error ? err.message : ''
-      if (raw.toLowerCase().includes('property not available') || raw.includes('P0001')) {
-        toast.error(t('property_unavailable_dates'))
-      } else {
-        const msg = raw || t('booking_failed')
-        toast.error(msg)
-      }
+      if (raw.toLowerCase().includes('property not available') || raw.includes('P0001')) toast.error(t('property_unavailable_dates'))
+      else toast.error(raw || t('booking_failed'))
     } finally {
+      setProcessingBookingPayment(false)
       setBookingLoading(false)
     }
   }
@@ -715,6 +739,46 @@ export function PropertyDetailPage() {
           )}
         </div>
       </div>
+      {/* Booking Fee Modal — 1000 RWF replaces listing fee */}
+      <Dialog open={showBookingFeeModal} onOpenChange={setShowBookingFeeModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary-100 dark:bg-primary-900/30">
+              <Banknote className="h-6 w-6 text-primary-600" />
+            </div>
+            <DialogTitle className="text-center">{t('booking_fee_required', 'Booking Fee Required')}</DialogTitle>
+            <DialogDescription className="text-center">
+              {t('booking_fee_description', 'A one-time booking fee of 1,000 RWF is required to confirm your booking. This fee secures your request and is processed securely.')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="my-3 rounded-lg bg-gray-50 dark:bg-gray-800 p-3 border flex items-center justify-between">
+            <span className="font-medium text-gray-700 dark:text-gray-300">{t('booking_fee', 'Booking Fee')}</span>
+            <span className="font-bold text-gray-900 dark:text-gray-100">1,000 RWF</span>
+          </div>
+          <form onSubmit={handleConfirmBookingPayment} className="space-y-4">
+            <div>
+              <label className="mb-2 block text-sm font-medium">{t('select_payment_method', 'Select Payment Method')}</label>
+              <div className="grid grid-cols-3 gap-2">
+                <button type="button" onClick={() => setBookingPaymentMethod('mtn_momo')} className={`rounded-lg border-2 p-2 text-xs font-semibold ${bookingPaymentMethod === 'mtn_momo' ? 'border-yellow-400 bg-yellow-50 text-yellow-800' : 'border-gray-200 bg-white text-gray-500'}`}>MTN MoMo</button>
+                <button type="button" onClick={() => setBookingPaymentMethod('airtel_money')} className={`rounded-lg border-2 p-2 text-xs font-semibold ${bookingPaymentMethod === 'airtel_money' ? 'border-red-400 bg-red-50 text-red-800' : 'border-gray-200 bg-white text-gray-500'}`}>Airtel Money</button>
+                <button type="button" onClick={() => setBookingPaymentMethod('card')} className={`rounded-lg border-2 p-2 text-xs font-semibold ${bookingPaymentMethod === 'card' ? 'border-blue-400 bg-blue-50 text-blue-800' : 'border-gray-200 bg-white text-gray-500'}`}><CreditCard className="mx-auto h-4 w-4 mb-1" /> Card</button>
+              </div>
+            </div>
+            {(bookingPaymentMethod === 'mtn_momo' || bookingPaymentMethod === 'airtel_money') && (
+              <div>
+                <label className="mb-1.5 block text-sm font-medium flex items-center gap-1"><Phone className="h-3.5 w-3.5" /> {t('mobile_money_number', 'Mobile Money Phone Number')}</label>
+                <Input type="tel" value={bookingPaymentPhone} onChange={(e) => setBookingPaymentPhone(e.target.value)} placeholder="0781234567" required />
+              </div>
+            )}
+            <div className="flex gap-2 pt-2">
+              <Button type="button" variant="outline" className="flex-1" onClick={() => setShowBookingFeeModal(false)} disabled={processingBookingPayment}>{t('cancel')}</Button>
+              <Button type="submit" className="flex-1" disabled={processingBookingPayment}>
+                {processingBookingPayment ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t('processing', 'Processing...')}</> : <><Banknote className="mr-2 h-4 w-4" /> {t('pay_1000_continue', 'Pay 1,000 RWF & Book')}</>}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
