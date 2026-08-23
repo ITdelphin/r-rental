@@ -292,7 +292,7 @@ function SecurityTab() {
     setSendingReset(true)
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(profile.email, {
-        redirectTo: 'https://rwanda-easyrent.vercel.app/auth/forgot-password',
+        redirectTo: `${window.location.origin}/auth/forgot-password`,
       })
       if (error) throw error
       toast.success(t('reset_link_sent') || 'Password reset link sent to your email!')

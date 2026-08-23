@@ -2,6 +2,16 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { MapPin, Bed, Bath, Square, Wifi, Shield, Car, TreePine, Waves, Zap, Droplets, Heart, MessageCircle, Calendar, Star, ChevronLeft, ChevronRight, Share2, CookingPot, Sun, Eye, DoorOpen, Flag, BadgeCheck } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
+import L from 'leaflet'
+// Fix leaflet default icon missing
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+delete (L.Icon.Default.prototype as any)._getIconUrl
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+})
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -644,7 +654,7 @@ export function PropertyDetailPage() {
                         `📍 *${t('location')}:* ${loc}`,
                         `🛏 *${t('bedrooms')}:* ${p.bedrooms}  |  🛁 *${t('bathrooms')}:* ${p.bathrooms}  |  🍳 *${t('kitchen')}:* ${p.kitchen}`,
                         desc ? `📝 *${t('description')}:* ${desc}` : '',
-                        `🔗 ${t('view_property')}: https://rwanda-easyrent.vercel.app/properties/${p.id}`,
+                        `🔗 ${t('view_property')}: ${window.location.origin}/properties/${p.id}`,
                       ].filter(Boolean).join('\n')
                       window.open(`https://wa.me/${n.startsWith('0') ? '250' + n.slice(1) : n}?text=${encodeURIComponent(msg)}`, '_blank')
                     }}
@@ -684,12 +694,21 @@ export function PropertyDetailPage() {
             <Card>
               <CardContent className="p-6">
                 <h3 className="font-semibold text-gray-900 dark:text-gray-100">{t('location')}</h3>
-                <div className="mt-3 h-48 flex items-center justify-center rounded-lg bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 border border-gray-200 dark:border-gray-700 text-sm text-gray-500">
-                  <div className="text-center">
-                    <MapPin className="mx-auto h-8 w-8 text-primary-600" />
-                    <p className="mt-2 font-medium text-gray-700 dark:text-gray-300">{property.district}, {property.province}</p>
-                    <p className="text-xs text-gray-400 mt-1">{property.latitude.toFixed(4)}, {property.longitude.toFixed(4)}</p>
-                  </div>
+                <p className="mt-1 text-sm text-gray-500">{property.district}, {property.province} — {property.sector}{property.cell ? `, ${property.cell}` : ''}</p>
+                <div className="mt-3 h-64 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
+                  <MapContainer center={[property.latitude, property.longitude]} zoom={14} style={{ height: '100%', width: '100%' }} scrollWheelZoom={false}>
+                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' />
+                    <Marker position={[property.latitude, property.longitude]}>
+                      <Popup>
+                        <div className="text-sm font-medium">{property.title}</div>
+                        <div className="text-xs text-gray-500">{property.district}, {property.province}</div>
+                      </Popup>
+                    </Marker>
+                  </MapContainer>
+                </div>
+                <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
+                  <span>{property.latitude.toFixed(5)}, {property.longitude.toFixed(5)}</span>
+                  <a href={`https://www.google.com/maps/search/?api=1&query=${property.latitude},${property.longitude}`} target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline">{t('open_in_maps', 'Open in Maps')}</a>
                 </div>
               </CardContent>
             </Card>

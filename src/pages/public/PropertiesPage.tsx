@@ -1,6 +1,14 @@
 import { useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useCompareStore } from '@/store/compareStore'
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
+import L from 'leaflet'
+delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl as unknown as string
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+})
 import { useTranslation } from 'react-i18next'
 import { MapPin, Home, SlidersHorizontal } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
@@ -25,6 +33,7 @@ export function PropertiesPage() {
   const [priceMax, setPriceMax] = useState<string>('')
   const [sortBy, setSortBy] = useState<'newest' | 'price_asc' | 'price_desc' | 'beds_desc'>('newest')
   const [page, setPage] = useState(1)
+  const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid')
   const pageSize = 6
   const { data: properties, isLoading } = useProperties({ ...filters, status: 'published' })
   const { toggleItem: toggleCompare, isInCompare, items: compareItems } = useCompareStore()
@@ -204,9 +213,13 @@ export function PropertiesPage() {
 
       <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          {filteredSorted.length} {t('properties_found')} {totalPages > 1 ? `— ${t('page', 'Page')} ${currentPage}/${totalPages}` : ''}
+          {filteredSorted.length} {t('properties_found')} {totalPages > 1 && viewMode === 'grid' ? `— ${t('page', 'Page')} ${currentPage}/${totalPages}` : ''}
         </p>
         <div className="flex items-center gap-2">
+          <div className="flex rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden">
+            <button onClick={() => setViewMode('grid')} className={`px-3 py-1.5 text-sm ${viewMode === 'grid' ? 'bg-primary-600 text-white' : 'bg-white dark:bg-gray-800 hover:bg-gray-100'}`}>{t('grid', 'Grid')}</button>
+            <button onClick={() => setViewMode('map')} className={`px-3 py-1.5 text-sm ${viewMode === 'map' ? 'bg-primary-600 text-white' : 'bg-white dark:bg-gray-800 hover:bg-gray-100'}`}>{t('map', 'Map')}</button>
+          </div>
           <label className="text-sm text-gray-600 dark:text-gray-400">{t('sort_by', 'Sort by')}:</label>
           <select value={sortBy} onChange={(e) => setSortBy(e.target.value as never)} className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-800">
             <option value="newest">{t('newest', 'Newest')}</option>
@@ -230,6 +243,29 @@ export function PropertiesPage() {
                 </CardContent>
               </Card>
             ))}
+          </div>
+        ) : viewMode === 'map' ? (
+          <div className="h-[600px] overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
+            {filteredSorted.filter((p) => p.latitude && p.longitude).length > 0 ? (
+              <MapContainer center={[-1.94, 29.87]} zoom={8} style={{ height: '100%', width: '100%' }}>
+                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap' />
+                {filteredSorted.filter((p) => p.latitude && p.longitude).map((p) => (
+                  <Marker key={p.id} position={[p.latitude as number, p.longitude as number]}>
+                    <Popup>
+                      <div className="w-48">
+                        <img src={p.images?.[0]?.url || ''} alt={p.title} className="h-24 w-full rounded object-cover" />
+                        <div className="mt-2 text-sm font-semibold">{p.title}</div>
+                        <div className="text-xs text-gray-500">{p.district}, {p.province}</div>
+                        <div className="mt-1 text-sm font-bold text-primary-600">{formatPrice(p.price)}/{t('mo')}</div>
+                        <Link to={`/properties/${p.id}`} className="mt-2 block text-center text-xs text-primary-600 hover:underline">{t('view_property', 'View')}</Link>
+                      </div>
+                    </Popup>
+                  </Marker>
+                ))}
+              </MapContainer>
+            ) : (
+              <div className="flex h-full items-center justify-center text-sm text-gray-500">{t('no_map_data', 'No properties with location data for map view')}</div>
+            )}
           </div>
         ) : filteredProperties && filteredProperties.length > 0 ? (
           <>
