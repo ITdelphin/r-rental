@@ -60,6 +60,9 @@ export const propertyApi = {
         // Handle bedrooms "5+" as gte(5) — eq("5+") is invalid for integer column and causes 400
         if (key === 'bedrooms' && String(value) === '5+') {
           query = query.gte(key, 5)
+        } else if (['province', 'district', 'sector', 'cell', 'village', 'category', 'property_type'].includes(key)) {
+          // Use case-insensitive contains to match DB values like "Western Province" vs filter "western", "Rent" vs "rent"
+          query = query.ilike(key, `%${value}%`)
         } else {
           query = query.eq(key, value)
         }
