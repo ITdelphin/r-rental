@@ -26,11 +26,6 @@ export function RegisterPage() {
       return
     }
 
-    if (!isValidEmail(email)) {
-      toast.error(t('disposable_email_blocked') !== 'disposable_email_blocked' ? t('disposable_email_blocked') : 'Disposable or temporary email domains are not allowed.')
-      return
-    }
-
     setLoading(true)
     const { data, error } = await supabase.auth.signUp({
       email,

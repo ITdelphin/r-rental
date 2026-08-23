@@ -63,6 +63,11 @@ export function PropertyDetailPage() {
     load()
   }, [property])
 
+  useEffect(() => {
+    if (!user || !id) return
+    supabase.from('favorites').select('id').eq('user_id', user.id).eq('property_id', id).maybeSingle().then(({ data }) => setIsFavorited(!!data))
+  }, [user, id])
+
   if (isLoading) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-8">
@@ -117,18 +122,38 @@ export function PropertyDetailPage() {
     setBookingLoading(true)
     setDateError('')
     try {
-      const { data: overlapping } = await supabase
-        .from('bookings')
-        .select('id')
-        .eq('property_id', property.id)
-        .in('status', ['pending', 'approved'])
-        .lte('check_in', checkOut)
-        .gte('check_out', checkIn)
-        .limit(1)
-      if (overlapping && overlapping.length > 0) {
+      // Prefer DB function for correct overlap (check_in < desiredCheckOut && check_out > desiredCheckIn)
+      // Falls back to direct select if function not yet migrated
+      let isAvailable: boolean | null = null
+      try {
+        const { data: avail, error: availError } = await (supabase.rpc as unknown as (fn: string, params: Record<string, unknown>) => Promise<{ data: boolean; error: unknown }>)('is_property_available', {
+          p_property_id: property.id,
+          p_check_in: checkIn,
+          p_check_out: checkOut,
+        })
+        if (!availError && typeof avail === 'boolean') isAvailable = avail
+      } catch {
+        // ignore rpc errors, fallback
+      }
+      if (isAvailable === false) {
         toast.error(t('property_unavailable_dates'))
         setBookingLoading(false)
         return
+      }
+      if (isAvailable === null) {
+        const { data: overlapping } = await supabase
+          .from('bookings')
+          .select('id')
+          .eq('property_id', property.id)
+          .in('status', ['pending', 'approved'])
+          .lt('check_in', checkOut)
+          .gt('check_out', checkIn)
+          .limit(1)
+        if (overlapping && overlapping.length > 0) {
+          toast.error(t('property_unavailable_dates'))
+          setBookingLoading(false)
+          return
+        }
       }
       const { data: newBooking, error } = await supabase.from('bookings').insert({
         property_id: property.id,
@@ -151,8 +176,13 @@ export function PropertyDetailPage() {
         notifyBookingCreated(bookingId, user.id, sellerId, property?.title || t('property'), bookingMessage)
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : t('booking_failed')
-      toast.error(msg)
+      const raw = err instanceof Error ? err.message : ''
+      if (raw.toLowerCase().includes('property not available') || raw.includes('P0001')) {
+        toast.error(t('property_unavailable_dates'))
+      } else {
+        const msg = raw || t('booking_failed')
+        toast.error(msg)
+      }
     } finally {
       setBookingLoading(false)
     }

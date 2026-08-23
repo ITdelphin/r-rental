@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { BrandLogo } from '@/components/ui/brand-logo'
 import { authApi } from '@/lib/api'
+import { supabase } from '@/lib/supabase'
 import { isValidEmail } from '@/lib/utils'
 import toast from 'react-hot-toast'
 
@@ -27,7 +28,17 @@ export function LoginPage() {
     }
     setLoading(true)
     try {
-      await authApi.login(email, password)
+      const data = await authApi.login(email, password)
+      // block suspended accounts immediately after login
+      const userId = (data as { user?: { id: string } })?.user?.id
+      if (userId) {
+        const { data: profile } = await supabase.from('profiles').select('is_suspended').eq('user_id', userId).single()
+        if ((profile as unknown as { is_suspended?: boolean })?.is_suspended) {
+          await supabase.auth.signOut()
+          toast.error(t('account_suspended', 'Your account has been suspended. Contact support.'))
+          return
+        }
+      }
       navigate('/dashboard')
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t('login_failed'))

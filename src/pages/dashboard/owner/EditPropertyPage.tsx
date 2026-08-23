@@ -243,9 +243,19 @@ export function EditPropertyPage() {
   const removeExistingImage = async (imageId: string) => {
     const confirmed = window.confirm(t('remove_this_image'))
     if (!confirmed) return
+    const target = existingImages.find((img) => img.id === imageId)
     try {
       const { error } = await supabase.from('property_images').delete().eq('id', imageId)
       if (error) throw error
+      // also remove from storage to avoid orphans
+      if (target?.url) {
+        try {
+          const path = target.url.split('/property-images/')[1]
+          if (path) await supabase.storage.from('property-images').remove([decodeURIComponent(path)])
+        } catch {
+          // ignore storage errors
+        }
+      }
       setExistingImages(prev => prev.filter(img => img.id !== imageId))
       toast.success(t('image_removed'))
     } catch {
